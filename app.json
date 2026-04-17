@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "stablefit",
-    "slug": "stablefit",
+    "name": "willfit",
+    "slug": "willfit",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "stablefit",
+    "scheme": "willfit",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
