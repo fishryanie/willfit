@@ -4,7 +4,7 @@ import Animated, { useAnimatedProps } from "react-native-reanimated";
 import { Circle, Svg, type CircleProps } from "react-native-svg";
 import type { ICircularProgress } from "./types";
 
-const AnimatedCircle = Animated.createAnimatedComponent<CircleProps>(Circle);
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 export const CircularProgress: React.FC<ICircularProgress> =
   memo<ICircularProgress>((props: ICircularProgress): React.ReactNode => {
@@ -90,6 +90,8 @@ export const CircularProgress: React.FC<ICircularProgress> =
       </Pressable>
     );
   });
+
+CircularProgress.displayName = "CircularProgress";
 
 const styles = StyleSheet.create({
   innerCircle: {

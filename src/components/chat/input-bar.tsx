@@ -7,7 +7,7 @@ import {
   Platform,
   type TextInputContentSizeChangeEvent,
 } from "react-native";
-import { useResponsive } from "helpers/hooks/use-responsive";
+import { useResponsive } from "hooks/use-responsive";
 import { Feather, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { SymbolView } from "expo-symbols";
 

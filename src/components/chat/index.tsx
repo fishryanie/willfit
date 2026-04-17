@@ -4,7 +4,7 @@ import { GiftedChat, IMessage, Bubble } from "react-native-gifted-chat";
 import { StreamingText } from "./streaming-text";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { InputBar } from "./input-bar";
-import { useResponsive } from "helpers/hooks/use-responsive";
+import { useResponsive } from "hooks/use-responsive";
 import { useFonts } from "expo-font";
 import { IChipOption } from "./types";
 import {

@@ -18,7 +18,7 @@ export function useHealthTracker() {
   const lastLocation = useRef<Location.LocationObject | null>(null);
 
   useEffect(() => {
-    let subscription: Pedometer.PedometerSubscription | null = null;
+    let subscription: { remove(): void } | null = null;
     let locationSubscription: Location.LocationSubscription | null = null;
 
     async function subscribe() {

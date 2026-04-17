@@ -1,5 +1,6 @@
-import { Platform, StyleSheet, Text, View, ViewStyle } from "react-native";
+import { BlurView, type BlurViewProps } from "expo-blur";
 import { type FC, memo, useState } from "react";
+import { Platform, StyleSheet, View, ViewStyle } from "react-native";
 import Animated, {
   Easing,
   interpolate,
@@ -11,14 +12,11 @@ import Animated, {
   withSpring,
   withTiming,
 } from "react-native-reanimated";
-import { BlurView, type BlurViewProps } from "expo-blur";
-import type { ICounter, IReusableDigit } from "./types";
-import { SPRING_CONFIG } from "./const";
 import { scheduleOnRN } from "react-native-worklets";
-import { LinearGradient } from "expo-linear-gradient";
+import { SPRING_CONFIG } from "./const";
+import type { ICounter, IReusableDigit } from "./types";
 
-const AnimatedBlur =
-  Animated.createAnimatedComponent<Partial<BlurViewProps>>(BlurView);
+const AnimatedBlur = Animated.createAnimatedComponent(BlurView);
 
 const getDigitAtPlace = <T extends number, I extends number>(
   num: T,
@@ -124,7 +122,7 @@ const CounterDigit: FC<IReusableDigit> = memo<IReusableDigit>(
                   color,
                   fontVariant: ["tabular-nums"],
                 },
-                Platform.OS === "android" && animatedAndroidBlurStylez,
+                Platform.OS === "android" && (animatedAndroidBlurStylez as any),
                 digitStyle,
               ]}
             >
@@ -145,6 +143,8 @@ const CounterDigit: FC<IReusableDigit> = memo<IReusableDigit>(
     );
   },
 );
+
+CounterDigit.displayName = "CounterDigit";
 
 const RollingCounter: FC<ICounter> = memo(
   ({
@@ -216,6 +216,8 @@ const RollingCounter: FC<ICounter> = memo(
     );
   },
 );
+
+RollingCounter.displayName = "RollingCounter";
 
 const styles = StyleSheet.create({
   rowContainer: {

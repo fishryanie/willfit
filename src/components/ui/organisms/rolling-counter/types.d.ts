@@ -22,4 +22,3 @@ interface ICounter {
   color?: string;
 }
 
-export type { ICounter, IReusableDigit };
