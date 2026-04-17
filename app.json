@@ -9,7 +9,11 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Cho phép ứng dụng truy cập vị trí để theo dõi quãng đường tập luyện của bạn.",
+        "NSMotionUsageDescription": "Cho phép ứng dụng đếm số bước chân của bạn để theo dõi sức khỏe."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -18,6 +22,12 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
+      "package": "com.willfit.app",
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "ACTIVITY_RECOGNITION"
+      ],
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
@@ -37,6 +47,13 @@
           "dark": {
             "backgroundColor": "#000000"
           }
+        }
+      ],
+      [
+        "@sentry/react-native",
+        {
+          "organization": "your-org-slug",
+          "project": "your-project-slug"
         }
       ]
     ],
