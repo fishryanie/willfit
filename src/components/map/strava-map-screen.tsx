@@ -1,5 +1,5 @@
 import * as Location from 'expo-location';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { storage, StorageKeys } from 'lib/storage';
 import {
   Bike,
   Check,
@@ -70,7 +70,7 @@ type RouteChoice = RouteSummary & {
   source: 'generated' | 'saved';
 };
 
-const SAVED_ROUTES_KEY = 'willfit:saved-routes';
+const SAVED_ROUTES_KEY = StorageKeys.SAVED_ROUTES;
 
 const ACTIVITY_MODES: { id: ActivityMode; label: string; icon: LucideIcon }[] = [
   { id: 'run', label: 'Run', icon: Footprints },
@@ -321,7 +321,7 @@ export function StravaMapScreen() {
   );
 
   const persistSavedRoutes = useCallback((routes: RouteChoice[]) => {
-    void AsyncStorage.setItem(SAVED_ROUTES_KEY, JSON.stringify(routes.slice(0, 8)));
+    storage.set(SAVED_ROUTES_KEY, JSON.stringify(routes.slice(0, 8)));
   }, []);
 
   const startRecording = useCallback(async (mode: 'route' | 'free' = 'route') => {
@@ -428,22 +428,16 @@ export function StravaMapScreen() {
   }, [liveCoordinates]);
 
   useEffect(() => {
-    let isMounted = true;
+    const value = storage.getString(SAVED_ROUTES_KEY);
 
-    AsyncStorage.getItem(SAVED_ROUTES_KEY)
-      .then(value => {
-        if (!isMounted || !value) {
-          return;
-        }
-
+    if (value) {
+      try {
         const parsedRoutes = JSON.parse(value) as RouteChoice[];
         setSavedRoutes(parsedRoutes.filter(route => route.coordinates && route.coordinates.length > 1));
-      })
-      .catch(() => undefined);
-
-    return () => {
-      isMounted = false;
-    };
+      } catch (error) {
+        console.error('Failed to parse saved routes:', error);
+      }
+    }
   }, []);
 
   useEffect(() => {

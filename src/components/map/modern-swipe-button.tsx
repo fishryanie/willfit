@@ -1,15 +1,15 @@
-import { ChevronRight } from 'lucide-react-native';
-import React, { useEffect } from 'react';
-import { StyleSheet, View } from 'react-native';
-import SwipeButton from 'rn-swipe-button';
 import { LinearGradient } from 'expo-linear-gradient';
+import { ChevronRight } from 'lucide-react-native';
+import { useEffect } from 'react';
+import { StyleSheet, View } from 'react-native';
 import Animated, {
+  interpolate,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
   withTiming,
-  interpolate,
 } from 'react-native-reanimated';
+import SwipeButton from 'rn-swipe-button';
 
 import { ThemedText } from 'components/themed-text';
 
@@ -74,7 +74,13 @@ export function ModernSwipeButton({
   return (
     <View style={styles.container}>
       <SwipeButton
-        onSwipeSuccess={onComplete}
+        onSwipeSuccess={() => {
+          // Grant 200ms for the library to finish its internal success animation
+          // before we trigger status changes that might unmount this component.
+          setTimeout(() => {
+            onComplete();
+          }, 200);
+        }}
         railBackgroundColor={isFinish ? '#2B2021' : '#F1F2F4'}
         railBorderColor='transparent'
         railFillBackgroundColor={isFinish ? 'rgba(255, 77, 77, 0.15)' : 'rgba(255, 90, 31, 0.1)'}
