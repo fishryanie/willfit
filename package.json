@@ -12,10 +12,12 @@
     "eas-build-on-complete": "sentry-eas-build-on-complete"
   },
   "dependencies": {
+    "@react-native-async-storage/async-storage": "2.2.0",
     "@react-navigation/bottom-tabs": "^7.4.0",
     "@react-navigation/elements": "^2.6.3",
     "@react-navigation/native": "^7.1.8",
     "@sentry/react-native": "~7.2.0",
+    "@shopify/react-native-skia": "2.2.12",
     "@tanstack/react-query": "^5.99.2",
     "axios": "^1.15.0",
     "expo": "~54.0.33",
@@ -41,7 +43,6 @@
     "react-native-gifted-chat": "^3.3.2",
     "react-native-keyboard-controller": "1.18.5",
     "react-native-maps": "1.20.1",
-    "react-native-mmkv": "^4.3.1",
     "react-native-reanimated": "~4.1.1",
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0",

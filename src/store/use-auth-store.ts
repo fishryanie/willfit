@@ -1,29 +1,29 @@
+import { storage } from 'lib/storage';
 import { create } from 'zustand';
-import { storage, StorageKeys } from 'lib/storage';
 
 interface AuthState {
   accessToken: string | null;
   isAuthenticated: boolean;
-  setTokens: (accessToken: string, refreshToken: string) => void;
+  setTokens: (accessToken: string, refreshToken: string) => Promise<void>;
   setAccessToken: (accessToken: string) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>(set => ({
   accessToken: null,
-  isAuthenticated: !!storage.getString(StorageKeys.REFRESH_TOKEN),
-  
-  setTokens: (accessToken, refreshToken) => {
-    storage.set(StorageKeys.REFRESH_TOKEN, refreshToken);
+  isAuthenticated: false,
+
+  setTokens: async (accessToken, refreshToken) => {
+    await storage.setItem('willfit:rfk_v1_z9x_auth', refreshToken);
     set({ accessToken, isAuthenticated: true });
   },
 
-  setAccessToken: (accessToken) => {
+  setAccessToken: accessToken => {
     set({ accessToken });
   },
 
-  logout: () => {
-    storage.remove(StorageKeys.REFRESH_TOKEN);
+  logout: async () => {
+    await storage.removeItem('willfit:rfk_v1_z9x_auth');
     set({ accessToken: null, isAuthenticated: false });
   },
 }));

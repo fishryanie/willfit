@@ -1,8 +1,8 @@
 import axios, { AxiosError } from 'axios';
-import { storage, StorageKeys } from './storage';
-import { useAuthStore } from '../store/use-auth-store';
-import { Alert } from 'react-native';
 import { router } from 'expo-router';
+import { Alert } from 'react-native';
+import { useAuthStore } from 'store/use-auth-store';
+import { storage } from './storage';
 
 const BASE_URL = 'https://api.willfit.app/v1';
 
@@ -19,7 +19,7 @@ let isRefreshing = false;
 let failedQueue: any[] = [];
 
 const processQueue = (error: any, token: string | null = null) => {
-  failedQueue.forEach((prom) => {
+  failedQueue.forEach(prom => {
     if (error) {
       prom.reject(error);
     } else {
@@ -34,28 +34,24 @@ const processQueue = (error: any, token: string | null = null) => {
  */
 const handleSessionExpired = () => {
   useAuthStore.getState().logout();
-  Alert.alert(
-    'Phiên đăng nhập hết hạn',
-    'Vui lòng đăng nhập lại để tiếp tục sử dụng dịch vụ.',
-    [{ text: 'OK', onPress: () => router.replace('/') }]
-  );
+  Alert.alert('Phiên đăng nhập hết hạn', 'Vui lòng đăng nhập lại để tiếp tục sử dụng dịch vụ.', [{ text: 'OK', onPress: () => router.replace('/') }]);
 };
 
 // Request Interceptor
 api.interceptors.request.use(
-  (config) => {
+  config => {
     const token = useAuthStore.getState().accessToken;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  error => Promise.reject(error),
 );
 
 // Response Interceptor
 api.interceptors.response.use(
-  (response) => response,
+  response => response,
   async (error: AxiosError) => {
     const originalRequest: any = error.config;
 
@@ -66,19 +62,19 @@ api.interceptors.response.use(
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         })
-          .then((token) => {
+          .then(token => {
             originalRequest.headers.Authorization = `Bearer ${token}`;
             return api(originalRequest);
           })
-          .catch((err) => Promise.reject(err));
+          .catch(err => Promise.reject(err));
       }
 
       originalRequest._retry = true;
       isRefreshing = true;
 
       try {
-        const refreshToken = storage.getString(StorageKeys.REFRESH_TOKEN);
-        
+        const refreshToken = await storage.getItem('willfit:rfk_v1_z9x_auth');
+
         if (!refreshToken) {
           throw new Error('No refresh token available');
         }
@@ -91,11 +87,11 @@ api.interceptors.response.use(
         const { accessToken, refreshToken: newRefreshToken } = response.data;
 
         // Update RAM and Storage
-        useAuthStore.getState().setTokens(accessToken, newRefreshToken);
+        await useAuthStore.getState().setTokens(accessToken, newRefreshToken);
 
         // Process stored requests with new token
         processQueue(null, accessToken);
-        
+
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         return api(originalRequest);
       } catch (refreshError) {
@@ -108,5 +104,5 @@ api.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );

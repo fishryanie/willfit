@@ -1,115 +1,73 @@
-import * as Location from 'expo-location';
-import { storage, StorageKeys } from 'lib/storage';
-import {
-  Bike,
-  Check,
-  Coffee,
-  Download,
-  Flame,
-  Footprints,
-  Flag,
-  Layers,
-  type LucideIcon,
-  LocateFixed,
-  MapPinned,
-  Mountain,
-  Pause,
-  Play,
-  RadioTower,
-  Search,
-  Share2,
-  Sparkles,
-  Star,
-  Timer,
-  TrendingUp,
-  Undo2,
-  Waves,
-} from 'lucide-react-native';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-  useWindowDimensions,
-} from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
+import { ModernSwipeButton } from 'components/map/modern-swipe-button';
 import { ThemedText } from 'components/themed-text';
 import { ThemedView } from 'components/themed-view';
-import { ModernSwipeButton } from 'components/map/modern-swipe-button';
+import { CircularCarousel } from 'components/ui/molecules/circular-carousel';
+import { SplitView } from 'components/ui/molecules/split-view';
+import * as Location from 'expo-location';
+import { storage } from 'lib/storage';
+import { Download, Flame, Layers, LocateFixed, MapPinned, Pause, Play, RadioTower, Search, Sparkles, Timer, Waves } from 'lucide-react-native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, Alert, type ListRenderItem, StyleSheet, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { RouteMap } from './route-map';
 import {
   DEFAULT_COORDINATE,
   calculateTrackDistance,
-  coordinateAtDistance,
   createFallbackRoute,
   createHeatRoutes,
   createLoopWaypoints,
   createRouteSummaries,
-  createSegments,
   fetchOsrmRoute,
   formatDistance,
   formatDuration,
   formatPace,
 } from './route-utils';
-import { RouteMap } from './route-map';
 import { ActivityMode, Coordinate, MapLayer, RouteSummary } from './types';
 
-type Panel = 'routes' | 'segments' | 'record';
-type RoutePriority = 'Popular' | 'Direct';
-type ElevationPreference = 'Any' | 'Flat' | 'Hilly';
-type SurfacePreference = 'Any' | 'Paved' | 'Dirt';
-type SegmentFilter = 'Popular' | 'Short' | 'Climbs' | 'Starred';
 type RouteChoice = RouteSummary & {
   coordinates?: Coordinate[];
   savedAt?: string;
   source: 'generated' | 'saved';
 };
+type RouteCarouselItem = { type: 'route'; route: RouteChoice } | { type: 'record' };
+type RecordTopItem = { id: 'summary' } | { id: 'metrics' } | { id: 'controls' };
+type RecordBottomItem = { id: 'route' } | { id: 'splits' };
 
-const SAVED_ROUTES_KEY = StorageKeys.SAVED_ROUTES;
+const ACTIVITY_MODE_LABELS: Record<ActivityMode, string> = {
+  run: 'Chạy bộ',
+  walk: 'Đi bộ',
+  ride: 'Đạp xe',
+  hike: 'Leo núi',
+};
 
-const ACTIVITY_MODES: { id: ActivityMode; label: string; icon: LucideIcon }[] = [
-  { id: 'run', label: 'Run', icon: Footprints },
-  { id: 'ride', label: 'Ride', icon: Bike },
-  { id: 'walk', label: 'Walk', icon: Footprints },
-  { id: 'hike', label: 'Hike', icon: Mountain },
-];
+const getNextActivityMode = (mode: ActivityMode): ActivityMode => {
+  if (mode === 'run') {
+    return 'walk';
+  }
 
-const SEGMENT_FILTERS: SegmentFilter[] = ['Popular', 'Short', 'Climbs', 'Starred'];
+  if (mode === 'walk') {
+    return 'ride';
+  }
 
-const POI_STARTS = [
-  { id: 'trailhead', title: 'Trailhead', meta: 'Popular start', distanceKm: 0.82, bearing: 54, icon: Flag },
-  { id: 'cafe', title: 'Cafe', meta: 'Water + coffee', distanceKm: 1.1, bearing: 130, icon: Coffee },
-  { id: 'fountain', title: 'Fountain', meta: 'Refill stop', distanceKm: 0.68, bearing: 245, icon: MapPinned },
-];
+  return 'run';
+};
 
 export function StravaMapScreen() {
-  const { height } = useWindowDimensions();
+  const { height, width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const [center, setCenter] = useState<Coordinate>(DEFAULT_COORDINATE);
-  const [activePanel, setActivePanel] = useState<Panel>('routes');
+  const [recordPanelVisible, setRecordPanelVisible] = useState(false);
   const [activityMode, setActivityMode] = useState<ActivityMode>('run');
   const [mapLayer, setMapLayer] = useState<MapLayer>('standard');
   const [showHeatmap, setShowHeatmap] = useState(true);
-  const [showSegments, setShowSegments] = useState(true);
   const [followUser, setFollowUser] = useState(true);
   const [beaconEnabled, setBeaconEnabled] = useState(false);
-  const [routePriority, setRoutePriority] = useState<RoutePriority>('Popular');
-  const [elevationPreference, setElevationPreference] = useState<ElevationPreference>('Any');
-  const [surfacePreference, setSurfacePreference] = useState<SurfacePreference>('Any');
-  const [segmentFilter, setSegmentFilter] = useState<SegmentFilter>('Popular');
-  const [offlineSaved, setOfflineSaved] = useState(false);
   const [savedRoutes, setSavedRoutes] = useState<RouteChoice[]>([]);
   const [recordingTitle, setRecordingTitle] = useState('Free run');
+  const [recordStartMode, setRecordStartMode] = useState<'route' | 'free'>('free');
   const [routeCoordinates, setRouteCoordinates] = useState<Coordinate[]>([]);
   const [waypoints, setWaypoints] = useState<Coordinate[]>([]);
-  const [manualMode, setManualMode] = useState(false);
   const [selectedRouteId, setSelectedRouteId] = useState('morning-loop');
-  const [selectedSegmentId, setSelectedSegmentId] = useState('sprint-bridge');
   const [isRouting, setIsRouting] = useState(false);
   const [routeSource, setRouteSource] = useState<'osrm' | 'local'>('local');
   const [locationStatus, setLocationStatus] = useState('Finding location...');
@@ -123,86 +81,40 @@ export function StravaMapScreen() {
   const initialRouteBuilt = useRef(false);
   const liveCoordinatesRef = useRef<Coordinate[]>([]);
 
-  const minSheetHeight = Math.max(210, height * 0.24);
-  const midSheetHeight = Math.max(360, height * 0.47);
-  const maxSheetHeight = Math.max(520, height - insets.top - 72);
-  const sheetHeight = useSharedValue(midSheetHeight);
-  const gestureStartHeight = useSharedValue(midSheetHeight);
-
-  const routeSuggestions = useMemo(() => createRouteSummaries(center), [center]);
+  const routeSuggestions = useMemo(() => createRouteSummaries(center, activityMode), [activityMode, center]);
   const routeChoices = useMemo<RouteChoice[]>(
     () => [
-      ...savedRoutes,
+      ...(activityMode === 'walk' ? savedRoutes.filter(route => route.distanceKm <= 10) : savedRoutes),
       ...routeSuggestions.map(route => ({
         ...route,
         source: 'generated' as const,
       })),
     ],
-    [routeSuggestions, savedRoutes],
+    [activityMode, routeSuggestions, savedRoutes],
   );
-  const segments = useMemo(() => createSegments(center), [center]);
   const heatRoutes = useMemo(() => createHeatRoutes(center), [center]);
-  const filteredSegments = useMemo(() => {
-    switch (segmentFilter) {
-      case 'Short':
-        return segments.filter(segment => segment.distanceKm < 1);
-      case 'Climbs':
-        return segments.filter(segment => segment.grade.includes('+'));
-      case 'Starred':
-        return segments.filter(segment => segment.starred);
-      default:
-        return segments;
-    }
-  }, [segmentFilter, segments]);
+  const carouselCardWidth = width - 24;
+  const carouselItems = useMemo<RouteCarouselItem[]>(
+    () => [...routeChoices.map(route => ({ type: 'route' as const, route })), { type: 'record' as const }],
+    [routeChoices],
+  );
+  const recordTopItems = useMemo<RecordTopItem[]>(() => [{ id: 'summary' }, { id: 'metrics' }, { id: 'controls' }], []);
+  const recordBottomItems = useMemo<RecordBottomItem[]>(() => [{ id: 'route' }, { id: 'splits' }], []);
+  const recordSplitMinTopHeight = Math.max(260, height * 0.34);
+  const recordSplitMaxTopHeight = Math.max(recordSplitMinTopHeight + 120, height - insets.top - insets.bottom - 220);
+  const recordSplitInitialTopHeight = Math.min(Math.max(360, height * 0.54), recordSplitMaxTopHeight);
+  const recordSplitSpringConfig = useMemo(() => ({ damping: 22, stiffness: 190, mass: 0.85 }), []);
   const routeDistanceMeters = useMemo(() => calculateTrackDistance(routeCoordinates), [routeCoordinates]);
   const liveDistanceMeters = useMemo(() => calculateTrackDistance(liveCoordinates), [liveCoordinates]);
-  const selectedSegment = filteredSegments.find(segment => segment.id === selectedSegmentId) ?? filteredSegments[0] ?? segments[0];
-  const selectedRoute =
-    routeChoices.find(route => route.id === selectedRouteId) ??
-    routeChoices[0] ??
-    {
-      ...routeSuggestions[0],
-      source: 'generated' as const,
-    };
-
-  const snapSheet = useCallback(
-    (targetHeight: number) => {
-      sheetHeight.value = withSpring(targetHeight, {
-        damping: 22,
-        stiffness: 190,
-      });
-    },
-    [sheetHeight],
-  );
-
-  const sheetGesture = useMemo(
+  const selectedRoute = useMemo(
     () =>
-      Gesture.Pan()
-        .onBegin(() => {
-          gestureStartHeight.value = sheetHeight.value;
-        })
-        .onUpdate(event => {
-          const nextHeight = gestureStartHeight.value - event.translationY;
-          sheetHeight.value = Math.min(maxSheetHeight, Math.max(minSheetHeight, nextHeight));
-        })
-        .onEnd(() => {
-          const currentHeight = sheetHeight.value;
-          const snaps = [minSheetHeight, midSheetHeight, maxSheetHeight];
-          const target = snaps.reduce((closest, snap) =>
-            Math.abs(snap - currentHeight) < Math.abs(closest - currentHeight) ? snap : closest,
-          );
-
-          sheetHeight.value = withSpring(target, {
-            damping: 22,
-            stiffness: 190,
-          });
-        }),
-    [gestureStartHeight, maxSheetHeight, midSheetHeight, minSheetHeight, sheetHeight],
+      routeChoices.find(route => route.id === selectedRouteId) ??
+      routeChoices[0] ?? {
+        ...routeSuggestions[0],
+        source: 'generated' as const,
+      },
+    [routeChoices, routeSuggestions, selectedRouteId],
   );
-
-  const sheetStyle = useAnimatedStyle(() => ({
-    height: sheetHeight.value,
-  }));
 
   const requestLocation = useCallback(async () => {
     try {
@@ -210,6 +122,7 @@ export function StravaMapScreen() {
 
       if (permission.status !== 'granted') {
         setLocationStatus('Location permission is off. Showing Ho Chi Minh City.');
+        setIsLocationReady(true);
         return;
       }
 
@@ -226,9 +139,9 @@ export function StravaMapScreen() {
       setLocationStatus('Using your current location');
     } catch {
       setLocationStatus('Could not read GPS. Showing Ho Chi Minh City.');
-    } finally {
-      setIsLocationReady(true);
     }
+
+    setIsLocationReady(true);
   }, []);
 
   const buildRoute = useCallback(
@@ -253,133 +166,119 @@ export function StravaMapScreen() {
       } catch {
         setRouteCoordinates(createFallbackRoute(nextWaypoints));
         setRouteSource('local');
-      } finally {
-        setIsRouting(false);
       }
+
+      setIsRouting(false);
     },
     [activityMode, center],
   );
 
-  const handleMapPress = useCallback(
-    async (coordinate: Coordinate) => {
-      if (!manualMode) {
-        setCenter(coordinate);
-        return;
-      }
-
-      const nextWaypoints = [...waypoints, coordinate];
-      setWaypoints(nextWaypoints);
-
-      if (nextWaypoints.length < 2) {
-        setRouteCoordinates(nextWaypoints);
-        return;
-      }
-
-      setIsRouting(true);
-
-      try {
-        const osrmRoute = await fetchOsrmRoute(nextWaypoints, activityMode);
-        setRouteCoordinates(osrmRoute);
-        setRouteSource('osrm');
-      } catch {
-        setRouteCoordinates(createFallbackRoute(nextWaypoints));
-        setRouteSource('local');
-      } finally {
-        setIsRouting(false);
-      }
-    },
-    [activityMode, manualMode, waypoints],
-  );
-
-  const clearRoute = useCallback(() => {
-    setWaypoints([]);
-    setRouteCoordinates([]);
-    setManualMode(false);
+  const handleMapPress = useCallback((coordinate: Coordinate) => {
+    setCenter(coordinate);
   }, []);
 
-  const routeToPoi = useCallback(
-    async (distanceKm: number, bearing: number) => {
-      const poiCoordinate = coordinateAtDistance(center, distanceKm, bearing);
-      const nextWaypoints = [center, poiCoordinate];
+  const handleRouteCarouselIndexChange = useCallback(
+    (index: number) => {
+      const item = carouselItems[index];
 
-      setManualMode(false);
-      setWaypoints(nextWaypoints);
-      setIsRouting(true);
-
-      try {
-        const osrmRoute = await fetchOsrmRoute(nextWaypoints, activityMode);
-        setRouteCoordinates(osrmRoute);
-        setRouteSource('osrm');
-      } catch {
-        setRouteCoordinates(createFallbackRoute(nextWaypoints));
-        setRouteSource('local');
-      } finally {
-        setIsRouting(false);
+      if (!item || item.type !== 'route' || item.route.id === selectedRouteId) {
+        return;
       }
+
+      void buildRoute(item.route);
     },
-    [activityMode, center],
+    [buildRoute, carouselItems, selectedRouteId],
   );
 
   const persistSavedRoutes = useCallback((routes: RouteChoice[]) => {
-    storage.set(SAVED_ROUTES_KEY, JSON.stringify(routes.slice(0, 8)));
+    void storage.setItem('willfit:saved-routes', JSON.stringify(routes.slice(0, 8)));
   }, []);
 
-  const startRecording = useCallback(async (mode: 'route' | 'free' = 'route') => {
-    const permission = await Location.requestForegroundPermissionsAsync();
+  const openRouteRecordSheet = useCallback(
+    (route: RouteChoice) => {
+      setRecordStartMode('route');
+      setRecordingTitle(route.title);
+      setRecordPanelVisible(true);
+      void buildRoute(route);
+    },
+    [buildRoute],
+  );
 
-    if (permission.status !== 'granted') {
-      Alert.alert('Location needed', 'Turn on location permission to record an activity.');
-      return;
-    }
+  const openFreeRecordSheet = useCallback(() => {
+    setRecordStartMode('free');
+    setRecordingTitle('Free run');
+    setRouteCoordinates([]);
+    setWaypoints([]);
+    setRecordPanelVisible(true);
+  }, []);
 
-    if (mode === 'free') {
-      setRouteCoordinates([]);
-      setWaypoints([]);
-      setRecordingTitle('Free run');
-    } else {
-      setRecordingTitle(selectedRoute?.title ?? 'Suggested route');
-    }
+  const closeRecordSheet = useCallback(() => {
+    setRecordPanelVisible(false);
+  }, []);
 
-    setIsRecording(true);
-    setIsPaused(false);
-    setElapsedSeconds(0);
-    setLiveCoordinates([]);
-    liveCoordinatesRef.current = [];
-    setActivePanel('record');
-    snapSheet(midSheetHeight);
+  const startRecording = useCallback(
+    async (mode: 'route' | 'free' = 'route') => {
+      const permission = await Location.requestForegroundPermissionsAsync();
 
-    watchSubscription.current?.remove();
-    watchSubscription.current = await Location.watchPositionAsync(
-      {
-        accuracy: Location.Accuracy.High,
-        timeInterval: 2000,
-        distanceInterval: 5,
-      },
-      position => {
-        if (isPausedRef.current) {
-          return;
+      if (permission.status !== 'granted') {
+        Alert.alert('Location needed', 'Turn on location permission to record an activity.');
+        return;
+      }
+
+      if (mode === 'free') {
+        setRouteCoordinates([]);
+        setWaypoints([]);
+        setRecordingTitle('Free run');
+      } else {
+        if (routeCoordinates.length < 2) {
+          await buildRoute(selectedRoute);
         }
+        setRecordingTitle(selectedRoute?.title ?? 'Suggested route');
+      }
 
-        const coordinate = {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        };
+      setIsRecording(true);
+      setIsPaused(false);
+      setElapsedSeconds(0);
+      setLiveCoordinates([]);
+      liveCoordinatesRef.current = [];
+      setRecordStartMode(mode);
+      setRecordPanelVisible(true);
 
-        setCenter(coordinate);
-        setLiveCoordinates(previous => {
-          const nextCoordinates = [...previous, coordinate];
-          liveCoordinatesRef.current = nextCoordinates;
-          return nextCoordinates;
-        });
-      },
-    );
-  }, [midSheetHeight, selectedRoute?.title, snapSheet]);
+      watchSubscription.current?.remove();
+      watchSubscription.current = await Location.watchPositionAsync(
+        {
+          accuracy: Location.Accuracy.High,
+          timeInterval: 2000,
+          distanceInterval: 5,
+        },
+        position => {
+          if (isPausedRef.current) {
+            return;
+          }
+
+          const coordinate = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          };
+
+          setCenter(coordinate);
+          setLiveCoordinates(previous => {
+            const nextCoordinates = [...previous, coordinate];
+            liveCoordinatesRef.current = nextCoordinates;
+            return nextCoordinates;
+          });
+        },
+      );
+    },
+    [buildRoute, routeCoordinates.length, selectedRoute],
+  );
 
   const finishRecording = useCallback(() => {
     watchSubscription.current?.remove();
     watchSubscription.current = null;
     setIsRecording(false);
     setIsPaused(false);
+    setRecordPanelVisible(false);
 
     const recordedTrack = liveCoordinatesRef.current;
 
@@ -411,9 +310,7 @@ export function StravaMapScreen() {
     setRouteCoordinates(recordedTrack);
     setWaypoints([recordedTrack[0], recordedTrack[recordedTrack.length - 1]]);
     setRouteSource('local');
-    setActivePanel('routes');
-    snapSheet(midSheetHeight);
-  }, [elapsedSeconds, midSheetHeight, persistSavedRoutes, recordingTitle, savedRoutes.length, snapSheet]);
+  }, [elapsedSeconds, persistSavedRoutes, recordingTitle, savedRoutes.length]);
 
   const pauseRecording = useCallback(() => {
     setIsPaused(value => !value);
@@ -428,20 +325,38 @@ export function StravaMapScreen() {
   }, [liveCoordinates]);
 
   useEffect(() => {
-    const value = storage.getString(SAVED_ROUTES_KEY);
+    let isMounted = true;
 
-    if (value) {
+    void storage.getItem('willfit:saved-routes').then(value => {
+      if (!isMounted || !value) {
+        return;
+      }
+
       try {
         const parsedRoutes = JSON.parse(value) as RouteChoice[];
         setSavedRoutes(parsedRoutes.filter(route => route.coordinates && route.coordinates.length > 1));
       } catch (error) {
         console.error('Failed to parse saved routes:', error);
       }
-    }
+    });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   useEffect(() => {
-    requestLocation();
+    let isMounted = true;
+
+    queueMicrotask(() => {
+      if (isMounted) {
+        void requestLocation();
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
   }, [requestLocation]);
 
   useEffect(() => {
@@ -449,10 +364,15 @@ export function StravaMapScreen() {
       return;
     }
 
-    initialRouteBuilt.current = true;
-    if (routeChoices[0]) {
-      buildRoute(routeChoices[0]);
+    const initialRoute = routeChoices[0];
+    if (!initialRoute) {
+      return;
     }
+
+    initialRouteBuilt.current = true;
+    queueMicrotask(() => {
+      void buildRoute(initialRoute);
+    });
   }, [buildRoute, isLocationReady, routeChoices]);
 
   useEffect(() => {
@@ -473,6 +393,137 @@ export function StravaMapScreen() {
     };
   }, []);
 
+  const renderRecordTopItem = useCallback<ListRenderItem<RecordTopItem>>(
+    ({ item }) => {
+      if (item.id === 'summary') {
+        return (
+          <View style={styles.sectionHeader}>
+            <View style={styles.recordHeaderText}>
+              <ThemedText style={styles.sheetTitle}>
+                {isRecording ? recordingTitle : recordStartMode === 'route' ? recordingTitle : 'Record activity'}
+              </ThemedText>
+              <ThemedText style={styles.sheetSubtitle}>{isRecording ? 'Trượt để kết thúc và lưu lại cung đường.' : 'Vuốt để bắt đầu record.'}</ThemedText>
+            </View>
+            <View style={styles.sheetActionRow}>
+              {!isRecording && (
+                <TouchableOpacity activeOpacity={0.82} style={styles.changeRoutePill} onPress={closeRecordSheet}>
+                  <Search size={14} color='#111111' />
+                  <ThemedText style={styles.changeRouteText}>Đổi cung</ThemedText>
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity
+                activeOpacity={0.82}
+                style={[styles.beaconPill, beaconEnabled && styles.beaconPillActive]}
+                onPress={() => setBeaconEnabled(value => !value)}>
+                <RadioTower size={15} color={beaconEnabled ? '#FFFFFF' : '#111111'} />
+                <ThemedText style={[styles.beaconText, beaconEnabled && styles.beaconTextActive]}>Beacon</ThemedText>
+              </TouchableOpacity>
+            </View>
+          </View>
+        );
+      }
+
+      if (item.id === 'metrics') {
+        return (
+          <>
+            <View style={styles.routeStats}>
+              <StatBlock label='Route' value={formatDistance(routeDistanceMeters)} />
+              <StatBlock label='Time' value={formatDuration(elapsedSeconds)} />
+              <StatBlock label='Distance' value={formatDistance(liveDistanceMeters)} />
+            </View>
+
+            <View style={styles.recordGrid}>
+              <StatBlock label='Pace' value={formatPace(liveDistanceMeters, elapsedSeconds)} />
+              <StatBlock label='Elevation' value={`${selectedRoute.elevationM} m`} />
+              <StatBlock label='Splits' value={liveDistanceMeters > 1000 ? '1 logged' : '--'} />
+              <StatBlock label='Source' value={routeSource === 'osrm' ? 'OSRM' : 'Local'} />
+            </View>
+          </>
+        );
+      }
+
+      return (
+        <View style={styles.recordControlsNew}>
+          {!isRecording ? (
+            <ModernSwipeButton label='Trượt để bắt đầu ghi' onComplete={() => startRecording(recordStartMode)} />
+          ) : (
+            <>
+              <View style={styles.secondaryControls}>
+                <TouchableOpacity activeOpacity={0.88} style={styles.pauseButtonNew} onPress={pauseRecording}>
+                  <View style={styles.pauseIconWrap}>
+                    {isPaused ? <Play size={20} color='#111111' fill='#111111' /> : <Pause size={20} color='#111111' fill='#111111' />}
+                  </View>
+                  <ThemedText style={styles.pauseLabel}>{isPaused ? 'Tiếp tục' : 'Tạm dừng'}</ThemedText>
+                </TouchableOpacity>
+              </View>
+              <ModernSwipeButton tone='finish' label='Trượt để kết thúc và lưu' onComplete={finishRecording} />
+            </>
+          )}
+        </View>
+      );
+    },
+    [
+      beaconEnabled,
+      closeRecordSheet,
+      elapsedSeconds,
+      finishRecording,
+      isPaused,
+      isRecording,
+      liveDistanceMeters,
+      pauseRecording,
+      recordStartMode,
+      recordingTitle,
+      routeDistanceMeters,
+      routeSource,
+      selectedRoute.elevationM,
+      startRecording,
+    ],
+  );
+
+  const renderRecordBottomItem = useCallback<ListRenderItem<RecordBottomItem>>(
+    ({ item }) => {
+      if (item.id === 'route') {
+        return (
+          <View style={styles.recordRouteDetail}>
+            <View style={styles.recordDetailRow}>
+              <ThemedText style={styles.recordDetailLabel}>Cung đường</ThemedText>
+              <ThemedText numberOfLines={1} style={styles.recordDetailValue}>
+                {recordStartMode === 'route' ? selectedRoute.title : 'Record tự do'}
+              </ThemedText>
+            </View>
+            <View style={styles.recordDetailRow}>
+              <ThemedText style={styles.recordDetailLabel}>Mục tiêu</ThemedText>
+              <ThemedText style={styles.recordDetailValue}>
+                {recordStartMode === 'route' ? `${selectedRoute.distanceKm.toFixed(1)} km` : 'Lưu track sau khi kết thúc'}
+              </ThemedText>
+            </View>
+            <View style={styles.recordDetailRow}>
+              <ThemedText style={styles.recordDetailLabel}>Dữ liệu route</ThemedText>
+              <ThemedText style={styles.recordDetailValue}>{routeSource === 'osrm' ? 'OSRM' : 'Local fallback'}</ThemedText>
+            </View>
+          </View>
+        );
+      }
+
+      return (
+        <View style={styles.liveSplits}>
+          <View style={styles.splitIcon}>
+            <Timer size={18} color='#FF8A00' />
+          </View>
+          <View style={styles.splitBody}>
+            <ThemedText style={styles.splitTitle}>Auto splits</ThemedText>
+            <ThemedText style={styles.splitMeta}>Mỗi kilomet sẽ được tổng hợp trong lúc record.</ThemedText>
+          </View>
+        </View>
+      );
+    },
+    [recordStartMode, routeSource, selectedRoute.distanceKm, selectedRoute.title],
+  );
+
+  const renderRecordSplitHeader = useCallback(() => <View />, []);
+
+  const showRouteCarousel = !recordPanelVisible && !isRecording;
+
   return (
     <ThemedView flex backgroundColor='#101114'>
       <RouteMap
@@ -481,10 +532,9 @@ export function StravaMapScreen() {
         liveCoordinates={liveCoordinates}
         waypoints={waypoints}
         heatRoutes={heatRoutes}
-        segments={segments}
-        selectedSegmentId={selectedSegmentId}
+        segments={[]}
         showHeatmap={showHeatmap}
-        showSegments={showSegments}
+        showSegments={false}
         mapLayer={mapLayer}
         activityMode={activityMode}
         followUser={followUser}
@@ -495,7 +545,7 @@ export function StravaMapScreen() {
         <View style={styles.searchPill}>
           <Search size={18} color='#6B7280' />
           <ThemedText numberOfLines={1} style={styles.searchText}>
-            Search location, route, segment
+            Tìm kiếm vị trí
           </ThemedText>
         </View>
         <TouchableOpacity
@@ -510,10 +560,7 @@ export function StravaMapScreen() {
         <TouchableOpacity
           activeOpacity={0.78}
           style={[styles.floatingButton, followUser && styles.floatingButtonActive]}
-          onPress={() => {
-            setFollowUser(value => !value);
-            snapSheet(minSheetHeight);
-          }}>
+          onPress={() => setFollowUser(value => !value)}>
           <LocateFixed size={20} color={followUser ? '#FFFFFF' : '#111111'} />
         </TouchableOpacity>
         <TouchableOpacity
@@ -533,7 +580,7 @@ export function StravaMapScreen() {
       <View style={[styles.statusPill, { top: insets.top + 78 }]}>
         <View style={[styles.statusDot, routeSource === 'osrm' ? styles.statusDotOnline : styles.statusDotLocal]} />
         <ThemedText numberOfLines={1} style={styles.statusText}>
-          {isRouting ? 'Building route...' : routeSource === 'osrm' ? 'Route by OSRM' : locationStatus}
+          {isRouting ? 'Đang dựng cung đường...' : routeSource === 'osrm' ? 'Route by OSRM' : locationStatus}
         </ThemedText>
       </View>
 
@@ -548,328 +595,104 @@ export function StravaMapScreen() {
               return;
             }
 
-            setSelectedRouteId(nearestRoute.id);
             buildRoute({
               ...nearestRoute,
               source: 'generated',
             });
-            snapSheet(midSheetHeight);
+            setRecordPanelVisible(false);
           }}>
           <ThemedText style={styles.searchHereText}>Tìm kiếm tại đây</ThemedText>
         </TouchableOpacity>
       )}
 
-      <GestureDetector gesture={sheetGesture}>
-        <Animated.View style={[styles.sheet, { paddingBottom: insets.bottom + 12 }, sheetStyle]}>
-          <View style={styles.handleWrap}>
-            <View style={styles.handle} />
+      {showRouteCarousel && (
+        <View style={[styles.routeCarouselOverlay, { bottom: insets.bottom + 88 }]}>
+          <View style={styles.carouselFilterRow}>
+            <View style={styles.carouselFilterPill}>
+              <Flame size={15} color='#FF5A1F' />
+              <ThemedText style={styles.carouselFilterText}>Lộ trình</ThemedText>
+            </View>
+            <TouchableOpacity
+              activeOpacity={0.82}
+              style={styles.carouselFilterPill}
+              onPress={() => {
+                const nextMode = getNextActivityMode(activityMode);
+                const nextRoute = createRouteSummaries(center, nextMode)[0];
+
+                setActivityMode(nextMode);
+
+                if (nextRoute) {
+                  buildRoute({ ...nextRoute, source: 'generated' }, nextMode);
+                }
+              }}>
+              <MapPinned size={15} color='#FFFFFF' />
+              <ThemedText style={styles.carouselFilterText}>{ACTIVITY_MODE_LABELS[activityMode]}</ThemedText>
+            </TouchableOpacity>
+            {isRouting && <ActivityIndicator color='#FF5A1F' size='small' />}
           </View>
 
-          <View style={styles.panelTabs}>
-            {(['routes', 'segments', 'record'] as Panel[]).map(panel => {
-              const isActive = activePanel === panel;
-              return (
-                <TouchableOpacity
-                  key={panel}
-                  activeOpacity={0.82}
-                  style={[styles.panelTab, isActive && styles.panelTabActive]}
-                  onPress={() => {
-                    setActivePanel(panel);
-                    snapSheet(panel === 'record' ? midSheetHeight : maxSheetHeight);
-                  }}>
-                  <ThemedText style={[styles.panelTabText, isActive && styles.panelTabTextActive]}>
-                    {panel[0].toUpperCase() + panel.slice(1)}
-                  </ThemedText>
+          <CircularCarousel
+            data={carouselItems}
+            itemWidth={carouselCardWidth}
+            horizontalSpacing={12}
+            spacing={0}
+            keyExtractor={(item, index) => (item.type === 'route' ? item.route.id : `record-${index}`)}
+            onIndexChange={handleRouteCarouselIndexChange}
+            contentContainerStyle={styles.routeCarouselContent}
+            renderItem={({ item }) =>
+              item.type === 'route' ? (
+                <RouteCarouselCard
+                  route={item.route}
+                  width={carouselCardWidth}
+                  active={selectedRouteId === item.route.id}
+                  onPress={() => openRouteRecordSheet(item.route)}
+                />
+              ) : (
+                <TouchableOpacity activeOpacity={0.9} style={[styles.recordCarouselCard, { width: carouselCardWidth }]} onPress={openFreeRecordSheet}>
+                  <View style={styles.recordCardIcon}>
+                    <Timer size={20} color='#FF5A1F' />
+                  </View>
+                  <View style={styles.recordCardBody}>
+                    <ThemedText numberOfLines={1} style={styles.routeCarouselTitle}>
+                      Ghi lại cung đường mới
+                    </ThemedText>
+                    <ThemedText style={styles.routeCarouselMeta}>Tự record ngay, sau đó lưu track này để chạy lại lần sau.</ThemedText>
+                  </View>
                 </TouchableOpacity>
-              );
-            })}
-          </View>
+              )
+            }
+          />
+        </View>
+      )}
 
-          <ScrollView
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.sheetContent}>
-            {activePanel === 'routes' && (
-              <>
-                <View style={styles.sectionHeader}>
-                  <View>
-                    <ThemedText style={styles.sheetTitle}>Cung đường gần bạn</ThemedText>
-                    <ThemedText style={styles.sheetSubtitle}>
-                      Gợi ý quanh vị trí hiện tại, hoặc ghi lại cung đường mới.
-                    </ThemedText>
-                  </View>
-                  {isRouting && <ActivityIndicator color='#FF5A1F' />}
-                </View>
-
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.modeRow}>
-                  {ACTIVITY_MODES.map(mode => {
-                    const Icon = mode.icon;
-                    const isActive = activityMode === mode.id;
-
-                    return (
-                      <TouchableOpacity
-                        key={mode.id}
-                        activeOpacity={0.82}
-                        style={[styles.modeChip, isActive && styles.modeChipActive]}
-                        onPress={() => {
-                          setActivityMode(mode.id);
-                          buildRoute(selectedRoute, mode.id);
-                        }}>
-                        <Icon size={16} color={isActive ? '#FFFFFF' : '#111111'} />
-                        <ThemedText style={[styles.modeText, isActive && styles.modeTextActive]}>{mode.label}</ThemedText>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </ScrollView>
-
-                <View style={styles.preferenceGrid}>
-                  <PreferenceChip
-                    label='Routing'
-                    value={routePriority}
-                    onPress={() => setRoutePriority(value => (value === 'Popular' ? 'Direct' : 'Popular'))}
-                  />
-                  <PreferenceChip
-                    label='Elevation'
-                    value={elevationPreference}
-                    onPress={() =>
-                      setElevationPreference(value => (value === 'Any' ? 'Flat' : value === 'Flat' ? 'Hilly' : 'Any'))
-                    }
-                  />
-                  <PreferenceChip
-                    label='Surface'
-                    value={surfacePreference}
-                    onPress={() =>
-                      setSurfacePreference(value => (value === 'Any' ? 'Paved' : value === 'Paved' ? 'Dirt' : 'Any'))
-                    }
-                  />
-                  <PreferenceChip
-                    label='Offline'
-                    value={offlineSaved ? 'Saved' : 'Save'}
-                    onPress={() => setOfflineSaved(value => !value)}
-                  />
-                </View>
-
-                <View style={styles.routeStats}>
-                  <StatBlock label='Distance' value={formatDistance(routeDistanceMeters)} />
-                  <StatBlock label='Elevation' value={`${selectedRoute.elevationM} m`} />
-                  <StatBlock label='Time' value={`${selectedRoute.estimatedMinutes}m`} />
-                </View>
-
-                <View style={styles.actionRow}>
-                  <ActionButton
-                    label='Record now'
-                    icon={Timer}
-                    active={isRecording && recordingTitle === 'Free run'}
-                    onPress={() => {
-                      setActivePanel('record');
-                      snapSheet(midSheetHeight);
-                    }}
-                  />
-                  <ActionButton
-                    label={manualMode ? 'Tap map to add' : 'Manual mode'}
-                    icon={manualMode ? Check : MapPinned}
-                    active={manualMode}
-                    onPress={() => {
-                      setManualMode(value => !value);
-                      snapSheet(minSheetHeight);
-                    }}
-                  />
-                  <ActionButton label='Clear' icon={Undo2} onPress={clearRoute} />
-                </View>
-
-                <View style={styles.poiPanel}>
-                  <View style={styles.poiHeader}>
-                    <View>
-                      <ThemedText style={styles.poiTitle}>Start points nearby</ThemedText>
-                      <ThemedText style={styles.poiMeta}>Tap a popular spot to route there.</ThemedText>
-                    </View>
-                    <Download size={18} color={offlineSaved ? '#36D399' : '#737780'} />
-                  </View>
-
-                  {POI_STARTS.map(poi => {
-                    const Icon = poi.icon;
-
-                    return (
-                      <TouchableOpacity
-                        key={poi.id}
-                        activeOpacity={0.82}
-                        style={styles.poiRow}
-                        onPress={() => routeToPoi(poi.distanceKm, poi.bearing)}>
-                        <View style={styles.poiIcon}>
-                          <Icon size={16} color='#111111' />
-                        </View>
-                        <View style={styles.poiBody}>
-                          <ThemedText style={styles.poiName}>{poi.title}</ThemedText>
-                          <ThemedText style={styles.poiDistance}>
-                            {poi.meta} • {poi.distanceKm.toFixed(1)} km
-                          </ThemedText>
-                        </View>
-                        <ThemedText style={styles.poiCta}>Route here</ThemedText>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-
-                {routeChoices.map(route => (
-                  <RouteCard
-                    key={route.id}
-                    route={route}
-                    active={selectedRouteId === route.id}
-                    onPress={() => buildRoute(route)}
-                    onStart={() => startRecording('route')}
-                    isRecording={isRecording}
-                  />
-                ))}
-
-                <View style={styles.directRecordCard}>
-                  <View>
-                    <ThemedText style={styles.directRecordTitle}>Tự record luôn</ThemedText>
-                    <ThemedText style={styles.directRecordMeta}>
-                      Không cần chọn route, WillFit sẽ lưu track này sau khi kết thúc.
-                    </ThemedText>
-                  </View>
-                  <ModernSwipeButton
-                    label='Trượt để bắt đầu ghi'
-                    completeLabel='Đang ghi'
-                    disabled={isRecording}
-                    onComplete={() => startRecording('free')}
-                  />
-                </View>
-              </>
-            )}
-
-            {activePanel === 'segments' && (
-              <>
-                <View style={styles.sectionHeader}>
-                  <View>
-                    <ThemedText style={styles.sheetTitle}>Nearby segments</ThemedText>
-                    <ThemedText style={styles.sheetSubtitle}>Star, preview, and chase local efforts</ThemedText>
-                  </View>
-                  <TouchableOpacity
-                    activeOpacity={0.82}
-                    style={[styles.smallToggle, showSegments && styles.smallToggleActive]}
-                    onPress={() => setShowSegments(value => !value)}>
-                    <TrendingUp size={16} color={showSegments ? '#FFFFFF' : '#111111'} />
-                  </TouchableOpacity>
-                </View>
-
-                <View style={styles.segmentHero}>
-                  <View>
-                    <ThemedText style={styles.segmentHeroTitle}>{selectedSegment.title}</ThemedText>
-                    <ThemedText style={styles.segmentHeroMeta}>
-                      {selectedSegment.distanceKm.toFixed(2)} km • {selectedSegment.grade} • PR {selectedSegment.bestTime}
-                    </ThemedText>
-                  </View>
-                  <View style={styles.segmentHeroActions}>
-                    <Share2 size={18} color='#FFFFFF' />
-                    <Flame size={28} color='#FF5A1F' />
-                  </View>
-                </View>
-
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.segmentFilterRow}>
-                  {SEGMENT_FILTERS.map(filter => {
-                    const isActive = segmentFilter === filter;
-
-                    return (
-                      <TouchableOpacity
-                        key={filter}
-                        activeOpacity={0.82}
-                        style={[styles.segmentFilterChip, isActive && styles.segmentFilterChipActive]}
-                        onPress={() => setSegmentFilter(filter)}>
-                        <ThemedText style={[styles.segmentFilterText, isActive && styles.segmentFilterTextActive]}>
-                          {filter}
-                        </ThemedText>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </ScrollView>
-
-                {filteredSegments.map(segment => (
-                  <TouchableOpacity
-                    key={segment.id}
-                    activeOpacity={0.82}
-                    style={[styles.segmentCard, selectedSegmentId === segment.id && styles.segmentCardActive]}
-                    onPress={() => setSelectedSegmentId(segment.id)}>
-                    <View style={styles.segmentIcon}>
-                      {segment.starred ? <Star size={17} color='#FF8A00' fill='#FF8A00' /> : <TrendingUp size={17} color='#36D399' />}
-                    </View>
-                    <View style={styles.segmentContent}>
-                      <ThemedText style={styles.segmentTitle}>{segment.title}</ThemedText>
-                      <ThemedText style={styles.segmentMeta}>
-                        {segment.distanceKm.toFixed(2)} km • {segment.grade} • best {segment.bestTime}
-                      </ThemedText>
-                    </View>
-                  </TouchableOpacity>
-                ))}
-              </>
-            )}
-
-            {activePanel === 'record' && (
-              <>
-                <View style={styles.sectionHeader}>
-                  <View>
-                    <ThemedText style={styles.sheetTitle}>
-                      {isRecording ? recordingTitle : 'Record activity'}
-                    </ThemedText>
-                    <ThemedText style={styles.sheetSubtitle}>
-                      {isRecording ? 'Trượt để kết thúc và lưu lại cung đường.' : 'Record ngay, rồi lưu route cho lần sau.'}
-                    </ThemedText>
-                  </View>
-                  <TouchableOpacity
-                    activeOpacity={0.82}
-                    style={[styles.beaconPill, beaconEnabled && styles.beaconPillActive]}
-                    onPress={() => setBeaconEnabled(value => !value)}>
-                    <RadioTower size={15} color={beaconEnabled ? '#FFFFFF' : '#111111'} />
-                    <ThemedText style={[styles.beaconText, beaconEnabled && styles.beaconTextActive]}>Beacon</ThemedText>
-                  </TouchableOpacity>
-                </View>
-
-                <View style={styles.recordGrid}>
-                  <StatBlock label='Time' value={formatDuration(elapsedSeconds)} />
-                  <StatBlock label='Distance' value={formatDistance(liveDistanceMeters)} />
-                  <StatBlock label='Pace' value={formatPace(liveDistanceMeters, elapsedSeconds)} />
-                  <StatBlock label='Splits' value={liveDistanceMeters > 1000 ? '1 logged' : '--'} />
-                </View>
-
-                <View style={styles.recordControlsNew}>
-                  {!isRecording ? (
-                    <ModernSwipeButton
-                      label='Trượt để bắt đầu ghi'
-                      onComplete={() => startRecording('free')}
-                    />
-                  ) : (
-                    <>
-                      <View style={styles.secondaryControls}>
-                        <TouchableOpacity activeOpacity={0.88} style={styles.pauseButtonNew} onPress={pauseRecording}>
-                          <View style={styles.pauseIconWrap}>
-                            {isPaused ? <Play size={20} color='#111111' fill='#111111' /> : <Pause size={20} color='#111111' fill='#111111' />}
-                          </View>
-                          <ThemedText style={styles.pauseLabel}>{isPaused ? 'Tiếp tục' : 'Tạm dừng'}</ThemedText>
-                        </TouchableOpacity>
-                      </View>
-                      <ModernSwipeButton
-                        tone='finish'
-                        label='Trượt để kết thúc và lưu'
-                        onComplete={finishRecording}
-                      />
-                    </>
-                  )}
-                </View>
-
-                <View style={styles.liveSplits}>
-                  <View style={styles.splitIcon}>
-                    <Timer size={18} color='#FF8A00' />
-                  </View>
-                  <View>
-                    <ThemedText style={styles.splitTitle}>Auto splits</ThemedText>
-                    <ThemedText style={styles.splitMeta}>Every kilometer gets summarized while recording.</ThemedText>
-                  </View>
-                </View>
-              </>
-            )}
-          </ScrollView>
-        </Animated.View>
-      </GestureDetector>
-
+      {(recordPanelVisible || isRecording) && (
+        <View style={styles.recordSplitOverlay}>
+          <SplitView
+            topSectionItems={recordTopItems}
+            bottomSectionItems={recordBottomItems}
+            bottomSectionTitle={isRecording ? 'Đang record' : 'Chuẩn bị'}
+            initialTopSectionHeight={recordSplitInitialTopHeight}
+            minSectionHeight={recordSplitMinTopHeight}
+            maxTopSectionHeight={recordSplitMaxTopHeight}
+            velocityThreshold={900}
+            springConfig={recordSplitSpringConfig}
+            containerBackgroundColor='#101114'
+            sectionBackgroundColor='#FFFFFF'
+            dividerBackgroundColor='#101114'
+            dragHandleColor='#FF5A1F'
+            renderTopItem={renderRecordTopItem}
+            renderBottomItem={renderRecordBottomItem}
+            renderHeader={renderRecordSplitHeader}
+            topKeyExtractor={item => item.id}
+            bottomKeyExtractor={item => item.id}
+            showHeader={false}
+            topListContentContainerStyle={styles.recordSplitTopContent}
+            bottomListContentContainerStyle={styles.recordSplitBottomContent}
+            sectionTitleStyle={styles.recordSplitSectionTitle}
+            sectionTitleTextColor='#111111'
+          />
+        </View>
+      )}
     </ThemedView>
   );
 }
@@ -883,86 +706,53 @@ function StatBlock({ label, value }: { label: string; value: string }) {
   );
 }
 
-function ActionButton({
-  label,
-  icon: Icon,
-  active,
-  onPress,
-}: {
-  label: string;
-  icon: LucideIcon;
-  active?: boolean;
-  onPress: () => void;
-}) {
+function RouteCarouselCard({ route, width, active, onPress }: { route: RouteChoice; width: number; active: boolean; onPress: () => void }) {
   return (
-    <TouchableOpacity
-      activeOpacity={0.82}
-      style={[styles.actionButton, active && styles.actionButtonActive]}
-      onPress={onPress}>
-      <Icon size={16} color={active ? '#FFFFFF' : '#111111'} />
-      <ThemedText style={[styles.actionText, active && styles.actionTextActive]}>{label}</ThemedText>
-    </TouchableOpacity>
-  );
-}
+    <View style={[styles.routeCarouselCard, { width }, active && styles.routeCarouselCardActive]}>
+      <TouchableOpacity activeOpacity={0.9} style={styles.routeCarouselTapArea} onPress={onPress}>
+        <View style={styles.routeThumbnail}>
+          <View style={styles.routeThumbnailSky} />
+          <View style={styles.routeThumbnailWater} />
+          <View style={styles.routeThumbnailRoad} />
+          <View style={styles.routeThumbnailLine} />
+        </View>
+        <View style={styles.routeCarouselBody}>
+          <View style={styles.routeCarouselTitleRow}>
+            <ThemedText numberOfLines={1} style={styles.routeCarouselTitle}>
+              {route.title}
+            </ThemedText>
+            <View style={[styles.routeCarouselBadge, route.source === 'saved' && styles.routeCarouselSavedBadge]}>
+              {route.source === 'saved' ? <Download size={12} color='#5BD67D' /> : <Sparkles size={12} color='#FF8A00' />}
+              <ThemedText style={[styles.routeCarouselBadgeText, route.source === 'saved' && styles.routeCarouselSavedText]}>
+                {route.source === 'saved' ? 'Đã lưu' : 'Đề xuất'}
+              </ThemedText>
+            </View>
+          </View>
 
-function PreferenceChip({ label, value, onPress }: { label: string; value: string; onPress: () => void }) {
-  return (
-    <TouchableOpacity activeOpacity={0.82} style={styles.preferenceChip} onPress={onPress}>
-      <ThemedText style={styles.preferenceLabel}>{label}</ThemedText>
-      <ThemedText style={styles.preferenceValue}>{value}</ThemedText>
-    </TouchableOpacity>
-  );
-}
+          <View style={styles.routeCarouselMetaRow}>
+            <ThemedText style={styles.routeCarouselMeta}>{route.distanceKm.toFixed(1)} km</ThemedText>
+            <View style={styles.routeMetaDot} />
+            <ThemedText style={styles.routeCarouselMeta}>{route.elevationM} m</ThemedText>
+            <View style={styles.routeMetaDot} />
+            <ThemedText style={styles.routeCarouselMeta}>0 giờ {route.estimatedMinutes} phút</ThemedText>
+          </View>
 
-function RouteCard({
-  route,
-  active,
-  onPress,
-  onStart,
-  isRecording,
-}: {
-  route: RouteChoice;
-  active: boolean;
-  onPress: () => void;
-  onStart: () => void;
-  isRecording: boolean;
-}) {
-  return (
-    <TouchableOpacity activeOpacity={0.84} style={[styles.routeCard, active && styles.routeCardActive]} onPress={onPress}>
-      <View style={styles.routePreview}>
-        <View style={styles.routePreviewGlow} />
-        <MapPinned size={22} color='#FFFFFF' />
-      </View>
-      <View style={styles.routeCardBody}>
-        <View style={styles.routeCardHeader}>
-          <ThemedText numberOfLines={1} style={styles.routeTitle}>{route.title}</ThemedText>
-          <View style={[styles.routeBadge, route.source === 'saved' && styles.savedBadge]}>
-            {route.source === 'saved' ? <Download size={12} color='#5BD67D' /> : <Sparkles size={12} color='#FF8A00' />}
-            <ThemedText style={[styles.routeBadgeText, route.source === 'saved' && styles.savedBadgeText]}>
-              {route.source === 'saved' ? 'Đã lưu' : 'Gợi ý'}
+          <View style={styles.routeLocationRow}>
+            <LocateFixed size={14} color='#C8CCD2' />
+            <ThemedText numberOfLines={1} style={styles.routeLocationText}>
+              Vị trí hiện tại
+            </ThemedText>
+          </View>
+
+          <View style={styles.routePrivacyRow}>
+            <MapPinned size={14} color='#FF5A1F' />
+            <ThemedText numberOfLines={1} style={styles.routePrivacyText}>
+              Được thiết kế riêng cho bạn
             </ThemedText>
           </View>
         </View>
-        <ThemedText style={styles.routeMeta}>
-          {route.distanceKm.toFixed(1)} km • {route.elevationM} m • {route.estimatedMinutes} phút
-        </ThemedText>
-        <ThemedText style={styles.routeSurface}>
-          {route.surface} • riêng tư cho bạn
-        </ThemedText>
-        {active ? (
-          <View style={styles.routeStartWrap}>
-            <ModernSwipeButton
-              label='Trượt để bắt đầu cung đường'
-              completeLabel='Đang chạy'
-              disabled={isRecording}
-              onComplete={onStart}
-            />
-          </View>
-        ) : (
-          <ThemedText style={styles.routePreviewText}>Chạm để xem trên bản đồ</ThemedText>
-        )}
-      </View>
-    </TouchableOpacity>
+      </TouchableOpacity>
+    </View>
   );
 }
 
@@ -1069,6 +859,253 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: 0,
   },
+  routeCarouselOverlay: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+  },
+  carouselFilterRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 16,
+    marginBottom: 8,
+  },
+  carouselFilterPill: {
+    minHeight: 34,
+    borderRadius: 8,
+    backgroundColor: '#111111',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+    paddingHorizontal: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+  },
+  carouselFilterText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 0,
+  },
+  routeCarouselContent: {
+    marginTop: 0,
+    marginBottom: 0,
+    bottom: 0,
+  },
+  routeCarouselCard: {
+    minHeight: 118,
+    borderRadius: 8,
+    backgroundColor: '#101114',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    padding: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 8 },
+    shadowRadius: 16,
+    elevation: 10,
+  },
+  routeCarouselCardActive: {
+    borderColor: '#FF5A1F',
+  },
+  routeCarouselTapArea: {
+    flexDirection: 'row',
+    gap: 12,
+    minHeight: 98,
+  },
+  routeThumbnail: {
+    width: 92,
+    alignSelf: 'stretch',
+    borderRadius: 8,
+    overflow: 'hidden',
+    backgroundColor: '#22262B',
+  },
+  routeThumbnailSky: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '42%',
+    backgroundColor: '#6B7B73',
+  },
+  routeThumbnailWater: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: '42%',
+    backgroundColor: '#222F3A',
+  },
+  routeThumbnailRoad: {
+    position: 'absolute',
+    left: -10,
+    right: -12,
+    bottom: 26,
+    height: 34,
+    backgroundColor: '#52625F',
+    transform: [{ rotate: '-9deg' }],
+  },
+  routeThumbnailLine: {
+    position: 'absolute',
+    width: 86,
+    height: 6,
+    left: 9,
+    top: 66,
+    borderRadius: 6,
+    backgroundColor: '#FF5A1F',
+    transform: [{ rotate: '-18deg' }],
+  },
+  routeCarouselBody: {
+    flex: 1,
+    minWidth: 0,
+  },
+  routeCarouselTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  routeCarouselTitle: {
+    flex: 1,
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '900',
+    letterSpacing: 0,
+  },
+  routeCarouselBadge: {
+    minHeight: 24,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 90, 31, 0.14)',
+    paddingHorizontal: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  routeCarouselSavedBadge: {
+    backgroundColor: 'rgba(54, 211, 153, 0.14)',
+  },
+  routeCarouselBadgeText: {
+    color: '#FF8A00',
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 0,
+  },
+  routeCarouselSavedText: {
+    color: '#5BD67D',
+  },
+  routeCarouselMetaRow: {
+    marginTop: 7,
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 7,
+  },
+  routeCarouselMeta: {
+    color: '#D8DCE2',
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0,
+  },
+  routeMetaDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#FF5A1F',
+  },
+  routeLocationRow: {
+    marginTop: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  routeLocationText: {
+    color: '#C8CCD2',
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0,
+  },
+  routePrivacyRow: {
+    marginTop: 5,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  routePrivacyText: {
+    flex: 1,
+    color: '#FF5A1F',
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 0,
+  },
+  recordCarouselCard: {
+    minHeight: 118,
+    borderRadius: 8,
+    backgroundColor: '#101114',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    flexDirection: 'row',
+    gap: 12,
+    padding: 10,
+  },
+  recordCardIcon: {
+    width: 54,
+    height: 54,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 90, 31, 0.14)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  recordCardBody: {
+    flex: 1,
+    minWidth: 0,
+  },
+  recordSplitOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 40,
+    backgroundColor: '#101114',
+  },
+  recordSplitTopContent: {
+    gap: 14,
+    padding: 16,
+    paddingBottom: 22,
+  },
+  recordSplitBottomContent: {
+    gap: 12,
+    padding: 16,
+    paddingBottom: 34,
+  },
+  recordSplitSectionTitle: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 16,
+    paddingTop: 12,
+  },
+  recordRouteDetail: {
+    borderRadius: 8,
+    backgroundColor: '#F7F7F8',
+    padding: 14,
+    gap: 11,
+  },
+  recordDetailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 14,
+  },
+  recordDetailLabel: {
+    color: '#777B84',
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0,
+  },
+  recordDetailValue: {
+    flex: 1,
+    color: '#111111',
+    fontSize: 13,
+    fontWeight: '900',
+    letterSpacing: 0,
+    textAlign: 'right',
+  },
   sheet: {
     position: 'absolute',
     left: 0,
@@ -1131,6 +1168,29 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: 12,
     marginBottom: 14,
+  },
+  recordHeaderText: {
+    flex: 1,
+    minWidth: 0,
+  },
+  sheetActionRow: {
+    alignItems: 'flex-end',
+    gap: 8,
+  },
+  changeRoutePill: {
+    minHeight: 34,
+    paddingHorizontal: 11,
+    borderRadius: 8,
+    backgroundColor: '#F1F2F4',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  changeRouteText: {
+    color: '#111111',
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 0,
   },
   sheetTitle: {
     color: '#111111',
@@ -1660,6 +1720,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  splitBody: {
+    flex: 1,
+    minWidth: 0,
   },
   splitTitle: {
     color: '#111111',

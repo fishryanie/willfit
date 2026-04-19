@@ -154,8 +154,72 @@ export async function fetchOsrmRoute(waypoints: Coordinate[], mode: ActivityMode
   }));
 }
 
-export function createRouteSummaries(center: Coordinate): RouteSummary[] {
+export function createRouteSummaries(center: Coordinate, mode: ActivityMode = 'run'): RouteSummary[] {
   const baseElevation = Math.round(Math.abs(center.latitude - 10) * 40);
+
+  if (mode === 'walk') {
+    return [
+      {
+        id: 'walk-neighborhood',
+        title: 'Neighborhood easy walk',
+        distanceKm: 3.2,
+        elevationM: 12 + baseElevation,
+        estimatedMinutes: 38,
+        surface: 'Sidewalk + park path',
+        popularity: 92,
+      },
+      {
+        id: 'walk-park-loop',
+        title: 'Park walking loop',
+        distanceKm: 5.8,
+        elevationM: 20 + baseElevation,
+        estimatedMinutes: 70,
+        surface: 'Park path',
+        popularity: 89,
+      },
+      {
+        id: 'walk-long-loop',
+        title: 'Long city walk',
+        distanceKm: 9.6,
+        elevationM: 34 + baseElevation,
+        estimatedMinutes: 116,
+        surface: 'Road + sidewalk',
+        popularity: 82,
+      },
+    ];
+  }
+
+  if (mode === 'ride') {
+    return [
+      {
+        id: 'ride-river-loop',
+        title: 'River ride loop',
+        distanceKm: 12.4,
+        elevationM: 38 + baseElevation,
+        estimatedMinutes: 40,
+        surface: 'Road + riverside path',
+        popularity: 94,
+      },
+      {
+        id: 'ride-city-tempo',
+        title: 'City tempo ride',
+        distanceKm: 24.8,
+        elevationM: 86 + baseElevation,
+        estimatedMinutes: 78,
+        surface: 'Road',
+        popularity: 88,
+      },
+      {
+        id: 'ride-long-aerobic',
+        title: 'Long aerobic ride',
+        distanceKm: 42,
+        elevationM: 160 + baseElevation,
+        estimatedMinutes: 132,
+        surface: 'Mixed road',
+        popularity: 81,
+      },
+    ];
+  }
 
   return [
     {
