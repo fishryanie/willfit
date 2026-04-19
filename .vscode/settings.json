@@ -4,5 +4,10 @@
     "source.organizeImports": "explicit",
     "source.sortMembers": "explicit"
   },
-  "cSpell.words": ["Pressable", "willfit", "worklets"]
+  "cSpell.words": [
+    "Pressable",
+    "reacticx",
+    "willfit",
+    "worklets"
+  ]
 }

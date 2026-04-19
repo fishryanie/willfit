@@ -1,62 +1,76 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
-import { HelloWave } from 'components/hello-wave';
-import ParallaxScrollView from 'components/parallax-scroll-view';
-import { ThemedText } from 'components/themed-text';
+import React from 'react';
+import { StyleSheet, View, ScrollView } from 'react-native';
+import { DashboardHeader } from 'components/dashboard/dashboard-header';
+import { MetricGridCard } from 'components/dashboard/metric-grid-card';
+import { MetricChips } from 'components/dashboard/metric-chips';
 import { ThemedView } from 'components/themed-view';
-import { HealthTrackerCard } from 'components/health/tracker-card';
 
 export default function HomeScreen() {
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">WillFit</ThemedText>
-        <HelloWave />
-      </ThemedView>
+    <ThemedView flex>
+      <DashboardHeader name="Sofia" />
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <MetricChips />
 
-      <ThemedView style={styles.contentContainer}>
-        <HealthTrackerCard />
-        
-        <ThemedView style={styles.infoContainer}>
-          <ThemedText type="subtitle">Sức khỏe của bạn</ThemedText>
-          <ThemedText>
-            Theo dõi vận động hàng ngày giúp bạn duy trì vóc dáng và sức khỏe bền bỉ.
-          </ThemedText>
-        </ThemedView>
-      </ThemedView>
-    </ParallaxScrollView>
+        <View style={styles.metricRow}>
+          <MetricGridCard
+            title="Calories"
+            value="5,839"
+            unit="kcal"
+            progress={0.7}
+            progressColor="#222"
+            icon="flame"
+            iconColor="#222"
+          />
+          <MetricGridCard
+            title="Water"
+            value="1,200"
+            unit="ml"
+            progress={0.4}
+            progressColor="#222"
+            icon="water"
+            iconColor="#222"
+          />
+        </View>
+
+        <View style={styles.metricRow}>
+          <MetricGridCard
+            title="Sleep"
+            value="7.30"
+            unit="hrs"
+            progress={0.8}
+            progressColor="#222"
+            icon="moon"
+            iconColor="#222"
+          />
+          <MetricGridCard
+            title="Weight"
+            value="92"
+            unit="kg"
+            progress={0.6}
+            progressColor="#222"
+            icon="barbell"
+            iconColor="#222"
+          />
+        </View>
+
+        <View style={{ height: 120 }} />
+      </ScrollView>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  scrollContent: {
+    paddingBottom: 100,
+  },
+  metricRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingTop: 16,
-  },
-  contentContainer: {
-    paddingHorizontal: 16,
     gap: 16,
-  },
-  infoContainer: {
-    gap: 8,
-    marginTop: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+    paddingHorizontal: 20,
+    marginBottom: 16,
   },
 });

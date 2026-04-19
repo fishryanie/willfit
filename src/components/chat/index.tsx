@@ -1,17 +1,12 @@
-import React, { useState, useCallback, useEffect } from "react";
-import { View, StyleSheet, Text, LayoutAnimation } from "react-native";
+import React, { useState, useCallback } from "react";
+import { View, StyleSheet, Text, LayoutAnimation, Platform } from "react-native";
 import { GiftedChat, IMessage, Bubble } from "react-native-gifted-chat";
 import { StreamingText } from "./streaming-text";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { InputBar } from "./input-bar";
 import { useResponsive } from "hooks/use-responsive";
-import { useFonts } from "expo-font";
 import { IChipOption } from "./types";
-import {
-  MaterialCommunityIcons,
-  Ionicons,
-  FontAwesome,
-} from "@expo/vector-icons";
+import { CodeXml, Image, PartyPopper, Scale } from "lucide-react-native";
 import { EmptyChipGrid } from "./empty-chat-options";
 import { ChatHeader } from "./header";
 
@@ -44,11 +39,6 @@ export default function ChatV1() {
   const headerHeight = useHeaderHeight();
   const screen = useResponsive();
 
-  const [fontLoaded] = useFonts({
-    SfProRounded: require("assets/fonts/sf-pro-rounded.ttf"),
-    HelveticaNowDisplay: require("assets/fonts/HelveticaNowDisplayMedium.ttf"),
-  });
-
   const handleStreamComplete = useCallback((id: string) => {
     setStreamingIds((prev) => {
       const next = new Set(prev);
@@ -76,14 +66,11 @@ export default function ChatV1() {
     }, 400);
   }, []);
 
-  useEffect(() => {
-    setMessages([]);
-  }, []);
   const CHIP_OPTIONS: IChipOption[] = [
     {
       text: "Surprise me",
       icon: (
-        <MaterialCommunityIcons name="party-popper" size={18} color="#E5E5E5" />
+        <PartyPopper size={18} color="#E5E5E5" />
       ),
       onPress: () =>
         onSend([
@@ -99,7 +86,7 @@ export default function ChatV1() {
     },
     {
       text: "Transform image",
-      icon: <Ionicons name="image-outline" size={18} color="#E5E5E5" />,
+      icon: <Image size={18} color="#E5E5E5" />,
       onPress: () =>
         onSend([
           {
@@ -114,7 +101,7 @@ export default function ChatV1() {
     },
     {
       text: "Learn maths",
-      icon: <FontAwesome name="balance-scale" size={16} color="#E5E5E5" />,
+      icon: <Scale size={16} color="#E5E5E5" />,
       onPress: () =>
         onSend([
           {
@@ -129,7 +116,7 @@ export default function ChatV1() {
     },
     {
       text: "Learn coding",
-      icon: <Ionicons name="code-slash-outline" size={18} color="#E5E5E5" />,
+      icon: <CodeXml size={18} color="#E5E5E5" />,
       onPress: () =>
         onSend([
           {
@@ -241,7 +228,7 @@ export default function ChatV1() {
                   style={{
                     fontSize: screen.rf(32),
                     color: "#fff",
-                    fontFamily: fontLoaded ? "HelveticaNowDisplay" : undefined,
+                    fontFamily: Platform.OS === 'ios' ? 'Helvetica' : 'sans-serif-medium',
                   }}
                 >
                   👋 Hello, rit3zh
@@ -250,7 +237,7 @@ export default function ChatV1() {
                   style={{
                     fontSize: screen.rf(18),
                     color: "#555",
-                    fontFamily: fontLoaded ? "SfProRounded" : undefined,
+                    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
                   }}
                 >
                   How can i assist you today?
@@ -270,7 +257,7 @@ export default function ChatV1() {
                     paddingHorizontal: screen.rf(28),
                   }}
                   labelStyle={{
-                    fontFamily: fontLoaded ? "SfProRounded" : undefined,
+                    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
                     fontSize: screen.rv({
                       compact: 14,
                       medium: 16,

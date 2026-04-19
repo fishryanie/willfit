@@ -1,33 +1,61 @@
 import { Tabs } from 'expo-router';
-import React from 'react';
-
-import { HapticTab } from 'components/haptic-tab';
-import { IconSymbol } from 'components/ui/icon-symbol';
-import { Colors } from 'constants/theme';
-import { useColorScheme } from 'hooks/use-color-scheme';
+import { BookOpen, House, Map, Plus, UserRound } from 'lucide-react-native';
+import { useThemeColor } from 'hooks/use-theme-color';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const activeColor = useThemeColor({}, 'accent');
+  const inactiveColor = useThemeColor({}, 'tabIconDefault');
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
-        tabBarButton: HapticTab,
+        tabBarActiveTintColor: activeColor,
+        tabBarInactiveTintColor: inactiveColor,
       }}>
       <Tabs.Screen
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          tabBarIcon: ({ color, size }) => (
+            <House size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="workout"
+        options={{
+          title: 'Map',
+          tabBarIcon: ({ color, size }) => (
+            <Map size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="add"
+        options={{
+          title: 'Exercise',
+          tabBarIcon: ({ color, size }) => (
+            <Plus size={size} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="explore"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: 'Meditation',
+          tabBarIcon: ({ color, size }) => (
+            <BookOpen size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="chat"
+        options={{
+          title: 'Profile',
+          tabBarIcon: ({ color, size }) => (
+            <UserRound size={size} color={color} />
+          ),
         }}
       />
     </Tabs>

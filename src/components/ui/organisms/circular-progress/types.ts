@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import type { SharedValue } from "react-native-reanimated";
 
-export interface ICircularProgress {
+interface ICircularProgress {
   progress: SharedValue<number>;
   readonly size?: number;
   readonly strokeWidth?: number;
@@ -13,3 +13,4 @@ export interface ICircularProgress {
   readonly renderIcon?: () => ReactNode;
 }
 
+export type { ICircularProgress };

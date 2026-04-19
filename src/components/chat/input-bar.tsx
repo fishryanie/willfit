@@ -4,12 +4,17 @@ import {
   TextInput,
   StyleSheet,
   Pressable,
-  Platform,
   type TextInputContentSizeChangeEvent,
 } from "react-native";
 import { useResponsive } from "hooks/use-responsive";
-import { Feather, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { SymbolView } from "expo-symbols";
+import {
+  ArrowUp,
+  AudioWaveform,
+  Globe,
+  Megaphone,
+  Mic,
+  Plus,
+} from "lucide-react-native";
 
 const MAX_LINES = 5;
 
@@ -79,26 +84,22 @@ export const InputBar: React.FC<InputBarProps> = ({
         <View style={styles.bottomRow}>
           <View style={styles.leftIcons}>
             <Pressable>
-              <Feather name="plus" size={iconSize} color="#CFCFCF" />
+              <Plus size={iconSize} color="#CFCFCF" />
             </Pressable>
 
             <Pressable>
-              <Ionicons name="globe-outline" size={iconSize} color="#CFCFCF" />
+              <Globe size={iconSize} color="#CFCFCF" />
             </Pressable>
 
             <Pressable>
-              <MaterialCommunityIcons
-                name="bullhorn-outline"
-                size={iconSize}
-                color="#CFCFCF"
-              />
+              <Megaphone size={iconSize} color="#CFCFCF" />
             </Pressable>
           </View>
 
           <View style={styles.rightIcons}>
             {value.length === 0 ? (
               <>
-                <Feather name="mic" size={iconSize} color="#CFCFCF" />
+                <Mic size={iconSize} color="#CFCFCF" />
                 <View
                   style={[
                     styles.voiceCircle,
@@ -109,17 +110,7 @@ export const InputBar: React.FC<InputBarProps> = ({
                     },
                   ]}
                 >
-                  {Platform.OS === "ios" ? (
-                    <>
-                      <SymbolView
-                        name="waveform"
-                        tintColor={"#000"}
-                        size={iconSize}
-                      />
-                    </>
-                  ) : (
-                    <Ionicons name="walk" size={iconSize} color="#000" />
-                  )}
+                  <AudioWaveform size={iconSize} color="#000" />
                 </View>
               </>
             ) : (
@@ -134,7 +125,7 @@ export const InputBar: React.FC<InputBarProps> = ({
                   },
                 ]}
               >
-                <Ionicons name="arrow-up" size={iconSize} color="#000" />
+                <ArrowUp size={iconSize} color="#000" />
               </Pressable>
             )}
           </View>

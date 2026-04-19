@@ -6,7 +6,7 @@ import { RollingCounter } from 'components/ui/organisms/rolling-counter';
 import { ThemedText } from 'components/themed-text';
 import { ThemedView } from 'components/themed-view';
 import { useHealthTracker } from 'hooks/use-health-tracker';
-import { Ionicons } from '@expo/vector-icons';
+import { ChartColumnIncreasing, Footprints, Map } from 'lucide-react-native';
 
 const STEP_GOAL = 10000;
 
@@ -22,17 +22,24 @@ export function HealthTrackerCard() {
 
   if (!isPermissionsGranted) {
     return (
-      <ThemedView style={styles.container}>
+      <ThemedView padding={16} radius={24} marginVertical={12}>
         <ThemedText>Vui lòng cấp quyền để theo dõi sức khỏe.</ThemedText>
       </ThemedView>
     );
   }
 
   return (
-    <ThemedView style={[styles.container, styles.card]}>
+    <ThemedView
+      padding={16}
+      radius={24}
+      marginVertical={12}
+      borderWidth={StyleSheet.hairlineWidth}
+      borderColor="rgba(150, 150, 150, 0.2)"
+      style={styles.card}
+    >
       <View style={styles.header}>
         <ThemedText type="subtitle">Hôm nay</ThemedText>
-        <Ionicons name="stats-chart" size={20} color={colorScheme === 'dark' ? '#fff' : '#000'} />
+        <ChartColumnIncreasing size={20} color={colorScheme === 'dark' ? '#fff' : '#000'} />
       </View>
 
       <View style={styles.mainContent}>
@@ -61,7 +68,7 @@ export function HealthTrackerCard() {
 
         <View style={styles.statsRow}>
           <View style={styles.statItem}>
-            <Ionicons name="footsteps" size={24} color="#4CAF50" />
+            <Footprints size={24} color="#4CAF50" />
             <ThemedText type="defaultSemiBold">Bước chân</ThemedText>
             <ThemedText>{steps}</ThemedText>
           </View>
@@ -69,7 +76,7 @@ export function HealthTrackerCard() {
           <View style={styles.divider} />
 
           <View style={styles.statItem}>
-            <Ionicons name="map" size={24} color="#2196F3" />
+            <Map size={24} color="#2196F3" />
             <ThemedText type="defaultSemiBold">Quãng đường</ThemedText>
             <ThemedText>{distanceKm} km</ThemedText>
           </View>
@@ -80,19 +87,12 @@ export function HealthTrackerCard() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 16,
-    borderRadius: 24,
-    marginVertical: 12,
-  },
   card: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 12,
     elevation: 4,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(150, 150, 150, 0.2)',
   },
   header: {
     flexDirection: 'row',

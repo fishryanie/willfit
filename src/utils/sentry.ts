@@ -7,7 +7,7 @@ export const navigationIntegration = Sentry.reactNavigationIntegration({
 
 export const initSentry = () => {
   Sentry.init({
-    dsn: process.env.EXPO_PUBLIC_SENTRY_DSN || 'YOUR_SENTRY_DSN_HERE',
+    dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
     debug: false,
     sendDefaultPii: true,
 
