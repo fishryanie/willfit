@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { BookOpen, House, Map, Plus, UserRound } from 'lucide-react-native';
+import { BookOpen, House, Map, MessageCircle, Plus } from 'lucide-react-native';
 import { useThemeColor } from 'hooks/use-theme-color';
 
 export default function TabLayout() {
@@ -14,48 +14,38 @@ export default function TabLayout() {
         tabBarInactiveTintColor: inactiveColor,
       }}>
       <Tabs.Screen
-        name="index"
+        name='index'
         options={{
           title: 'Home',
-          tabBarIcon: ({ color, size }) => (
-            <House size={size} color={color} />
-          ),
+          tabBarIcon: ({ color, size }) => <House size={size} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="workout"
+        name='workout'
         options={{
           title: 'Map',
-          tabBarIcon: ({ color, size }) => (
-            <Map size={size} color={color} />
-          ),
+          tabBarIcon: ({ color, size }) => <Map size={size} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="add"
+        name='add'
         options={{
           title: 'Exercise',
-          tabBarIcon: ({ color, size }) => (
-            <Plus size={size} color={color} />
-          ),
+          tabBarIcon: ({ color, size }) => <Plus size={size} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name='explore'
         options={{
           title: 'Meditation',
-          tabBarIcon: ({ color, size }) => (
-            <BookOpen size={size} color={color} />
-          ),
+          tabBarIcon: ({ color, size }) => <BookOpen size={size} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="chat"
+        name='chat'
         options={{
-          title: 'Profile',
-          tabBarIcon: ({ color, size }) => (
-            <UserRound size={size} color={color} />
-          ),
+          title: 'Message',
+          tabBarIcon: ({ color, size }) => <MessageCircle size={size} color={color} />,
         }}
       />
     </Tabs>

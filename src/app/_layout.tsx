@@ -7,7 +7,9 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import 'react-native-reanimated';
 
+import { AppDialogHost } from 'components/app-dialog-host';
 import { AppDrawerProvider } from 'components/drawer/app-drawer';
+import { ToastProviderWithViewport } from 'components/ui/molecules/Toast';
 import { ThemeProvider as ReacticxThemeProvider, ThemeMode } from 'components/ui/organisms/theme-switch/context';
 import { useThemeMode } from 'components/ui/organisms/theme-switch/hooks';
 import { Colors } from 'constants/theme';
@@ -15,7 +17,7 @@ import { Sentry, initSentry, navigationIntegration } from 'utils/sentry';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { api } from 'lib/api';
 import { useAuthStore } from 'store/use-auth-store';
-import { storage } from 'lib/storage';
+import { STORAGE_KEY, storage } from 'lib/storage';
 
 initSentry();
 
@@ -49,7 +51,7 @@ function RootLayout() {
   useEffect(() => {
     let isMounted = true;
 
-    void storage.getItem('willfit:theme-mode').then(value => {
+    void storage.getItem(STORAGE_KEY.THEME_MODE).then(value => {
       if (!isMounted) {
         return;
       }
@@ -66,7 +68,7 @@ function RootLayout() {
   }, []);
 
   const persistThemeMode = useCallback((theme: ThemeMode) => {
-    void storage.setItem('willfit:theme-mode', theme);
+    void storage.setItem(STORAGE_KEY.THEME_MODE, theme);
   }, []);
 
   return (
@@ -93,7 +95,10 @@ function RootLayout() {
               accent: Colors.dark.accent,
               primary: Colors.dark.tint,
             }}>
-            <RootLayoutContent />
+            <ToastProviderWithViewport>
+              <RootLayoutContent />
+              <AppDialogHost />
+            </ToastProviderWithViewport>
           </ReacticxThemeProvider>
         </KeyboardProvider>
       </QueryClientProvider>
@@ -114,7 +119,7 @@ function RootLayoutContent() {
 
   useEffect(() => {
     const initializeSession = async () => {
-      const refreshToken = await storage.getItem('willfit:theme-mode');
+      const refreshToken = await storage.getItem(STORAGE_KEY.REFRESH_TOKEN);
 
       if (refreshToken && !useAuthStore.getState().accessToken) {
         try {
@@ -138,6 +143,7 @@ function RootLayoutContent() {
       <AppDrawerProvider>
         <Stack>
           <Stack.Screen name='(tabs)' options={{ headerShown: false }} />
+          <Stack.Screen name='chat/[id]' options={{ headerShown: false }} />
           <Stack.Screen name='modal' options={{ presentation: 'modal', title: 'Modal' }} />
         </Stack>
         <StatusBar style={isDarkTheme ? 'light' : 'dark'} />

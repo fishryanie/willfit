@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, View, TouchableOpacity, useColorScheme } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import { BookOpen, House, Map, Plus, UserRound, type LucideIcon } from 'lucide-react-native';
+import { BookOpen, House, Map, MessageCircle, Plus, type LucideIcon } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemedText } from 'components/themed-text';
 import { useThemeColor } from 'hooks/use-theme-color';
@@ -11,7 +11,7 @@ const TAB_ICONS: Record<string, LucideIcon> = {
   workout: Map,
   add: Plus,
   explore: BookOpen,
-  chat: UserRound,
+  chat: MessageCircle,
 };
 
 export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
@@ -45,17 +45,9 @@ export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarPro
           const activeItemContentColor = colorScheme === 'dark' ? '#000' : '#FFF';
 
           return (
-            <TouchableOpacity
-              key={route.key}
-              onPress={onPress}
-              style={[styles.tabItem, isFocused && { backgroundColor: accentColor }]}
-            >
+            <TouchableOpacity key={route.key} onPress={onPress} style={[styles.tabItem, isFocused && { backgroundColor: accentColor }]}>
               <Icon size={22} color={isFocused ? activeItemContentColor : '#8E8E93'} />
-              {isFocused && (
-                <ThemedText style={[styles.activeLabel, { color: activeItemContentColor }]}>
-                   {label}
-                </ThemedText>
-              )}
+              {isFocused && <ThemedText style={[styles.activeLabel, { color: activeItemContentColor }]}>{label}</ThemedText>}
             </TouchableOpacity>
           );
         })}

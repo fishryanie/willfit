@@ -22,6 +22,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-na
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from 'components/themed-text';
+import { appToast } from 'lib/app-toast';
 
 type WorkoutSet = {
   id: string;
@@ -88,11 +89,13 @@ export function WorkoutEntrySheet({ visible, onClose }: WorkoutEntrySheetProps) 
       return;
     }
 
-    translateY.value = sheetHeight;
-    translateY.value = withSpring(0, {
-      damping: 24,
-      stiffness: 170,
-    });
+    translateY.set(sheetHeight);
+    translateY.set(
+      withSpring(0, {
+        damping: 24,
+        stiffness: 170,
+      }),
+    );
   }, [sheetHeight, translateY, visible]);
 
   useEffect(() => {
@@ -188,6 +191,11 @@ export function WorkoutEntrySheet({ visible, onClose }: WorkoutEntrySheetProps) 
     ]);
   };
 
+  const finishWorkout = () => {
+    appToast.success('Đã lưu bài tập', `${completedSets}/${totalSets} set đã hoàn tất.`);
+    onClose();
+  };
+
   if (!visible) {
     return null;
   }
@@ -209,7 +217,7 @@ export function WorkoutEntrySheet({ visible, onClose }: WorkoutEntrySheetProps) 
               <View style={[styles.progressArc, { transform: [{ rotate: `${Math.min(completedSets * 36, 300)}deg` }] }]} />
             </View>
             <ThemedText style={styles.timer}>{formatDuration(elapsedSeconds)}</ThemedText>
-            <TouchableOpacity activeOpacity={0.85} style={styles.finishButton} onPress={onClose}>
+            <TouchableOpacity activeOpacity={0.85} style={styles.finishButton} onPress={finishWorkout}>
               <ThemedText style={styles.finishText}>Finish</ThemedText>
             </TouchableOpacity>
           </View>

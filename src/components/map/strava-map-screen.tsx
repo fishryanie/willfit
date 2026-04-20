@@ -4,10 +4,11 @@ import { ThemedView } from 'components/themed-view';
 import { CircularCarousel } from 'components/ui/molecules/circular-carousel';
 import { SplitView } from 'components/ui/molecules/split-view';
 import * as Location from 'expo-location';
+import { appToast } from 'lib/app-toast';
 import { storage } from 'lib/storage';
 import { Download, Flame, Layers, LocateFixed, MapPinned, Pause, Play, RadioTower, Search, Sparkles, Timer, Waves } from 'lucide-react-native';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, type ListRenderItem, StyleSheet, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, type ListRenderItem, StyleSheet, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RouteMap } from './route-map';
 import {
@@ -221,7 +222,7 @@ export function StravaMapScreen() {
       const permission = await Location.requestForegroundPermissionsAsync();
 
       if (permission.status !== 'granted') {
-        Alert.alert('Location needed', 'Turn on location permission to record an activity.');
+        appToast.error('Chưa bật vị trí', 'Cho phép GPS để bắt đầu record hoạt động.');
         return;
       }
 
@@ -283,6 +284,7 @@ export function StravaMapScreen() {
     const recordedTrack = liveCoordinatesRef.current;
 
     if (recordedTrack.length < 2) {
+      appToast.warning('Chưa lưu được cung đường', 'GPS chưa có đủ điểm để tạo cung đường mới.');
       return;
     }
 
@@ -310,6 +312,7 @@ export function StravaMapScreen() {
     setRouteCoordinates(recordedTrack);
     setWaypoints([recordedTrack[0], recordedTrack[recordedTrack.length - 1]]);
     setRouteSource('local');
+    appToast.success('Đã lưu cung đường', `${savedRoute.distanceKm.toFixed(2)} km đã được thêm vào danh sách.`);
   }, [elapsedSeconds, persistSavedRoutes, recordingTitle, savedRoutes.length]);
 
   const pauseRecording = useCallback(() => {
