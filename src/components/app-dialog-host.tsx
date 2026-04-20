@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from 'components/themed-text';
 import { Dialog } from 'components/ui/organisms/dialog';
-import { appDialog, type AppDialogState, type AppDialogTone } from 'lib/app-dialog';
+import { appDialog, type AppDialogState, type AppDialogTone } from 'utils/app-dialog';
 
 type DialogAction = 'cancel' | 'confirm';
 

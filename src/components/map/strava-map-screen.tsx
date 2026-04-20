@@ -4,12 +4,12 @@ import { ThemedView } from 'components/themed-view';
 import { CircularCarousel } from 'components/ui/molecules/circular-carousel';
 import { SplitView } from 'components/ui/molecules/split-view';
 import * as Location from 'expo-location';
-import { appToast } from 'lib/app-toast';
-import { storage } from 'lib/storage';
 import { Download, Flame, Layers, LocateFixed, MapPinned, Pause, Play, RadioTower, Search, Sparkles, Timer, Waves } from 'lucide-react-native';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, type ListRenderItem, StyleSheet, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { appToast } from 'utils/app-toast';
+import { storage } from 'utils/storage';
 import { RouteMap } from './route-map';
 import {
   DEFAULT_COORDINATE,

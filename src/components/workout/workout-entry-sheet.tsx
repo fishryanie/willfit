@@ -1,28 +1,11 @@
-import {
-  Check,
-  Dumbbell,
-  Ellipsis,
-  Plus,
-  Sparkles,
-  TrendingUp,
-  X,
-} from 'lucide-react-native';
-import React, { useEffect, useMemo, useState } from 'react';
-import {
-  Pressable,
-  Modal,
-  ScrollView,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  View,
-  useWindowDimensions,
-} from 'react-native';
+import { Check, Dumbbell, Ellipsis, Plus, Sparkles, TrendingUp, X } from 'lucide-react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { Modal, Pressable, ScrollView, StyleSheet, TextInput, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from 'components/themed-text';
-import { appToast } from 'lib/app-toast';
+import { appToast } from 'utils/app-toast';
 
 type WorkoutSet = {
   id: string;
@@ -75,14 +58,8 @@ export function WorkoutEntrySheet({ visible, onClose }: WorkoutEntrySheetProps) 
   const [elapsedSeconds, setElapsedSeconds] = useState(79);
   const [exercises, setExercises] = useState(INITIAL_EXERCISES);
 
-  const completedSets = useMemo(
-    () => exercises.reduce((count, exercise) => count + exercise.sets.filter(set => set.done).length, 0),
-    [exercises],
-  );
-  const totalSets = useMemo(
-    () => exercises.reduce((count, exercise) => count + exercise.sets.length, 0),
-    [exercises],
-  );
+  const completedSets = useMemo(() => exercises.reduce((count, exercise) => count + exercise.sets.filter(set => set.done).length, 0), [exercises]);
+  const totalSets = useMemo(() => exercises.reduce((count, exercise) => count + exercise.sets.length, 0), [exercises]);
 
   useEffect(() => {
     if (!visible) {
@@ -201,12 +178,7 @@ export function WorkoutEntrySheet({ visible, onClose }: WorkoutEntrySheetProps) 
   }
 
   return (
-    <Modal
-      animationType='none'
-      transparent
-      visible={visible}
-      statusBarTranslucent
-      onRequestClose={onClose}>
+    <Modal animationType='none' transparent visible={visible} statusBarTranslucent onRequestClose={onClose}>
       <View style={styles.portal}>
         <Pressable style={styles.backdrop} onPress={onClose} />
         <Animated.View style={[styles.sheet, sheetStyle]}>
@@ -222,9 +194,7 @@ export function WorkoutEntrySheet({ visible, onClose }: WorkoutEntrySheetProps) 
             </TouchableOpacity>
           </View>
 
-          <ScrollView
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 28 }]}>
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 28 }]}>
             <View style={styles.titleRow}>
               <View>
                 <ThemedText style={styles.workoutTitle}>Push Day - Chest & Triceps</ThemedText>
@@ -246,14 +216,8 @@ export function WorkoutEntrySheet({ visible, onClose }: WorkoutEntrySheetProps) 
                     <View style={styles.tagRow}>
                       {exercise.tags.map(tag => (
                         <View key={tag.label} style={[styles.tag, tag.tone === 'blue' && styles.tagBlue]}>
-                          {tag.tone === 'blue' ? (
-                            <Sparkles size={12} color='#7AA2FF' />
-                          ) : (
-                            <TrendingUp size={12} color='#4BD783' />
-                          )}
-                          <ThemedText style={[styles.tagText, tag.tone === 'blue' && styles.tagTextBlue]}>
-                            {tag.label}
-                          </ThemedText>
+                          {tag.tone === 'blue' ? <Sparkles size={12} color='#7AA2FF' /> : <TrendingUp size={12} color='#4BD783' />}
+                          <ThemedText style={[styles.tagText, tag.tone === 'blue' && styles.tagTextBlue]}>{tag.label}</ThemedText>
                         </View>
                       ))}
                     </View>
@@ -263,11 +227,7 @@ export function WorkoutEntrySheet({ visible, onClose }: WorkoutEntrySheetProps) 
                   </TouchableOpacity>
                 </View>
 
-                <SetTable
-                  exercise={exercise}
-                  onUpdateSet={updateSet}
-                  onToggleSet={toggleSet}
-                />
+                <SetTable exercise={exercise} onUpdateSet={updateSet} onToggleSet={toggleSet} />
 
                 <TouchableOpacity activeOpacity={0.84} style={styles.addSetButton} onPress={() => addSet(exercise.id)}>
                   <Plus size={18} color='#E5E7EF' />
@@ -277,9 +237,7 @@ export function WorkoutEntrySheet({ visible, onClose }: WorkoutEntrySheetProps) 
                 {index === 0 && (
                   <View style={styles.estimateCard}>
                     <TrendingUp size={22} color='#43D681' />
-                    <ThemedText style={styles.estimateText}>
-                      Estimated one rep max is 145 lbs which is a 7% increase from last time
-                    </ThemedText>
+                    <ThemedText style={styles.estimateText}>Estimated one rep max is 145 lbs which is a 7% increase from last time</ThemedText>
                   </View>
                 )}
               </View>

@@ -144,7 +144,6 @@ const notifyAxiosError = (error: AxiosError) => {
   if (!shouldShowAxiosErrorToast(error)) {
     return;
   }
-
   appToast.error('Yêu cầu thất bại', getAxiosErrorMessage(error));
 };
 

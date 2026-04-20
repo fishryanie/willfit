@@ -1,4 +1,4 @@
-import { storage } from 'lib/storage';
+import { storage } from 'utils/storage';
 import { create } from 'zustand';
 
 interface AuthState {

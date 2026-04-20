@@ -7,17 +7,17 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import 'react-native-reanimated';
 
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AppDialogHost } from 'components/app-dialog-host';
 import { AppDrawerProvider } from 'components/drawer/app-drawer';
 import { ToastProviderWithViewport } from 'components/ui/molecules/Toast';
 import { ThemeProvider as ReacticxThemeProvider, ThemeMode } from 'components/ui/organisms/theme-switch/context';
 import { useThemeMode } from 'components/ui/organisms/theme-switch/hooks';
 import { Colors } from 'constants/theme';
-import { Sentry, initSentry, navigationIntegration } from 'utils/sentry';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { api } from 'lib/api';
 import { useAuthStore } from 'store/use-auth-store';
-import { STORAGE_KEY, storage } from 'lib/storage';
+import { api } from 'utils/api';
+import { Sentry, initSentry, navigationIntegration } from 'utils/sentry';
+import { STORAGE_KEY, storage } from 'utils/storage';
 
 initSentry();
 
