@@ -1,6 +1,7 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { ThemedText } from 'components/themed-text';
+import { ThemedView } from 'components/themed-view';
 import { CircularProgress } from '../ui/organisms/circular-progress';
 import { useSharedValue } from 'react-native-reanimated';
 import { Flame, Utensils, Zap } from 'lucide-react-native';
@@ -13,46 +14,50 @@ export function DailyBalanceCard() {
   const secondaryColor = useThemeColor({}, 'secondary');
 
   return (
-    <View style={[styles.container, { backgroundColor: cardBg }]}>
-      <View style={styles.header}>
-        <ThemedText style={styles.title}>Your daily balance</ThemedText>
-        <ThemedText style={styles.subtitle}>Goal - Food + Exercise</ThemedText>
-      </View>
+    <ThemedView style={[styles.container, { backgroundColor: cardBg }]}>
+      <ThemedView backgroundColor='transparent' marginBottom={20}>
+        <ThemedText fontSize={18} fontWeight='600'>
+          Your daily balance
+        </ThemedText>
+        <ThemedText fontSize={14} opacity={0.6} marginTop={4}>
+          Goal - Food + Exercise
+        </ThemedText>
+      </ThemedView>
 
-      <View style={styles.content}>
-        <View style={styles.stats}>
-          <View style={styles.statItem}>
-            <View style={[styles.iconCircle, { backgroundColor: 'rgba(255, 69, 58, 0.1)' }]}>
+      <ThemedView backgroundColor='transparent' row justifyContent='space-between' alignItems='center'>
+        <ThemedView backgroundColor='transparent' gap={16}>
+          <ThemedView backgroundColor='transparent' row alignItems='center' gap={12}>
+            <ThemedView square={32} radius={16} backgroundColor='rgba(255, 69, 58, 0.1)' contentCenter>
               <Flame size={16} color="#FF453A" />
-            </View>
-            <View>
-              <ThemedText style={styles.statLabel}>Goals</ThemedText>
-              <ThemedText style={styles.statValue}>1,670</ThemedText>
-            </View>
-          </View>
+            </ThemedView>
+            <ThemedView backgroundColor='transparent'>
+              <ThemedText fontSize={13} opacity={0.6}>Goals</ThemedText>
+              <ThemedText fontSize={16} fontWeight='600'>1,670</ThemedText>
+            </ThemedView>
+          </ThemedView>
 
-          <View style={styles.statItem}>
-            <View style={[styles.iconCircle, { backgroundColor: 'rgba(10, 132, 255, 0.1)' }]}>
+          <ThemedView backgroundColor='transparent' row alignItems='center' gap={12}>
+            <ThemedView square={32} radius={16} backgroundColor='rgba(10, 132, 255, 0.1)' contentCenter>
               <Utensils size={16} color="#0A84FF" />
-            </View>
-            <View>
-              <ThemedText style={styles.statLabel}>Food</ThemedText>
-              <ThemedText style={styles.statValue}>300</ThemedText>
-            </View>
-          </View>
+            </ThemedView>
+            <ThemedView backgroundColor='transparent'>
+              <ThemedText fontSize={13} opacity={0.6}>Food</ThemedText>
+              <ThemedText fontSize={16} fontWeight='600'>300</ThemedText>
+            </ThemedView>
+          </ThemedView>
 
-          <View style={styles.statItem}>
-            <View style={[styles.iconCircle, { backgroundColor: 'rgba(255, 159, 10, 0.1)' }]}>
+          <ThemedView backgroundColor='transparent' row alignItems='center' gap={12}>
+            <ThemedView square={32} radius={16} backgroundColor='rgba(255, 159, 10, 0.1)' contentCenter>
               <Zap size={16} color="#FF9F0A" />
-            </View>
-            <View>
-              <ThemedText style={styles.statLabel}>Exercise</ThemedText>
-              <ThemedText style={styles.statValue}>0</ThemedText>
-            </View>
-          </View>
-        </View>
+            </ThemedView>
+            <ThemedView backgroundColor='transparent'>
+              <ThemedText fontSize={13} opacity={0.6}>Exercise</ThemedText>
+              <ThemedText fontSize={16} fontWeight='600'>0</ThemedText>
+            </ThemedView>
+          </ThemedView>
+        </ThemedView>
 
-        <View style={styles.progressContainer}>
+        <ThemedView backgroundColor='transparent' contentCenter>
           <CircularProgress
             progress={progress}
             size={140}
@@ -61,15 +66,15 @@ export function DailyBalanceCard() {
             outerCircleColor={secondaryColor + '33'}
             backgroundColor="transparent"
             renderIcon={() => (
-              <View style={styles.innerValueContainer}>
-                <ThemedText style={styles.innerValue}>1,670</ThemedText>
-                <ThemedText style={styles.innerUnit}>kcal</ThemedText>
-              </View>
+              <ThemedView backgroundColor='transparent' alignItems='center'>
+                <ThemedText fontSize={20} fontWeight='500'>1,670</ThemedText>
+                <ThemedText fontSize={12} opacity={0.6} marginTop={2}>kcal</ThemedText>
+              </ThemedView>
             )}
           />
-        </View>
-      </View>
-    </View>
+        </ThemedView>
+      </ThemedView>
+    </ThemedView>
   );
 }
 
@@ -84,61 +89,5 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 10,
     elevation: 2,
-  },
-  header: {
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  subtitle: {
-    fontSize: 14,
-    opacity: 0.6,
-    marginTop: 4,
-  },
-  content: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  stats: {
-    gap: 16,
-  },
-  statItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  iconCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  statLabel: {
-    fontSize: 13,
-    opacity: 0.6,
-  },
-  statValue: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  progressContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  innerValueContainer: {
-    alignItems: 'center',
-  },
-  innerValue: {
-    fontSize: 20,
-    fontWeight: '500',
-  },
-  innerUnit: {
-    fontSize: 12,
-    opacity: 0.6,
-    marginTop: 2,
   },
 });

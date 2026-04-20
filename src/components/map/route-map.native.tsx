@@ -1,7 +1,8 @@
 import { useEffect, useRef } from 'react';
 import MapView, { Circle, Marker, Polyline, type MapPressEvent } from 'react-native-maps';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet } from 'react-native';
 
+import { ThemedView } from 'components/themed-view';
 import { ActivityMode, Coordinate, MapLayer, SegmentSummary } from './types';
 
 type RouteMapProps = {
@@ -60,7 +61,7 @@ export function RouteMap({
   const lastWaypoint = waypoints.length > 1 ? waypoints[waypoints.length - 1] : undefined;
 
   return (
-    <View style={StyleSheet.absoluteFill}>
+    <ThemedView backgroundColor='transparent' style={StyleSheet.absoluteFill}>
       <MapView
         ref={mapRef}
         style={StyleSheet.absoluteFill}
@@ -77,9 +78,9 @@ export function RouteMap({
         toolbarEnabled={false}
         onPress={handleMapPress}>
         {showHeatmap &&
-          heatRoutes.map((route, index) => (
+          heatRoutes.map(route => (
             <Polyline
-              key={`heat-${index}`}
+              key={`heat-${route[0]?.latitude ?? 'x'}-${route[0]?.longitude ?? 'x'}-${route[route.length - 1]?.latitude ?? 'x'}`}
               coordinates={route}
               strokeColor='rgba(255, 138, 0, 0.24)'
               strokeWidth={10}
@@ -130,38 +131,38 @@ export function RouteMap({
         />
 
         <Marker coordinate={center} anchor={{ x: 0.5, y: 0.5 }}>
-          <View style={styles.currentLocationMarker}>
-            <View style={styles.currentLocationDot} />
-          </View>
+          <ThemedView style={styles.currentLocationMarker}>
+            <ThemedView style={styles.currentLocationDot} />
+          </ThemedView>
         </Marker>
 
         {firstWaypoint && (
           <Marker coordinate={firstWaypoint} title='Start'>
-            <View style={[styles.pin, styles.startPin]} />
+            <ThemedView style={[styles.pin, styles.startPin]} />
           </Marker>
         )}
 
         {lastWaypoint && (
           <Marker coordinate={lastWaypoint} title='Finish'>
-            <View style={[styles.pin, styles.finishPin]} />
+            <ThemedView style={[styles.pin, styles.finishPin]} />
           </Marker>
         )}
 
-        {waypoints.slice(1, -1).map((waypoint, index) => (
-          <Marker key={`${waypoint.latitude}-${waypoint.longitude}-${index}`} coordinate={waypoint}>
-            <View style={styles.waypoint}>
-              <View style={styles.waypointInner} />
-            </View>
+        {waypoints.slice(1, -1).map(waypoint => (
+          <Marker key={`${waypoint.latitude}-${waypoint.longitude}`} coordinate={waypoint}>
+            <ThemedView style={styles.waypoint}>
+              <ThemedView style={styles.waypointInner} />
+            </ThemedView>
           </Marker>
         ))}
 
         {liveLastPoint && (
           <Marker coordinate={liveLastPoint} title='Live position'>
-            <View style={styles.liveMarker} />
+            <ThemedView style={styles.liveMarker} />
           </Marker>
         )}
       </MapView>
-    </View>
+    </ThemedView>
   );
 }
 

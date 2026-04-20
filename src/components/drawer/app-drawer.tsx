@@ -150,8 +150,12 @@ export function AppDrawerProvider({ children }: PropsWithChildren) {
             borderBottomWidth={StyleSheet.hairlineWidth}
             borderBottomColor={isDarkDrawer ? 'rgba(255,255,255,0.18)' : 'rgba(36,41,74,0.14)'}
             backgroundColor='transparent'>
-            <ThemedText style={[styles.drawerTitle, { color: drawerTextColor }]}>Sofia</ThemedText>
-            <ThemedText style={[styles.drawerSubtitle, { color: drawerMutedColor }]}>WillFit dashboard</ThemedText>
+            <ThemedText color={drawerTextColor} fontSize={22} fontWeight='700' letterSpacing={0}>
+              Sofia
+            </ThemedText>
+            <ThemedText color={drawerMutedColor} fontSize={12} lineHeight={16} letterSpacing={0}>
+              WillFit dashboard
+            </ThemedText>
           </ThemedView>
 
           {DRAWER_ITEMS.map(item => {
@@ -162,7 +166,9 @@ export function AppDrawerProvider({ children }: PropsWithChildren) {
             return (
               <TouchableOpacity key={item.name} activeOpacity={0.78} style={styles.drawerItem} onPress={() => onPressItem(item)}>
                 <Icon size={22} color={isActive ? '#FF8A00' : drawerTextColor} strokeWidth={2.2} />
-                <ThemedText style={[styles.drawerItemText, { color: isActive ? '#FF8A00' : drawerTextColor }]}>{item.name}</ThemedText>
+                <ThemedText color={isActive ? '#FF8A00' : drawerTextColor} fontSize={16} fontWeight='700' letterSpacing={0}>
+                  {item.name}
+                </ThemedText>
               </TouchableOpacity>
             );
           })}
@@ -172,8 +178,12 @@ export function AppDrawerProvider({ children }: PropsWithChildren) {
               {isDarkDrawer ? <Moon size={18} color='#FF8A00' /> : <Sun size={18} color='#FF8A00' />}
             </ThemedView>
             <ThemedView backgroundColor='transparent' style={styles.themeSwitchCopy}>
-              <ThemedText style={[styles.themeSwitchTitle, { color: drawerTextColor }]}>{isDarkDrawer ? 'Dark mode' : 'Light mode'}</ThemedText>
-              <ThemedText style={[styles.themeSwitchMeta, { color: drawerMutedColor }]}>Tap to switch</ThemedText>
+              <ThemedText color={drawerTextColor} fontSize={13} fontWeight='800' letterSpacing={0}>
+                {isDarkDrawer ? 'Dark mode' : 'Light mode'}
+              </ThemedText>
+              <ThemedText color={drawerMutedColor} fontSize={11} lineHeight={15} marginTop={2} fontWeight='700' letterSpacing={0}>
+                Tap to switch
+              </ThemedText>
             </ThemedView>
             <ThemedView backgroundColor='transparent' style={[styles.themeSwitchTrack, isDarkDrawer && styles.themeSwitchTrackActive]}>
               <ThemedView style={[styles.themeSwitchThumb, isDarkDrawer && styles.themeSwitchThumbActive]} />
@@ -182,7 +192,9 @@ export function AppDrawerProvider({ children }: PropsWithChildren) {
 
           <ThemedView position='absolute' right={30} bottom={insets.bottom + 12} rowCenter gap={6} backgroundColor='transparent'>
             <Bell size={13} color={drawerMutedColor} />
-            <ThemedText style={[styles.versionText, { color: drawerMutedColor }]}>v1.0.0</ThemedText>
+            <ThemedText color={drawerMutedColor} fontSize={12} lineHeight={16} letterSpacing={0}>
+              v1.0.0
+            </ThemedText>
           </ThemedView>
         </ThemedView>
 
@@ -198,26 +210,11 @@ export function AppDrawerProvider({ children }: PropsWithChildren) {
 }
 
 const styles = StyleSheet.create({
-  drawerTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    letterSpacing: 0,
-  },
-  drawerSubtitle: {
-    fontSize: 12,
-    lineHeight: 16,
-    letterSpacing: 0,
-  },
   drawerItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
     paddingVertical: 16,
-  },
-  drawerItemText: {
-    fontSize: 16,
-    fontWeight: '700',
-    letterSpacing: 0,
   },
   themePill: {
     flexDirection: 'row',
@@ -239,18 +236,6 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
   },
-  themeSwitchTitle: {
-    fontSize: 13,
-    fontWeight: '800',
-    letterSpacing: 0,
-  },
-  themeSwitchMeta: {
-    fontSize: 11,
-    lineHeight: 15,
-    marginTop: 2,
-    fontWeight: '700',
-    letterSpacing: 0,
-  },
   themeSwitchTrack: {
     width: 34,
     height: 20,
@@ -271,10 +256,5 @@ const styles = StyleSheet.create({
   themeSwitchThumbActive: {
     alignSelf: 'flex-end',
     backgroundColor: '#24294A',
-  },
-  versionText: {
-    fontSize: 12,
-    lineHeight: 16,
-    letterSpacing: 0,
   },
 });

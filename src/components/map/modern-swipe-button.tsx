@@ -1,9 +1,10 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { ChevronRight } from 'lucide-react-native';
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet } from 'react-native';
 import SwipeButton from 'rn-swipe-button';
 
+import { ThemedView } from 'components/themed-view';
 import { AnimatedMaskedText } from 'components/ui/molecules/animated-masked-text/AnimatedMaskedText';
 import { RippleRect } from 'components/ui/organisms/skia-ripple';
 
@@ -19,7 +20,7 @@ const BUTTON_HEIGHT = 64;
 
 function MaskedSwipeTitle({ label, color, isFinish }: { label: string; color: string; isFinish: boolean }) {
   return (
-    <View style={styles.titleContainer} pointerEvents='none'>
+    <ThemedView backgroundColor='transparent' style={styles.titleContainer} pointerEvents='none'>
       <AnimatedMaskedText
         speed={1.35}
         baseTextColor={color}
@@ -31,7 +32,7 @@ function MaskedSwipeTitle({ label, color, isFinish }: { label: string; color: st
         style={styles.title}>
         {label}
       </AnimatedMaskedText>
-    </View>
+    </ThemedView>
   );
 }
 
@@ -44,7 +45,7 @@ export function ModernSwipeButton({ label, completeLabel = 'Release', disabled, 
   const titleColor = isFinish ? '#E5484D' : '#4B5563';
 
   const swipeButton = (
-    <View style={styles.swipeLayer} pointerEvents='box-none'>
+    <ThemedView backgroundColor='transparent' style={styles.swipeLayer} pointerEvents='box-none'>
       <SwipeButton
         onSwipeSuccess={() => {
           // Grant 200ms for the library to finish its internal success animation
@@ -60,11 +61,11 @@ export function ModernSwipeButton({ label, completeLabel = 'Release', disabled, 
         thumbIconBackgroundColor='transparent'
         thumbIconBorderColor='transparent'
         thumbIconComponent={() => (
-          <View style={styles.thumbWrapper} pointerEvents='none'>
+          <ThemedView backgroundColor='transparent' style={styles.thumbWrapper} pointerEvents='none'>
             <LinearGradient colors={gradientColors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.thumbGradient}>
               <ChevronRight size={24} color='#FFFFFF' strokeWidth={3.5} />
             </LinearGradient>
-          </View>
+          </ThemedView>
         )}
         titleComponent={() => <MaskedSwipeTitle label={disabled ? completeLabel || label : label} color={titleColor} isFinish={isFinish} />}
         thumbIconWidth={60}
@@ -74,11 +75,12 @@ export function ModernSwipeButton({ label, completeLabel = 'Release', disabled, 
         containerStyles={styles.swipeContainer}
         disabled={disabled}
       />
-    </View>
+    </ThemedView>
   );
 
   return (
-    <View
+    <ThemedView
+      backgroundColor='transparent'
       style={styles.container}
       onLayout={event => {
         const nextWidth = Math.round(event.nativeEvent.layout.width);
@@ -101,9 +103,9 @@ export function ModernSwipeButton({ label, completeLabel = 'Release', disabled, 
           {swipeButton}
         </RippleRect>
       ) : (
-        <View style={[styles.fallbackRail, { backgroundColor: railBackgroundColor }]}>{swipeButton}</View>
+        <ThemedView style={[styles.fallbackRail, { backgroundColor: railBackgroundColor }]}>{swipeButton}</ThemedView>
       )}
-    </View>
+    </ThemedView>
   );
 }
 

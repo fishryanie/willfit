@@ -1,9 +1,10 @@
 import React from 'react';
-import { StyleSheet, View, TouchableOpacity, useColorScheme } from 'react-native';
+import { StyleSheet, TouchableOpacity, useColorScheme } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { BookOpen, House, Map, MessageCircle, Plus, type LucideIcon } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemedText } from 'components/themed-text';
+import { ThemedView } from 'components/themed-view';
 import { useThemeColor } from 'hooks/use-theme-color';
 
 const TAB_ICONS: Record<string, LucideIcon> = {
@@ -21,8 +22,8 @@ export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarPro
   const accentColor = useThemeColor({}, 'accent');
 
   return (
-    <View style={[styles.outerContainer, { paddingBottom: insets.bottom + 10 }]}>
-      <View style={[styles.container, { backgroundColor: cardBg }]}>
+    <ThemedView backgroundColor='transparent' style={[styles.outerContainer, { paddingBottom: insets.bottom + 10 }]}>
+      <ThemedView style={[styles.container, { backgroundColor: cardBg }]}>
         {state.routes.map((route, index) => {
           const { options } = descriptors[route.key];
           const isFocused = state.index === index;
@@ -47,12 +48,16 @@ export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarPro
           return (
             <TouchableOpacity key={route.key} onPress={onPress} style={[styles.tabItem, isFocused && { backgroundColor: accentColor }]}>
               <Icon size={22} color={isFocused ? activeItemContentColor : '#8E8E93'} />
-              {isFocused && <ThemedText style={[styles.activeLabel, { color: activeItemContentColor }]}>{label}</ThemedText>}
+              {isFocused && (
+                <ThemedText color={activeItemContentColor} fontWeight='800' fontSize={14}>
+                  {label}
+                </ThemedText>
+              )}
             </TouchableOpacity>
           );
         })}
-      </View>
-    </View>
+      </ThemedView>
+    </ThemedView>
   );
 }
 
@@ -87,10 +92,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 28,
     gap: 8,
-  },
-  activeLabel: {
-    color: '#FFF',
-    fontWeight: '800',
-    fontSize: 14,
   },
 });

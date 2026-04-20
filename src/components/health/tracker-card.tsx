@@ -1,6 +1,6 @@
 import React from 'react';
-import { StyleSheet, View, useColorScheme } from 'react-native';
-import { useSharedValue, useDerivedValue } from 'react-native-reanimated';
+import { StyleSheet, useColorScheme } from 'react-native';
+import { useDerivedValue } from 'react-native-reanimated';
 import { CircularProgress } from 'components/ui/organisms/circular-progress';
 import { RollingCounter } from 'components/ui/organisms/rolling-counter';
 import { ThemedText } from 'components/themed-text';
@@ -11,7 +11,7 @@ import { ChartColumnIncreasing, Footprints, Map } from 'lucide-react-native';
 const STEP_GOAL = 10000;
 
 export function HealthTrackerCard() {
-  const { stepsAnimated, distanceAnimated, steps, distance, isPermissionsGranted } = useHealthTracker();
+  const { stepsAnimated, steps, distance, isPermissionsGranted } = useHealthTracker();
   const colorScheme = useColorScheme();
   
   const progress = useDerivedValue(() => {
@@ -37,13 +37,13 @@ export function HealthTrackerCard() {
       borderColor="rgba(150, 150, 150, 0.2)"
       style={styles.card}
     >
-      <View style={styles.header}>
+      <ThemedView backgroundColor='transparent' style={styles.header}>
         <ThemedText type="subtitle">Hôm nay</ThemedText>
         <ChartColumnIncreasing size={20} color={colorScheme === 'dark' ? '#fff' : '#000'} />
-      </View>
+      </ThemedView>
 
-      <View style={styles.mainContent}>
-        <View style={styles.progressContainer}>
+      <ThemedView backgroundColor='transparent' alignItems='center'>
+        <ThemedView backgroundColor='transparent' marginVertical={20} contentCenter>
           <CircularProgress
             progress={progress}
             size={200}
@@ -52,7 +52,7 @@ export function HealthTrackerCard() {
             outerCircleColor={colorScheme === 'dark' ? '#333' : '#eee'}
             backgroundColor="transparent"
             renderIcon={() => (
-              <View style={styles.counterWrapper}>
+              <ThemedView backgroundColor='transparent' contentCenter>
                 <RollingCounter
                   value={stepsAnimated}
                   fontSize={32}
@@ -60,28 +60,28 @@ export function HealthTrackerCard() {
                   width={22}
                   color={colorScheme === 'dark' ? '#fff' : '#000'}
                 />
-                <ThemedText style={styles.goalText}>/ {STEP_GOAL}</ThemedText>
-              </View>
+                <ThemedText fontSize={14} opacity={0.6} marginTop={4}>/ {STEP_GOAL}</ThemedText>
+              </ThemedView>
             )}
           />
-        </View>
+        </ThemedView>
 
-        <View style={styles.statsRow}>
-          <View style={styles.statItem}>
+        <ThemedView backgroundColor='transparent' style={styles.statsRow}>
+          <ThemedView backgroundColor='transparent' alignItems='center' gap={4}>
             <Footprints size={24} color="#4CAF50" />
             <ThemedText type="defaultSemiBold">Bước chân</ThemedText>
             <ThemedText>{steps}</ThemedText>
-          </View>
+          </ThemedView>
           
-          <View style={styles.divider} />
+          <ThemedView width={1} height='100%' backgroundColor='rgba(150, 150, 150, 0.2)' />
 
-          <View style={styles.statItem}>
+          <ThemedView backgroundColor='transparent' alignItems='center' gap={4}>
             <Map size={24} color="#2196F3" />
             <ThemedText type="defaultSemiBold">Quãng đường</ThemedText>
             <ThemedText>{distanceKm} km</ThemedText>
-          </View>
-        </View>
-      </View>
+          </ThemedView>
+        </ThemedView>
+      </ThemedView>
     </ThemedView>
   );
 }
@@ -100,23 +100,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
   },
-  mainContent: {
-    alignItems: 'center',
-  },
-  progressContainer: {
-    marginVertical: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  counterWrapper: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  goalText: {
-    fontSize: 14,
-    opacity: 0.6,
-    marginTop: 4,
-  },
   statsRow: {
     flexDirection: 'row',
     width: '100%',
@@ -125,14 +108,5 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: 'rgba(150, 150, 150, 0.2)',
-  },
-  statItem: {
-    alignItems: 'center',
-    gap: 4,
-  },
-  divider: {
-    width: 1,
-    height: '100%',
-    backgroundColor: 'rgba(150, 150, 150, 0.2)',
   },
 });

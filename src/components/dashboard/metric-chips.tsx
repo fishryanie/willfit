@@ -1,6 +1,7 @@
 import React from 'react';
-import { StyleSheet, ScrollView, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { ThemedText } from 'components/themed-text';
+import { ThemedView } from 'components/themed-view';
 
 import { useThemeColor } from 'hooks/use-theme-color';
 
@@ -17,7 +18,7 @@ export function MetricChips() {
   const inactiveText = useThemeColor({}, 'secondary');
 
   return (
-    <View style={styles.container}>
+    <ThemedView backgroundColor='transparent' marginBottom={24}>
       <ScrollView 
         horizontal 
         showsHorizontalScrollIndicator={false} 
@@ -34,24 +35,18 @@ export function MetricChips() {
               ]}
               onPress={() => setActiveId(chip.id)}
             >
-              <ThemedText style={[
-                styles.label, 
-                { color: isActive ? activeText : inactiveText }
-              ]}>
+              <ThemedText color={isActive ? activeText : inactiveText} fontSize={15} fontWeight='600' letterSpacing={0}>
                 {chip.label}
               </ThemedText>
             </TouchableOpacity>
           );
         })}
       </ScrollView>
-    </View>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    marginBottom: 24,
-  },
   scrollContent: {
     paddingHorizontal: 16,
     gap: 12,
@@ -61,10 +56,5 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 24,
     backgroundColor: 'transparent',
-  },
-  label: {
-    fontSize: 15,
-    fontWeight: '600',
-    letterSpacing: -0.2,
   },
 });

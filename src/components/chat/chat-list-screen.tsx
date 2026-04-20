@@ -1,236 +1,452 @@
-import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { MessageCircle, Search, ShieldCheck, Sparkles } from 'lucide-react-native';
-import { FlatList, Pressable, StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Search, X } from 'lucide-react-native';
+import { useMemo, useState } from 'react';
+import { Image, type ImageSourcePropType, Pressable, ScrollView, StyleSheet } from 'react-native';
+import { Swipeable } from 'react-native-gesture-handler';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText, ThemedView } from 'components/base';
-import { useThemeColor } from 'hooks/use-theme-color';
-import { chatConversations, type ChatConversation } from './data';
-
-const HERO_IMAGE = 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=900&q=80';
+import { ScrollableSearch, useScrollableSearch } from 'components/ui/base/scrollable-search';
+import { SearchBar as ReacticxSearchBar } from 'components/ui/molecules/search-bar/SearchBar';
+import { CHAT_COLORS, chatConversations, type ChatConversation } from './data';
 
 export function ChatListScreen() {
-  const insets = useSafeAreaInsets();
-  const backgroundColor = useThemeColor({}, 'background');
-  const cardColor = useThemeColor({}, 'card');
-  const mutedColor = useThemeColor({}, 'secondary');
-  const accentColor = useThemeColor({}, 'accent');
-
   return (
-    <ThemedView flex={1} backgroundColor={backgroundColor}>
-      <FlatList
-        data={chatConversations}
-        keyExtractor={item => item.id}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.content, { paddingTop: insets.top + 18, paddingBottom: insets.bottom + 120 }]}
-        ListHeaderComponent={
-          <View>
-            <View style={styles.header}>
-              <View>
-                <ThemedText color={mutedColor} fontSize={13} fontWeight='900' textTransform='uppercase'>
-                  Message
-                </ThemedText>
-                <ThemedText fontSize={33} lineHeight={38} fontWeight='900' marginTop={3}>
-                  Your coaching chat
-                </ThemedText>
-              </View>
-              <Pressable accessibilityRole='button' style={[styles.searchButton, { backgroundColor: cardColor }]}>
-                <Search size={21} color={accentColor} />
-              </Pressable>
-            </View>
-
-            <View style={styles.hero}>
-              <Image source={{ uri: HERO_IMAGE }} style={StyleSheet.absoluteFill} contentFit='cover' />
-              <View style={styles.heroOverlay} />
-              <View style={styles.heroContent}>
-                <View style={styles.heroBadge}>
-                  <Sparkles size={14} color='#111111' />
-                  <ThemedText color='#111111' fontSize={12} fontWeight='900'>
-                    Live support
-                  </ThemedText>
-                </View>
-                <ThemedText color='#FFFFFF' fontSize={24} lineHeight={29} fontWeight='900' maxWidth={250}>
-                  Keep every workout decision in one place.
-                </ThemedText>
-                <ThemedText color='rgba(255,255,255,0.78)' fontSize={14} lineHeight={20} fontWeight='700' marginTop={7}>
-                  Coach notes, run routes, nutrition tweaks, and recovery checks.
-                </ThemedText>
-              </View>
-            </View>
-
-            <View style={styles.sectionTitleRow}>
-              <ThemedText fontSize={20} fontWeight='900'>
-                Recent conversations
-              </ThemedText>
-              <View style={styles.secureRow}>
-                <ShieldCheck size={15} color='#5BD67D' />
-                <ThemedText color={mutedColor} fontSize={12} fontWeight='800'>
-                  Synced
-                </ThemedText>
-              </View>
-            </View>
-          </View>
-        }
-        renderItem={({ item }) => <ConversationCard conversation={item} cardColor={cardColor} mutedColor={mutedColor} />}
-      />
+    <ThemedView flex={1} backgroundColor={CHAT_COLORS.white}>
+      <ScrollableSearch>
+        <ChatListContent />
+      </ScrollableSearch>
     </ThemedView>
   );
 }
 
-function ConversationCard({ conversation, cardColor, mutedColor }: { conversation: ChatConversation; cardColor: string; mutedColor: string }) {
+function ChatListContent() {
+  const insets = useSafeAreaInsets();
+  const [query, setQuery] = useState('');
+  const { setIsFocused } = useScrollableSearch();
+
+  const filteredConversations = useMemo(() => filterConversations(query), [query]);
+  const activeCount = useMemo(() => chatConversations.filter(conversation => conversation.isActive).length, []);
+
+  const closeSearch = () => {
+    setIsFocused(false);
+    setQuery('');
+  };
+
   return (
-    <Pressable accessibilityRole='button' style={[styles.card, { backgroundColor: cardColor }]} onPress={() => router.push(`/chat/${conversation.id}`)}>
-      <View style={[styles.avatar, { backgroundColor: conversation.accent }]}>
-        <ThemedText color={conversation.color} fontSize={16} fontWeight='900'>
-          {conversation.avatar}
-        </ThemedText>
-      </View>
+    <>
+      <ScrollableSearch.ScrollContent contentContainerStyle={{ paddingTop: insets.top + 138, paddingBottom: insets.bottom + 86 }} pullThreshold={72}>
+        <ThemedView style={styles.content}>
+          {chatConversations.map((item, index) => (
+            <ThemedView key={item.id} backgroundColor='transparent'>
+              <ConversationRow item={item} />
+              {index !== chatConversations.length - 1 ? <ConversationSeparator /> : null}
+            </ThemedView>
+          ))}
+        </ThemedView>
+      </ScrollableSearch.ScrollContent>
 
-      <View style={styles.cardBody}>
-        <View style={styles.cardTitleRow}>
-          <View style={styles.nameGroup}>
-            <ThemedText numberOfLines={1} fontSize={17} fontWeight='900'>
-              {conversation.name}
-            </ThemedText>
-            <ThemedText numberOfLines={1} color={mutedColor} fontSize={12} fontWeight='800'>
-              {conversation.role}
-            </ThemedText>
-          </View>
-          <ThemedText color={mutedColor} fontSize={12} fontWeight='800'>
-            {conversation.lastActive}
+      <ScrollableSearch.Overlay blurTint='light' maxBlurIntensity={60} onPress={closeSearch}>
+        <ScrollableSearch.FocusedScreen>
+          <FocusedSearchPanel conversations={filteredConversations} query={query} setQuery={setQuery} onClose={closeSearch} />
+        </ScrollableSearch.FocusedScreen>
+      </ScrollableSearch.Overlay>
+
+      <ScrollableSearch.AnimatedComponent
+        focusedOffset={-180}
+        unfocusedOffset={0}
+        onPullToFocus={() => setIsFocused(true)}
+        springConfig={{ damping: 20, stiffness: 170, mass: 0.7 }}>
+        <ChatSearchTrigger activeCount={activeCount} totalCount={chatConversations.length} />
+      </ScrollableSearch.AnimatedComponent>
+    </>
+  );
+}
+
+function ChatSearchTrigger({ activeCount, totalCount }: { activeCount: number; totalCount: number }) {
+  const { isFocused, setIsFocused } = useScrollableSearch();
+
+  return (
+    <ThemedView style={styles.header}>
+      <ThemedView backgroundColor='transparent' style={styles.headerTitleRow}>
+        <ThemedView backgroundColor='transparent' style={styles.headerCopy}>
+          <ThemedText color={CHAT_COLORS.gray1000} fontSize={28} fontWeight='700' lineHeight={34}>
+            Messages
           </ThemedText>
-        </View>
+          <ThemedText color={CHAT_COLORS.gray600} fontSize={14} lineHeight={20}>
+            Coach, AI chat, and workout support
+          </ThemedText>
+        </ThemedView>
+        <ThemedView style={styles.headerBadge}>
+          <ThemedText color={CHAT_COLORS.primary} fontSize={12} fontWeight='700'>
+            {activeCount}/{totalCount} online
+          </ThemedText>
+        </ThemedView>
+      </ThemedView>
 
-        <ThemedText numberOfLines={2} color={mutedColor} fontSize={14} lineHeight={20} fontWeight='700' marginTop={7}>
+      <Pressable accessibilityRole='search' style={styles.searchTrigger} onPress={() => setIsFocused(!isFocused)}>
+        <Search size={18} color={CHAT_COLORS.textPlaceholder} />
+        <ThemedText flex={1} color={CHAT_COLORS.textPlaceholder} fontSize={16}>
+          Search messages...
+        </ThemedText>
+      </Pressable>
+    </ThemedView>
+  );
+}
+
+function FocusedSearchPanel({
+  conversations,
+  query,
+  setQuery,
+  onClose,
+}: {
+  conversations: ChatConversation[];
+  query: string;
+  setQuery: (value: string) => void;
+  onClose: () => void;
+}) {
+  return (
+    <SafeAreaView edges={['top']} style={styles.focusedContainer}>
+      <ThemedView backgroundColor='transparent' style={styles.focusedSearchRow}>
+        <ThemedView backgroundColor='transparent' style={styles.focusedSearch}>
+          <ReacticxSearchBar
+            autoFocusOnMount
+            placeholder='Search messages'
+            tint={CHAT_COLORS.primary}
+            centerWhenUnfocused={false}
+            inputStyle={styles.searchInput}
+            onSearch={setQuery}
+            onClear={() => setQuery('')}
+            onSearchDone={onClose}
+          />
+        </ThemedView>
+        <Pressable accessibilityRole='button' style={styles.closeSearchButton} onPress={onClose}>
+          <X size={20} color={CHAT_COLORS.gray700} />
+        </Pressable>
+      </ThemedView>
+
+      <ScrollView style={styles.focusedScroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps='handled'>
+        <ThemedView backgroundColor='transparent' style={styles.focusedSection}>
+          <ThemedView backgroundColor='transparent' style={styles.focusedHeader}>
+            <Search size={16} color={CHAT_COLORS.gray600} />
+            <ThemedText color={CHAT_COLORS.gray600} fontSize={15} fontWeight='700'>
+              {query.trim() ? 'Search results' : 'Recent conversations'}
+            </ThemedText>
+          </ThemedView>
+
+          {conversations.length > 0 ? (
+            conversations.map(conversation => <FocusedConversation key={conversation.id} conversation={conversation} onPress={onClose} />)
+          ) : (
+            <EmptySearchState query={query} />
+          )}
+        </ThemedView>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+function FocusedConversation({ conversation, onPress }: { conversation: ChatConversation; onPress: () => void }) {
+  return (
+    <Pressable
+      accessibilityRole='button'
+      style={styles.focusedItem}
+      onPress={() => {
+        onPress();
+        router.push(`/chat/${conversation.id}`);
+      }}>
+      <ChatAvatar source={conversation.avatar} name={conversation.name} size={44} />
+      <ThemedView backgroundColor='transparent' style={styles.focusedItemBody}>
+        <ThemedText numberOfLines={1} color={CHAT_COLORS.gray1000} fontSize={16} fontWeight='700'>
+          {conversation.name}
+        </ThemedText>
+        <ThemedText numberOfLines={1} color={CHAT_COLORS.gray600} fontSize={13}>
           {conversation.lastMessage}
         </ThemedText>
-
-        <View style={styles.tagRow}>
-          {conversation.tags.map(tag => (
-            <View key={tag} style={styles.tag}>
-              <ThemedText color={conversation.color} fontSize={11} fontWeight='900'>
-                {tag}
-              </ThemedText>
-            </View>
-          ))}
-        </View>
-      </View>
-
-      {conversation.unread > 0 ? (
-        <View style={[styles.unreadBadge, { backgroundColor: conversation.color }]}>
-          <ThemedText color='#111111' fontSize={12} fontWeight='900'>
-            {conversation.unread}
-          </ThemedText>
-        </View>
-      ) : (
-        <MessageCircle size={19} color={mutedColor} />
-      )}
+      </ThemedView>
     </Pressable>
   );
 }
 
+type ConversationRowProps = {
+  item: ChatConversation;
+};
+
+function ConversationRow({ item }: ConversationRowProps) {
+  return (
+    <Swipeable overshootRight={false} renderRightActions={renderDeleteAction}>
+      <ThemedView backgroundColor='transparent'>
+        <Pressable accessibilityRole='button' style={styles.row} onPress={() => router.push(`/chat/${item.id}`)}>
+          <ChatAvatar source={item.avatar} name={item.name} size={56} />
+          <ThemedView backgroundColor='transparent' style={styles.body}>
+            <ThemedView backgroundColor='transparent' style={styles.titleRow}>
+              <ThemedText flex={1} numberOfLines={1} color={CHAT_COLORS.gray1000} fontSize={16} fontWeight='600' lineHeight={20}>
+                {item.name}
+              </ThemedText>
+              <ThemedText color={CHAT_COLORS.textPlaceholder} fontSize={12}>
+                {item.time}
+              </ThemedText>
+            </ThemedView>
+            <ThemedText numberOfLines={1} color={CHAT_COLORS.gray600} fontSize={14} marginRight={12}>
+              {item.lastMessage}
+            </ThemedText>
+          </ThemedView>
+        </Pressable>
+      </ThemedView>
+    </Swipeable>
+  );
+}
+
+function ConversationSeparator() {
+  return <ThemedView style={styles.separator} />;
+}
+
+function EmptySearchState({ query }: { query: string }) {
+  return (
+    <ThemedView backgroundColor='transparent' style={styles.emptyState}>
+      <ThemedText color={CHAT_COLORS.gray1000} fontSize={16} fontWeight='700'>
+        No conversations found
+      </ThemedText>
+      <ThemedText color={CHAT_COLORS.gray600} fontSize={14} lineHeight={20} textAlign='center'>
+        {query.trim() ? `Try another keyword for "${query.trim()}".` : 'Start typing to find a coach or conversation.'}
+      </ThemedText>
+    </ThemedView>
+  );
+}
+
+function renderDeleteAction() {
+  return (
+    <ThemedView style={styles.deleteAction}>
+      <ThemedText color={CHAT_COLORS.white} fontSize={13} fontWeight='700'>
+        Delete
+      </ThemedText>
+    </ThemedView>
+  );
+}
+
+function ChatAvatar({ source, name, size }: { source?: ImageSourcePropType; name: string; size: number }) {
+  if (source) {
+    return <Image source={source} resizeMode='cover' style={[styles.avatar, { width: size, height: size, borderRadius: size / 2 }]} />;
+  }
+
+  return (
+    <ThemedView style={[styles.avatarFallback, { width: size, height: size, borderRadius: size / 2 }]}>
+      <ThemedText color={CHAT_COLORS.white} fontSize={size / 3.5} fontWeight='600'>
+        {getInitials(name)}
+      </ThemedText>
+    </ThemedView>
+  );
+}
+
+function getInitials(name: string) {
+  const initials = name
+    .replace(/[^\w\s]/gi, '')
+    .split(' ')
+    .filter(Boolean)
+    .map(word => word.charAt(0).toUpperCase())
+    .join('');
+
+  return initials || name.charAt(0).toUpperCase();
+}
+
+function filterConversations(query: string) {
+  const normalizedQuery = query.trim().toLowerCase();
+
+  if (!normalizedQuery) {
+    return chatConversations;
+  }
+
+  return chatConversations.filter(conversation =>
+    [conversation.name, conversation.status, conversation.lastMessage].some(value => value.toLowerCase().includes(normalizedQuery)),
+  );
+}
+
+function ChatShimmerList() {
+  return (
+    <ThemedView backgroundColor='transparent'>
+      {Array.from({ length: 10 }).map((_, index) => (
+        <ThemedView key={index} backgroundColor='transparent'>
+          <ThemedView backgroundColor='transparent' style={styles.shimmerRow}>
+            <ThemedView style={styles.shimmerAvatar} />
+            <ThemedView backgroundColor='transparent' style={styles.shimmerBody}>
+              <ThemedView style={styles.shimmerTitle} />
+              <ThemedView style={styles.shimmerLine} />
+            </ThemedView>
+          </ThemedView>
+          {index !== 9 ? <ConversationSeparator /> : null}
+        </ThemedView>
+      ))}
+    </ThemedView>
+  );
+}
+
+export const ChatListLoading = ChatShimmerList;
+
 const styles = StyleSheet.create({
   content: {
-    paddingHorizontal: 18,
-    gap: 14,
+    backgroundColor: CHAT_COLORS.white,
   },
   header: {
+    marginHorizontal: 12,
+    paddingHorizontal: 12,
+    paddingTop: 10,
+    paddingBottom: 12,
+    borderRadius: 8,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: CHAT_COLORS.antiFlashWhite,
+    backgroundColor: CHAT_COLORS.white,
+  },
+  headerTitleRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    gap: 14,
+    gap: 12,
   },
-  searchButton: {
-    width: 48,
-    height: 48,
+  headerCopy: {
+    flex: 1,
+    minWidth: 0,
+  },
+  headerBadge: {
     borderRadius: 8,
+    backgroundColor: '#FFF1E8',
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+  },
+  searchTrigger: {
+    minHeight: 48,
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: 10,
+    marginTop: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: CHAT_COLORS.antiFlashWhite,
+    backgroundColor: 'rgba(118,118,128,0.12)',
+    paddingHorizontal: 14,
+  },
+  searchInput: {
+    color: CHAT_COLORS.gray1000,
+    fontSize: 16,
+  },
+  row: {
+    minHeight: 80,
+    flexDirection: 'row',
+    gap: 12,
+    padding: 12,
+    backgroundColor: CHAT_COLORS.white,
+  },
+  body: {
+    flex: 1,
+    gap: 5,
     justifyContent: 'center',
   },
-  hero: {
-    minHeight: 202,
-    borderRadius: 8,
-    overflow: 'hidden',
-    marginTop: 18,
-    justifyContent: 'flex-end',
-  },
-  heroOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.46)',
-  },
-  heroContent: {
-    padding: 18,
-  },
-  heroBadge: {
-    alignSelf: 'flex-start',
+  titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    borderRadius: 8,
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    marginBottom: 12,
-  },
-  sectionTitleRow: {
-    marginTop: 22,
-    marginBottom: 4,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  secureRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  card: {
-    minHeight: 132,
-    borderRadius: 8,
-    padding: 14,
-    flexDirection: 'row',
-    gap: 13,
-    alignItems: 'flex-start',
+    gap: 8,
   },
   avatar: {
-    width: 52,
-    height: 52,
+    backgroundColor: CHAT_COLORS.antiFlashWhite,
+  },
+  avatarFallback: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: CHAT_COLORS.primary,
+  },
+  separator: {
+    height: 1,
+    marginLeft: 74,
+    backgroundColor: CHAT_COLORS.antiFlashWhite,
+  },
+  deleteAction: {
+    width: 86,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: CHAT_COLORS.textError,
+  },
+  emptyState: {
+    minHeight: 180,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingHorizontal: 24,
+  },
+  focusedContainer: {
+    flex: 1,
+    paddingTop: 16,
+    backgroundColor: CHAT_COLORS.white,
+  },
+  focusedSearchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 16,
+  },
+  focusedSearch: {
+    flex: 1,
+  },
+  closeSearchButton: {
+    width: 42,
+    height: 42,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: CHAT_COLORS.white,
   },
-  cardBody: {
+  focusedScroll: {
+    flex: 1,
+    marginTop: 18,
+  },
+  focusedSection: {
+    paddingHorizontal: 16,
+    paddingBottom: 30,
+  },
+  focusedHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
+  focusedItem: {
+    minHeight: 72,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: CHAT_COLORS.antiFlashWhite,
+    backgroundColor: CHAT_COLORS.white,
+    paddingHorizontal: 12,
+    marginBottom: 8,
+  },
+  focusedItemBody: {
     flex: 1,
     minWidth: 0,
+    gap: 4,
   },
-  cardTitleRow: {
+  shimmerRow: {
+    minHeight: 72,
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    gap: 15,
+    padding: 12,
+  },
+  shimmerAvatar: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: CHAT_COLORS.antiFlashWhite,
+  },
+  shimmerBody: {
+    flex: 1,
     gap: 10,
   },
-  nameGroup: {
-    flex: 1,
-    minWidth: 0,
+  shimmerTitle: {
+    height: 20,
+    borderRadius: 5,
+    backgroundColor: CHAT_COLORS.antiFlashWhite,
   },
-  tagRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 7,
-    marginTop: 12,
-  },
-  tag: {
+  shimmerLine: {
+    width: '72%',
+    height: 10,
     borderRadius: 8,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    paddingHorizontal: 9,
-    paddingVertical: 5,
-  },
-  unreadBadge: {
-    minWidth: 24,
-    height: 24,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 7,
+    backgroundColor: CHAT_COLORS.antiFlashWhite,
   },
 });

@@ -1,5 +1,7 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 
+import { ThemedText } from 'components/themed-text';
+import { ThemedView } from 'components/themed-view';
 import { Coordinate, MapLayer, SegmentSummary } from './types';
 
 type RouteMapProps = {
@@ -39,14 +41,14 @@ export function RouteMap({
 
   return (
     <Pressable style={styles.container} onPress={handlePress}>
-      <View style={[styles.grid, mapLayer === 'satellite' && styles.satelliteGrid]} />
-      <View style={styles.park} />
-      <View style={styles.river} />
+      <ThemedView style={[styles.grid, mapLayer === 'satellite' && styles.satelliteGrid]} />
+      <ThemedView style={styles.park} />
+      <ThemedView style={styles.river} />
 
       {showHeatmap &&
-        heatRoutes.map((_, index) => (
-          <View
-            key={`heat-${index}`}
+        heatRoutes.map((route, index) => (
+          <ThemedView
+            key={`heat-${route[0]?.latitude ?? 'x'}-${route[0]?.longitude ?? 'x'}-${route[route.length - 1]?.latitude ?? 'x'}`}
             style={[
               styles.fakePolyline,
               styles.heatLine,
@@ -61,7 +63,7 @@ export function RouteMap({
 
       {showSegments &&
         segments.map((segment, index) => (
-          <View
+          <ThemedView
             key={segment.id}
             style={[
               styles.fakePolyline,
@@ -77,13 +79,13 @@ export function RouteMap({
           />
         ))}
 
-      {routeCoordinates.length > 1 && <View style={[styles.fakePolyline, styles.routeLine]} />}
-      {liveCoordinates.length > 1 && <View style={[styles.fakePolyline, styles.liveLine]} />}
+      {routeCoordinates.length > 1 && <ThemedView style={[styles.fakePolyline, styles.routeLine]} />}
+      {liveCoordinates.length > 1 && <ThemedView style={[styles.fakePolyline, styles.liveLine]} />}
 
-      <View style={styles.currentMarker} />
-      {waypoints.map((_, index) => (
-        <View
-          key={`waypoint-${index}`}
+      <ThemedView style={styles.currentMarker} />
+      {waypoints.map((waypoint, index) => (
+        <ThemedView
+          key={`waypoint-${waypoint.latitude}-${waypoint.longitude}`}
           style={[
             styles.waypoint,
             {
@@ -94,10 +96,10 @@ export function RouteMap({
         />
       ))}
 
-      <View style={styles.notice}>
-        <Text style={styles.noticeTitle}>Map preview</Text>
-        <Text style={styles.noticeText}>Native maps render on iOS/Android. Web keeps route controls testable.</Text>
-      </View>
+      <ThemedView style={styles.notice}>
+        <ThemedText color='#111111' fontWeight='800'>Map preview</ThemedText>
+        <ThemedText color='#555555' fontSize={12} marginTop={2}>Native maps render on iOS/Android. Web keeps route controls testable.</ThemedText>
+      </ThemedView>
     </Pressable>
   );
 }
@@ -193,14 +195,5 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     backgroundColor: 'rgba(255,255,255,0.88)',
-  },
-  noticeTitle: {
-    fontWeight: '800',
-    color: '#111111',
-  },
-  noticeText: {
-    marginTop: 2,
-    color: '#555555',
-    fontSize: 12,
   },
 });

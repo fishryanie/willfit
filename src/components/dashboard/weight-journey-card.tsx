@@ -1,6 +1,7 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { ThemedText } from 'components/themed-text';
+import { ThemedView } from 'components/themed-view';
 
 import { useThemeColor } from 'hooks/use-theme-color';
 
@@ -10,38 +11,42 @@ export function WeightJourneyCard() {
   const barBg = useThemeColor({ light: 'rgba(0,0,0,0.05)', dark: '#333' }, 'card');
 
   const data = [
-    { label: 'Mon', value: 0.4 },
-    { label: 'Tue', value: 0.6 },
-    { label: 'Wed', value: 0.5 },
-    { label: 'Thu', value: 0.7 },
-    { label: 'Fri', value: 0.9, highlight: true },
-    { label: 'Sat', value: 0.6 },
-    { label: 'Sun', value: 0.4 },
-    { label: 'Mon', value: 0.3 },
+    { id: 'mon-current', label: 'Mon', value: 0.4 },
+    { id: 'tue-current', label: 'Tue', value: 0.6 },
+    { id: 'wed-current', label: 'Wed', value: 0.5 },
+    { id: 'thu-current', label: 'Thu', value: 0.7 },
+    { id: 'fri-current', label: 'Fri', value: 0.9, highlight: true },
+    { id: 'sat-current', label: 'Sat', value: 0.6 },
+    { id: 'sun-current', label: 'Sun', value: 0.4 },
+    { id: 'mon-previous', label: 'Mon', value: 0.3 },
   ];
 
   return (
-    <View style={[styles.container, { backgroundColor: cardBg }]}>
-      <View style={styles.header}>
-        <ThemedText style={styles.title}>Weight journey</ThemedText>
-        <ThemedText style={styles.subtitle}>Last 30 days</ThemedText>
-      </View>
+    <ThemedView style={[styles.container, { backgroundColor: cardBg }]}>
+      <ThemedView backgroundColor='transparent' marginBottom={24}>
+        <ThemedText fontSize={18} fontWeight='600'>Weight journey</ThemedText>
+        <ThemedText fontSize={14} opacity={0.6} marginTop={4}>Last 30 days</ThemedText>
+      </ThemedView>
 
-      <View style={styles.chartContainer}>
-        {data.map((item, index) => (
-          <View key={index} style={styles.barWrapper}>
-            <View 
+      <ThemedView backgroundColor='transparent' row height={120} alignItems='flex-end' justifyContent='space-between'>
+        {data.map(item => (
+          <ThemedView key={item.id} backgroundColor='transparent' flex alignItems='center' height='100%' justifyContent='flex-end'>
+            <ThemedView
               style={[
                 styles.bar, 
                 { height: `${item.value * 100}%`, backgroundColor: item.highlight ? accentColor : barBg },
                 item.highlight && styles.highlightedBar
               ]} 
             />
-            {item.highlight && <ThemedText style={styles.barLabel}>{item.label}</ThemedText>}
-          </View>
+            {item.highlight && (
+              <ThemedText fontSize={10} opacity={0.6} marginTop={8} position='absolute' bottom={-20}>
+                {item.label}
+              </ThemedText>
+            )}
+          </ThemedView>
         ))}
-      </View>
-    </View>
+      </ThemedView>
+    </ThemedView>
   );
 }
 
@@ -57,42 +62,11 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 2,
   },
-  header: {
-    marginBottom: 24,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  subtitle: {
-    fontSize: 14,
-    opacity: 0.6,
-    marginTop: 4,
-  },
-  chartContainer: {
-    flexDirection: 'row',
-    height: 120,
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
-  },
-  barWrapper: {
-    flex: 1,
-    alignItems: 'center',
-    height: '100%',
-    justifyContent: 'flex-end',
-  },
   bar: {
     width: 6,
     borderRadius: 3,
   },
   highlightedBar: {
     width: 8,
-  },
-  barLabel: {
-    fontSize: 10,
-    opacity: 0.6,
-    marginTop: 8,
-    position: 'absolute',
-    bottom: -20,
   },
 });

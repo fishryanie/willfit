@@ -3,9 +3,12 @@ import { forwardRef } from 'react';
 import { StyleSheet, View, ViewProps, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-interface ThemedViewProps extends ViewProps, ViewStyle {
+export type ThemedViewProps = ViewProps &
+  Omit<ViewStyle, 'flex' | 'flexGrow'> & {
   lightColor?: string;
   darkColor?: string;
+  flex?: number | boolean;
+  flexGrow?: number | true;
   row?: boolean;
   rowCenter?: boolean;
   contentCenter?: boolean;
@@ -18,7 +21,7 @@ interface ThemedViewProps extends ViewProps, ViewStyle {
   safePaddingBottom?: boolean;
   safeMarginTop?: boolean;
   safeMarginBottom?: boolean;
-}
+};
 
 const flexStyle = (flex: number | boolean): ViewStyle => ({
   flex: typeof flex === 'number' ? flex : flex ? 1 : 0,

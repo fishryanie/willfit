@@ -1,8 +1,9 @@
 import { LogIn, Trash2, TriangleAlert } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 
 import { ThemedText } from 'components/themed-text';
+import { ThemedView } from 'components/themed-view';
 import { Dialog } from 'components/ui/organisms/dialog';
 import { appDialog, type AppDialogState, type AppDialogTone } from 'utils/app-dialog';
 
@@ -75,17 +76,23 @@ export function AppDialogHost() {
   return (
     <Dialog key={dialog.id} defaultOpen>
       <Dialog.Content dismissible={dialog.dismissible} onClose={handleClose}>
-        <View style={styles.card}>
-          <View style={[styles.iconWrap, { backgroundColor: tone.backgroundColor }]}>
+        <ThemedView style={styles.card}>
+          <ThemedView style={[styles.iconWrap, { backgroundColor: tone.backgroundColor }]}>
             <Icon size={24} color={tone.color} strokeWidth={2.6} />
-          </View>
+          </ThemedView>
 
-          <View style={styles.copy}>
-            <ThemedText style={styles.title}>{dialog.title}</ThemedText>
-            {dialog.message ? <ThemedText style={styles.message}>{dialog.message}</ThemedText> : null}
-          </View>
+          <ThemedView backgroundColor='transparent' marginTop={16} gap={8}>
+            <ThemedText color='#FFFFFF' fontSize={20} lineHeight={25} fontWeight='900' letterSpacing={0}>
+              {dialog.title}
+            </ThemedText>
+            {dialog.message ? (
+              <ThemedText color='#B7BBC4' fontSize={15} lineHeight={21} fontWeight='600' letterSpacing={0}>
+                {dialog.message}
+              </ThemedText>
+            ) : null}
+          </ThemedView>
 
-          <View style={styles.actions}>
+          <ThemedView backgroundColor='transparent' style={styles.actions}>
             {dialog.cancelLabel ? (
               <Dialog.Close asChild>
                 <Pressable
@@ -94,7 +101,9 @@ export function AppDialogHost() {
                   onPress={() => {
                     actionRef.current = 'cancel';
                   }}>
-                  <ThemedText style={styles.secondaryText}>{dialog.cancelLabel}</ThemedText>
+                  <ThemedText color='#E5E7EF' fontSize={15} fontWeight='900' letterSpacing={0}>
+                    {dialog.cancelLabel}
+                  </ThemedText>
                 </Pressable>
               </Dialog.Close>
             ) : null}
@@ -106,11 +115,13 @@ export function AppDialogHost() {
                 onPress={() => {
                   actionRef.current = 'confirm';
                 }}>
-                <ThemedText style={styles.primaryText}>{dialog.confirmLabel}</ThemedText>
+                <ThemedText color='#111111' fontSize={15} fontWeight='900' letterSpacing={0}>
+                  {dialog.confirmLabel}
+                </ThemedText>
               </Pressable>
             </Dialog.Close>
-          </View>
-        </View>
+          </ThemedView>
+        </ThemedView>
       </Dialog.Content>
     </Dialog>
   );
@@ -136,24 +147,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  copy: {
-    marginTop: 16,
-    gap: 8,
-  },
-  title: {
-    color: '#FFFFFF',
-    fontSize: 20,
-    lineHeight: 25,
-    fontWeight: '900',
-    letterSpacing: 0,
-  },
-  message: {
-    color: '#B7BBC4',
-    fontSize: 15,
-    lineHeight: 21,
-    fontWeight: '600',
-    letterSpacing: 0,
-  },
   actions: {
     marginTop: 20,
     flexDirection: 'row',
@@ -177,17 +170,5 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 8 },
     shadowRadius: 18,
     elevation: 8,
-  },
-  secondaryText: {
-    color: '#E5E7EF',
-    fontSize: 15,
-    fontWeight: '900',
-    letterSpacing: 0,
-  },
-  primaryText: {
-    color: '#111111',
-    fontSize: 15,
-    fontWeight: '900',
-    letterSpacing: 0,
   },
 });

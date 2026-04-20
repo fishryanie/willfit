@@ -1,157 +1,161 @@
-export type ChatAuthor = 'me' | 'coach';
+import type { ImageSourcePropType } from 'react-native';
 
 export type ChatMessage = {
   id: string;
-  author: ChatAuthor;
-  body: string;
+  author: 'me' | 'coach';
+  text: string;
   time: string;
+  image?: string;
 };
 
 export type ChatConversation = {
   id: string;
   name: string;
-  role: string;
-  avatar: string;
-  color: string;
-  accent: string;
-  status: 'online' | 'active' | 'offline';
-  lastActive: string;
+  status: string;
+  avatar?: ImageSourcePropType;
   lastMessage: string;
-  unread: number;
-  tags: string[];
+  time: string;
+  isActive?: boolean;
   messages: ChatMessage[];
 };
 
+export const CHAT_COLORS = {
+  white: '#FFFFFF',
+  primary: '#F3742D',
+  primary200: '#FFCFA9',
+  textPlaceholder: '#808080',
+  antiFlashWhite: '#F1F1F1',
+  gray100: '#E5E8EC',
+  gray200: '#CAD1D9',
+  gray300: '#CBD5E1',
+  gray400: '#94A3B8',
+  gray600: '#64748B',
+  gray700: '#334155',
+  gray1000: '#282F38',
+  green500: '#32AD31',
+  textError: '#D9100A',
+} as const;
+
+export const CHAT_BACKGROUND = require('../../assets/chat/chatBg.png') as ImageSourcePropType;
+export const KINIS_AI_AVATAR = require('../../assets/chat/ava_Kinis_chat.png') as ImageSourcePropType;
+
+const currentTime = () =>
+  new Intl.DateTimeFormat('vi-VN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(new Date());
+
 export const chatConversations: ChatConversation[] = [
   {
-    id: 'coach-linh',
-    name: 'Coach Linh',
-    role: 'Strength coach',
-    avatar: 'CL',
-    color: '#FF8A00',
-    accent: '#FFE2C2',
-    status: 'online',
-    lastActive: 'Online',
-    lastMessage: 'Tối nay giữ RPE 7, đừng đẩy max ở set cuối.',
-    unread: 2,
-    tags: ['Push day', 'Recovery'],
+    id: 'kinis-ai',
+    name: 'Kinis.ai Chatbot',
+    status: 'Active now',
+    avatar: KINIS_AI_AVATAR,
+    time: currentTime(),
+    lastMessage: 'Lorem Ipsum is simply dummy text of the printing and typesetting industry',
+    isActive: true,
     messages: [
       {
-        id: 'm1',
+        id: 'ai-1',
         author: 'coach',
-        body: 'Hôm nay ngực và tay sau vẫn theo plan cũ. Warm-up kỹ vai trước khi chest press nhé.',
+        text: 'Hello developer',
         time: '08:12',
       },
       {
-        id: 'm2',
+        id: 'ai-2',
         author: 'me',
-        body: 'Set đầu thấy ổn, nhưng vai phải hơi căng.',
+        text: 'Tôi muốn xem lại lịch tập hôm nay.',
         time: '08:16',
       },
       {
-        id: 'm3',
+        id: 'ai-3',
         author: 'coach',
-        body: 'Giảm 5-10 lbs ở 2 set đầu. Nếu hết căng thì tăng lại từ từ.',
+        text: 'Plan hôm nay là push day. Giữ nhịp kiểm soát, nghỉ 90 giây giữa các set.',
         time: '08:18',
       },
+    ],
+  },
+  {
+    id: 'bethany-russell',
+    name: 'Bethany Russell PT, DPT',
+    status: 'Active now',
+    time: currentTime(),
+    lastMessage: 'Lorem Ipsum is simply dummy text of the printing and typesetting industry',
+    isActive: true,
+    messages: [
       {
-        id: 'm4',
+        id: 'b1',
         author: 'coach',
-        body: 'Tối nay giữ RPE 7, đừng đẩy max ở set cuối.',
-        time: '08:20',
+        text: 'Hello developer',
+        time: '09:30',
+      },
+      {
+        id: 'b2',
+        author: 'me',
+        text: 'Vai phải hơi căng khi chest press.',
+        time: '09:32',
+      },
+      {
+        id: 'b3',
+        author: 'coach',
+        text: 'Giảm tải set đầu và tập thêm warm-up cho vai. Nếu còn đau thì dừng bài đó lại.',
+        time: '09:34',
+      },
+    ],
+  },
+  {
+    id: 'trainer-hannah',
+    name: 'Hannah Lee Coach',
+    status: 'Active now',
+    time: currentTime(),
+    lastMessage: 'Lorem Ipsum is simply dummy text of the printing and typesetting industry',
+    isActive: true,
+    messages: [
+      {
+        id: 'h1',
+        author: 'coach',
+        text: 'Hôm nay bạn muốn chạy easy hay interval nhẹ?',
+        time: '13:10',
+      },
+      {
+        id: 'h2',
+        author: 'me',
+        text: 'Easy thôi, mai còn tập chân.',
+        time: '13:12',
+      },
+      {
+        id: 'h3',
+        author: 'coach',
+        text: 'Ok, giữ pace thoải mái và kết thúc dưới 6km.',
+        time: '13:13',
       },
     ],
   },
   {
     id: 'nutrition-team',
     name: 'Nutrition Team',
-    role: 'Meal support',
-    avatar: 'NT',
-    color: '#5BD67D',
-    accent: '#D9FBE2',
-    status: 'active',
-    lastActive: '12m ago',
+    status: '12m ago',
+    time: '12m',
     lastMessage: 'Bữa trưa thêm 25g protein là đủ mục tiêu hôm nay.',
-    unread: 0,
-    tags: ['Protein', 'Lunch'],
     messages: [
       {
         id: 'n1',
         author: 'coach',
-        body: 'Mục tiêu hôm nay là 145g protein. Sáng bạn đã có khoảng 38g.',
+        text: 'Mục tiêu hôm nay là 145g protein. Sáng bạn đã có khoảng 38g.',
         time: '11:03',
       },
       {
         id: 'n2',
         author: 'me',
-        body: 'Trưa ăn cơm gà được không?',
+        text: 'Trưa ăn cơm gà được không?',
         time: '11:05',
       },
       {
         id: 'n3',
         author: 'coach',
-        body: 'Được. Bữa trưa thêm 25g protein là đủ mục tiêu hôm nay.',
+        text: 'Được. Bữa trưa thêm 25g protein là đủ mục tiêu hôm nay.',
         time: '11:07',
-      },
-    ],
-  },
-  {
-    id: 'run-club',
-    name: 'WillFit Run Club',
-    role: 'Community',
-    avatar: 'RC',
-    color: '#4DA3FF',
-    accent: '#D9ECFF',
-    status: 'online',
-    lastActive: 'Online',
-    lastMessage: 'Route 5.2 km quanh công viên đã lưu cho sáng mai.',
-    unread: 1,
-    tags: ['5K', 'Route'],
-    messages: [
-      {
-        id: 'r1',
-        author: 'coach',
-        body: 'Bạn muốn chạy easy hay interval nhẹ?',
-        time: '17:30',
-      },
-      {
-        id: 'r2',
-        author: 'me',
-        body: 'Easy thôi, mai còn tập chân.',
-        time: '17:35',
-      },
-      {
-        id: 'r3',
-        author: 'coach',
-        body: 'Route 5.2 km quanh công viên đã lưu cho sáng mai.',
-        time: '17:36',
-      },
-    ],
-  },
-  {
-    id: 'recovery',
-    name: 'Recovery Check',
-    role: 'Mobility',
-    avatar: 'RX',
-    color: '#B86BFF',
-    accent: '#EBD9FF',
-    status: 'offline',
-    lastActive: 'Yesterday',
-    lastMessage: 'Foam roll 6 phút rồi ngủ sớm hơn thường ngày.',
-    unread: 0,
-    tags: ['Sleep', 'Mobility'],
-    messages: [
-      {
-        id: 'x1',
-        author: 'coach',
-        body: 'HRV hơi thấp. Tối nay ưu tiên phục hồi.',
-        time: 'Yesterday',
-      },
-      {
-        id: 'x2',
-        author: 'coach',
-        body: 'Foam roll 6 phút rồi ngủ sớm hơn thường ngày.',
-        time: 'Yesterday',
       },
     ],
   },

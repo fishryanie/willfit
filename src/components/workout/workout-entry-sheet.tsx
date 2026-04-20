@@ -1,10 +1,11 @@
 import { Check, Dumbbell, Ellipsis, Plus, Sparkles, TrendingUp, X } from 'lucide-react-native';
 import { useEffect, useMemo, useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, TextInput, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, TextInput, TouchableOpacity, useWindowDimensions } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from 'components/themed-text';
+import { ThemedView } from 'components/themed-view';
 import { appToast } from 'utils/app-toast';
 
 type WorkoutSet = {
@@ -179,77 +180,93 @@ export function WorkoutEntrySheet({ visible, onClose }: WorkoutEntrySheetProps) 
 
   return (
     <Modal animationType='none' transparent visible={visible} statusBarTranslucent onRequestClose={onClose}>
-      <View style={styles.portal}>
+      <ThemedView backgroundColor='transparent' style={styles.portal}>
         <Pressable style={styles.backdrop} onPress={onClose} />
         <Animated.View style={[styles.sheet, sheetStyle]}>
-          <View style={styles.handle} />
+          <ThemedView style={styles.handle} />
 
-          <View style={styles.header}>
-            <View style={styles.progressRing}>
-              <View style={[styles.progressArc, { transform: [{ rotate: `${Math.min(completedSets * 36, 300)}deg` }] }]} />
-            </View>
-            <ThemedText style={styles.timer}>{formatDuration(elapsedSeconds)}</ThemedText>
+          <ThemedView backgroundColor='transparent' style={styles.header}>
+            <ThemedView style={styles.progressRing}>
+              <ThemedView style={[styles.progressArc, { transform: [{ rotate: `${Math.min(completedSets * 36, 300)}deg` }] }]} />
+            </ThemedView>
+            <ThemedText color='#F0F1F6' fontSize={25} lineHeight={30} fontWeight='900' letterSpacing={0}>
+              {formatDuration(elapsedSeconds)}
+            </ThemedText>
             <TouchableOpacity activeOpacity={0.85} style={styles.finishButton} onPress={finishWorkout}>
-              <ThemedText style={styles.finishText}>Finish</ThemedText>
+              <ThemedText color='#FFFFFF' fontSize={19} fontWeight='900' letterSpacing={0}>
+                Finish
+              </ThemedText>
             </TouchableOpacity>
-          </View>
+          </ThemedView>
 
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 28 }]}>
-            <View style={styles.titleRow}>
-              <View>
-                <ThemedText style={styles.workoutTitle}>Push Day - Chest & Triceps</ThemedText>
-                <ThemedText style={styles.workoutMeta}>
+            <ThemedView backgroundColor='transparent' style={styles.titleRow}>
+              <ThemedView backgroundColor='transparent'>
+                <ThemedText color='#ECEEF4' fontSize={25} lineHeight={31} fontWeight='900' letterSpacing={0}>
+                  Push Day - Chest & Triceps
+                </ThemedText>
+                <ThemedText color='#888C98' fontSize={13} fontWeight='800' letterSpacing={0} marginTop={7}>
                   {completedSets}/{totalSets} sets complete
                 </ThemedText>
-              </View>
+              </ThemedView>
               <TouchableOpacity activeOpacity={0.8} style={styles.moreButton}>
                 <Ellipsis size={22} color='#C8CAD2' />
               </TouchableOpacity>
-            </View>
+            </ThemedView>
 
             {exercises.map((exercise, index) => (
-              <View key={exercise.id} style={styles.exerciseBlock}>
-                <View style={styles.exerciseHeader}>
+              <ThemedView key={exercise.id} backgroundColor='transparent' marginBottom={30}>
+                <ThemedView backgroundColor='transparent' style={styles.exerciseHeader}>
                   <ExerciseThumb variant={index} />
-                  <View style={styles.exerciseInfo}>
-                    <ThemedText style={styles.exerciseTitle}>{exercise.title}</ThemedText>
-                    <View style={styles.tagRow}>
+                  <ThemedView backgroundColor='transparent' flex>
+                    <ThemedText color='#F1F3F8' fontSize={20} lineHeight={25} fontWeight='900' letterSpacing={0}>
+                      {exercise.title}
+                    </ThemedText>
+                    <ThemedView backgroundColor='transparent' row wrap gap={7} marginTop={11}>
                       {exercise.tags.map(tag => (
-                        <View key={tag.label} style={[styles.tag, tag.tone === 'blue' && styles.tagBlue]}>
+                        <ThemedView key={tag.label} style={[styles.tag, tag.tone === 'blue' && styles.tagBlue]}>
                           {tag.tone === 'blue' ? <Sparkles size={12} color='#7AA2FF' /> : <TrendingUp size={12} color='#4BD783' />}
-                          <ThemedText style={[styles.tagText, tag.tone === 'blue' && styles.tagTextBlue]}>{tag.label}</ThemedText>
-                        </View>
+                          <ThemedText color={tag.tone === 'blue' ? '#7AA2FF' : '#53D58A'} fontSize={14} fontWeight='900' letterSpacing={0}>
+                            {tag.label}
+                          </ThemedText>
+                        </ThemedView>
                       ))}
-                    </View>
-                  </View>
+                    </ThemedView>
+                  </ThemedView>
                   <TouchableOpacity activeOpacity={0.8} style={styles.moreButton}>
                     <Ellipsis size={22} color='#C8CAD2' />
                   </TouchableOpacity>
-                </View>
+                </ThemedView>
 
                 <SetTable exercise={exercise} onUpdateSet={updateSet} onToggleSet={toggleSet} />
 
                 <TouchableOpacity activeOpacity={0.84} style={styles.addSetButton} onPress={() => addSet(exercise.id)}>
                   <Plus size={18} color='#E5E7EF' />
-                  <ThemedText style={styles.addSetText}>Add Set</ThemedText>
+                  <ThemedText color='#E9EBF2' fontSize={22} fontWeight='900' letterSpacing={0}>
+                    Add Set
+                  </ThemedText>
                 </TouchableOpacity>
 
                 {index === 0 && (
-                  <View style={styles.estimateCard}>
+                  <ThemedView style={styles.estimateCard}>
                     <TrendingUp size={22} color='#43D681' />
-                    <ThemedText style={styles.estimateText}>Estimated one rep max is 145 lbs which is a 7% increase from last time</ThemedText>
-                  </View>
+                    <ThemedText flex color='#F0F1F7' fontSize={21} lineHeight={27} fontWeight='800' letterSpacing={0}>
+                      Estimated one rep max is 145 lbs which is a 7% increase from last time
+                    </ThemedText>
+                  </ThemedView>
                 )}
-              </View>
+              </ThemedView>
             ))}
 
             <TouchableOpacity activeOpacity={0.86} style={styles.addExerciseButton} onPress={addExercise}>
               <Plus size={19} color='#FFFFFF' />
-              <ThemedText style={styles.addExerciseText}>Add Exercise</ThemedText>
+              <ThemedText color='#FFFFFF' fontSize={18} fontWeight='900' letterSpacing={0}>
+                Add Exercise
+              </ThemedText>
             </TouchableOpacity>
           </ScrollView>
         </Animated.View>
-      </View>
+      </ThemedView>
     </Modal>
   );
 }
@@ -264,19 +281,31 @@ function SetTable({
   onToggleSet: (exerciseId: string, setId: string) => void;
 }) {
   return (
-    <View style={styles.table}>
-      <View style={styles.tableHeader}>
-        <ThemedText style={[styles.tableLabel, styles.setColumn]}>Set</ThemedText>
-        <ThemedText style={[styles.tableLabel, styles.previousColumn]}>Previous</ThemedText>
-        <ThemedText style={[styles.tableLabel, styles.inputColumn]}>lbs</ThemedText>
-        <ThemedText style={[styles.tableLabel, styles.inputColumn]}>Reps</ThemedText>
-        <ThemedText style={[styles.tableLabel, styles.checkColumn]}>✓</ThemedText>
-      </View>
+    <ThemedView backgroundColor='transparent' gap={11}>
+      <ThemedView backgroundColor='transparent' style={styles.tableHeader}>
+        <ThemedText width={46} textAlign='center' color='#E7E9F0' fontSize={22} lineHeight={28} fontWeight='900' letterSpacing={0}>
+          Set
+        </ThemedText>
+        <ThemedText flex minWidth={86} color='#E7E9F0' fontSize={22} lineHeight={28} fontWeight='900' letterSpacing={0}>
+          Previous
+        </ThemedText>
+        <ThemedText width={66} textAlign='center' color='#E7E9F0' fontSize={22} lineHeight={28} fontWeight='900' letterSpacing={0}>
+          lbs
+        </ThemedText>
+        <ThemedText width={66} textAlign='center' color='#E7E9F0' fontSize={22} lineHeight={28} fontWeight='900' letterSpacing={0}>
+          Reps
+        </ThemedText>
+        <ThemedText width={44} textAlign='center' color='#E7E9F0' fontSize={22} lineHeight={28} fontWeight='900' letterSpacing={0}>
+          ✓
+        </ThemedText>
+      </ThemedView>
 
       {exercise.sets.map((set, index) => (
-        <View key={set.id} style={styles.setRow}>
-          <ThemedText style={[styles.setNumber, styles.setColumn]}>{index + 1}</ThemedText>
-          <ThemedText numberOfLines={1} style={[styles.previousText, styles.previousColumn]}>
+        <ThemedView key={set.id} backgroundColor='transparent' style={styles.setRow}>
+          <ThemedText width={46} textAlign='center' color='#EAECF2' fontSize={22} fontWeight='800' letterSpacing={0}>
+            {index + 1}
+          </ThemedText>
+          <ThemedText numberOfLines={1} flex minWidth={86} color='#ECEEF4' fontSize={19} fontWeight='800' letterSpacing={0}>
             {set.previous}
           </ThemedText>
           <TextInput
@@ -301,19 +330,19 @@ function SetTable({
             onPress={() => onToggleSet(exercise.id, set.id)}>
             {set.done ? <Check size={21} color='#FFFFFF' /> : <X size={18} color='#2A2C34' />}
           </TouchableOpacity>
-        </View>
+        </ThemedView>
       ))}
-    </View>
+    </ThemedView>
   );
 }
 
 function ExerciseThumb({ variant }: { variant: number }) {
   return (
-    <View style={styles.thumb}>
-      <View style={styles.thumbBench} />
-      <View style={[styles.thumbBody, variant % 2 === 1 && styles.thumbBodyAlt]} />
+    <ThemedView style={styles.thumb}>
+      <ThemedView style={styles.thumbBench} />
+      <ThemedView style={[styles.thumbBody, variant % 2 === 1 && styles.thumbBodyAlt]} />
       <Dumbbell size={20} color='#D8DAE2' />
-    </View>
+    </ThemedView>
   );
 }
 
@@ -383,13 +412,6 @@ const styles = StyleSheet.create({
     borderRightColor: 'transparent',
     borderBottomColor: 'transparent',
   },
-  timer: {
-    color: '#F0F1F6',
-    fontSize: 25,
-    lineHeight: 30,
-    fontWeight: '900',
-    letterSpacing: 0,
-  },
   finishButton: {
     minWidth: 124,
     height: 62,
@@ -397,12 +419,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#5BD67D',
-  },
-  finishText: {
-    color: '#FFFFFF',
-    fontSize: 19,
-    fontWeight: '900',
-    letterSpacing: 0,
   },
   content: {
     paddingHorizontal: 22,
@@ -415,28 +431,11 @@ const styles = StyleSheet.create({
     gap: 14,
     marginBottom: 26,
   },
-  workoutTitle: {
-    color: '#ECEEF4',
-    fontSize: 25,
-    lineHeight: 31,
-    fontWeight: '900',
-    letterSpacing: 0,
-  },
-  workoutMeta: {
-    marginTop: 7,
-    color: '#888C98',
-    fontSize: 13,
-    fontWeight: '800',
-    letterSpacing: 0,
-  },
   moreButton: {
     width: 34,
     height: 34,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  exerciseBlock: {
-    marginBottom: 30,
   },
   exerciseHeader: {
     flexDirection: 'row',
@@ -478,22 +477,6 @@ const styles = StyleSheet.create({
     left: 18,
     transform: [{ rotate: '15deg' }],
   },
-  exerciseInfo: {
-    flex: 1,
-  },
-  exerciseTitle: {
-    color: '#F1F3F8',
-    fontSize: 20,
-    lineHeight: 25,
-    fontWeight: '900',
-    letterSpacing: 0,
-  },
-  tagRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 7,
-    marginTop: 11,
-  },
   tag: {
     minHeight: 30,
     borderRadius: 8,
@@ -506,29 +489,10 @@ const styles = StyleSheet.create({
   tagBlue: {
     backgroundColor: 'rgba(92, 117, 255, 0.18)',
   },
-  tagText: {
-    color: '#53D58A',
-    fontSize: 14,
-    fontWeight: '900',
-    letterSpacing: 0,
-  },
-  tagTextBlue: {
-    color: '#7AA2FF',
-  },
-  table: {
-    gap: 11,
-  },
   tableHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-  },
-  tableLabel: {
-    color: '#E7E9F0',
-    fontSize: 22,
-    lineHeight: 28,
-    fontWeight: '900',
-    letterSpacing: 0,
   },
   setRow: {
     flexDirection: 'row',
@@ -536,33 +500,9 @@ const styles = StyleSheet.create({
     gap: 8,
     minHeight: 62,
   },
-  setColumn: {
-    width: 46,
-    textAlign: 'center',
-  },
-  previousColumn: {
-    flex: 1,
-    minWidth: 86,
-  },
   inputColumn: {
     width: 66,
     textAlign: 'center',
-  },
-  checkColumn: {
-    width: 44,
-    textAlign: 'center',
-  },
-  setNumber: {
-    color: '#EAECF2',
-    fontSize: 22,
-    fontWeight: '800',
-    letterSpacing: 0,
-  },
-  previousText: {
-    color: '#ECEEF4',
-    fontSize: 19,
-    fontWeight: '800',
-    letterSpacing: 0,
   },
   valueInput: {
     minHeight: 45,
@@ -595,12 +535,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
   },
-  addSetText: {
-    color: '#E9EBF2',
-    fontSize: 22,
-    fontWeight: '900',
-    letterSpacing: 0,
-  },
   estimateCard: {
     marginTop: 19,
     borderRadius: 8,
@@ -611,14 +545,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 16,
   },
-  estimateText: {
-    flex: 1,
-    color: '#F0F1F7',
-    fontSize: 21,
-    lineHeight: 27,
-    fontWeight: '800',
-    letterSpacing: 0,
-  },
   addExerciseButton: {
     minHeight: 58,
     borderRadius: 8,
@@ -627,11 +553,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     flexDirection: 'row',
     gap: 8,
-  },
-  addExerciseText: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '900',
-    letterSpacing: 0,
   },
 });

@@ -1,4 +1,5 @@
 import { DarkTheme, DefaultTheme, ThemeProvider as NavigationThemeProvider } from '@react-navigation/native';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { Stack, useNavigationContainerRef } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useState } from 'react';
@@ -75,31 +76,33 @@ function RootLayout() {
     <GestureHandlerRootView style={styles.root}>
       <QueryClientProvider client={queryClient}>
         <KeyboardProvider>
-          <ReacticxThemeProvider
-            key={themeSeed}
-            defaultTheme={initialTheme}
-            onThemeChange={persistThemeMode}
-            customLightColors={{
-              background: Colors.light.background,
-              card: Colors.light.card,
-              text: Colors.light.text,
-              textSecondary: Colors.light.secondary,
-              accent: Colors.light.accent,
-              primary: Colors.light.tint,
-            }}
-            customDarkColors={{
-              background: Colors.dark.background,
-              card: Colors.dark.card,
-              text: Colors.dark.text,
-              textSecondary: Colors.dark.secondary,
-              accent: Colors.dark.accent,
-              primary: Colors.dark.tint,
-            }}>
-            <ToastProviderWithViewport>
-              <RootLayoutContent />
-              <AppDialogHost />
-            </ToastProviderWithViewport>
-          </ReacticxThemeProvider>
+          <BottomSheetModalProvider>
+            <ReacticxThemeProvider
+              key={themeSeed}
+              defaultTheme={initialTheme}
+              onThemeChange={persistThemeMode}
+              customLightColors={{
+                background: Colors.light.background,
+                card: Colors.light.card,
+                text: Colors.light.text,
+                textSecondary: Colors.light.secondary,
+                accent: Colors.light.accent,
+                primary: Colors.light.tint,
+              }}
+              customDarkColors={{
+                background: Colors.dark.background,
+                card: Colors.dark.card,
+                text: Colors.dark.text,
+                textSecondary: Colors.dark.secondary,
+                accent: Colors.dark.accent,
+                primary: Colors.dark.tint,
+              }}>
+              <ToastProviderWithViewport>
+                <RootLayoutContent />
+                <AppDialogHost />
+              </ToastProviderWithViewport>
+            </ReacticxThemeProvider>
+          </BottomSheetModalProvider>
         </KeyboardProvider>
       </QueryClientProvider>
     </GestureHandlerRootView>

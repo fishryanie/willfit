@@ -1,7 +1,8 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { Droplets, Dumbbell, Flame, Moon, Weight, type LucideIcon } from 'lucide-react-native';
 import { ThemedText } from 'components/themed-text';
+import { ThemedView } from 'components/themed-view';
 import { useThemeColor } from 'hooks/use-theme-color';
 
 interface MetricGridCardProps {
@@ -40,22 +41,28 @@ export function MetricGridCard({
   const Icon = METRIC_ICONS[icon];
 
   return (
-    <View style={[styles.container, { backgroundColor: cardBg }]}>
-      <View style={styles.content}>
-        <View style={styles.infoSection}>
-          <View style={styles.iconWrapper}>
+    <ThemedView style={[styles.container, { backgroundColor: cardBg }]}>
+      <ThemedView backgroundColor='transparent' row alignItems='center' justifyContent='space-between'>
+        <ThemedView backgroundColor='transparent' row alignItems='center' gap={16}>
+          <ThemedView square={48} radius={24} backgroundColor='rgba(150, 150, 150, 0.1)' contentCenter>
             <Icon size={24} color={iconColor || iconTintColor} strokeWidth={2.1} />
-          </View>
-          <View>
-            <ThemedText style={styles.title}>{title}</ThemedText>
-            <View style={styles.valueRow}>
-              <ThemedText style={styles.value}>{value}</ThemedText>
-              <ThemedText style={styles.unit}>{unit}</ThemedText>
-            </View>
-          </View>
-        </View>
-      </View>
-    </View>
+          </ThemedView>
+          <ThemedView backgroundColor='transparent'>
+            <ThemedText fontSize={15} fontWeight='600' marginBottom={4}>
+              {title}
+            </ThemedText>
+            <ThemedView backgroundColor='transparent' row alignItems='baseline' gap={4}>
+              <ThemedText fontSize={20} fontWeight='700'>
+                {value}
+              </ThemedText>
+              <ThemedText fontSize={14} opacity={0.6}>
+                {unit}
+              </ThemedText>
+            </ThemedView>
+          </ThemedView>
+        </ThemedView>
+      </ThemedView>
+    </ThemedView>
   );
 }
 
@@ -66,41 +73,5 @@ const styles = StyleSheet.create({
     flex: 1,
     minHeight: 120,
     justifyContent: 'center',
-  },
-  content: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  infoSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-  },
-  iconWrapper: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(150, 150, 150, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 15,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  valueRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 4,
-  },
-  value: {
-    fontSize: 20,
-    fontWeight: '700',
-  },
-  unit: {
-    fontSize: 14,
-    opacity: 0.6,
   },
 });

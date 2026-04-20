@@ -1,7 +1,7 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { Clock3, Dumbbell, Flame, Plus, Trophy, type LucideIcon } from 'lucide-react-native';
 import React, { useCallback, useState } from 'react';
-import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from 'components/themed-text';
@@ -29,40 +29,52 @@ export default function AddScreen() {
             paddingBottom: insets.bottom + 120,
           },
         ]}>
-        <View style={styles.header}>
-          <View style={styles.headerIcon}>
+        <ThemedView row alignItems='center' gap={13} backgroundColor='transparent'>
+          <ThemedView square={54} radius={8} backgroundColor='#FF5A1F' contentCenter>
             <Dumbbell size={25} color='#FFFFFF' />
-          </View>
-          <View>
-            <ThemedText style={styles.kicker}>Exercise</ThemedText>
-            <ThemedText style={styles.title}>Log strength work</ThemedText>
-          </View>
-        </View>
+          </ThemedView>
+          <ThemedView backgroundColor='transparent'>
+            <ThemedText color='#8E939E' fontSize={13} fontWeight='900' letterSpacing={0}>
+              Exercise
+            </ThemedText>
+            <ThemedText color='#FFFFFF' fontSize={29} lineHeight={34} fontWeight='900' letterSpacing={0} marginTop={3}>
+              Log strength work
+            </ThemedText>
+          </ThemedView>
+        </ThemedView>
 
         <TouchableOpacity activeOpacity={0.86} style={styles.primaryButton} onPress={() => setSheetVisible(true)}>
           <Plus size={22} color='#FFFFFF' />
-          <ThemedText style={styles.primaryButtonText}>Add Exercise</ThemedText>
+          <ThemedText color='#FFFFFF' fontSize={18} fontWeight='900' letterSpacing={0}>
+            Add Exercise
+          </ThemedText>
         </TouchableOpacity>
 
-        <View style={styles.planCard}>
-          <View>
-            <ThemedText style={styles.planTitle}>Push Day</ThemedText>
-            <ThemedText style={styles.planMeta}>Chest, triceps, machine press, dumbbell kickback</ThemedText>
-          </View>
+        <ThemedView style={styles.planCard}>
+          <ThemedView backgroundColor='transparent'>
+            <ThemedText color='#FFFFFF' fontSize={24} fontWeight='900' letterSpacing={0}>
+              Push Day
+            </ThemedText>
+            <ThemedText color='#A4A8B4' fontSize={14} lineHeight={20} fontWeight='700' letterSpacing={0} marginTop={7}>
+              Chest, triceps, machine press, dumbbell kickback
+            </ThemedText>
+          </ThemedView>
           <Flame size={28} color='#FF5A1F' />
-        </View>
+        </ThemedView>
 
-        <View style={styles.metricRow}>
+        <ThemedView row gap={12} backgroundColor='transparent'>
           <MetricTile icon={Clock3} label='Timer' value='01:19' />
           <MetricTile icon={Trophy} label='Target' value='5 sets' />
-        </View>
+        </ThemedView>
 
-        <View style={styles.tipCard}>
-          <ThemedText style={styles.tipTitle}>Ready to track</ThemedText>
-          <ThemedText style={styles.tipText}>
+        <ThemedView radius={8} backgroundColor='#232631' padding={18}>
+          <ThemedText color='#FFFFFF' fontSize={18} fontWeight='900' letterSpacing={0}>
+            Ready to track
+          </ThemedText>
+          <ThemedText color='#C7CBD4' fontSize={14} lineHeight={21} fontWeight='700' letterSpacing={0} marginTop={7}>
             Open the sheet to enter lbs, reps, completed sets, and one rep max progress.
           </ThemedText>
-        </View>
+        </ThemedView>
       </ScrollView>
 
       <WorkoutEntrySheet visible={sheetVisible} onClose={() => setSheetVisible(false)} />
@@ -80,11 +92,15 @@ function MetricTile({
   value: string;
 }) {
   return (
-    <View style={styles.metricTile}>
+    <ThemedView flex radius={8} backgroundColor='#1C1D25' padding={16}>
       <Icon size={18} color='#5BD67D' />
-      <ThemedText style={styles.metricValue}>{value}</ThemedText>
-      <ThemedText style={styles.metricLabel}>{label}</ThemedText>
-    </View>
+      <ThemedText color='#FFFFFF' fontSize={22} fontWeight='900' marginTop={10} letterSpacing={0}>
+        {value}
+      </ThemedText>
+      <ThemedText color='#8E939E' fontSize={12} fontWeight='800' marginTop={3} letterSpacing={0}>
+        {label}
+      </ThemedText>
+    </ThemedView>
   );
 }
 
@@ -92,33 +108,6 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 20,
     gap: 16,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 13,
-  },
-  headerIcon: {
-    width: 54,
-    height: 54,
-    borderRadius: 8,
-    backgroundColor: '#FF5A1F',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  kicker: {
-    color: '#8E939E',
-    fontSize: 13,
-    fontWeight: '900',
-    letterSpacing: 0,
-  },
-  title: {
-    marginTop: 3,
-    color: '#FFFFFF',
-    fontSize: 29,
-    lineHeight: 34,
-    fontWeight: '900',
-    letterSpacing: 0,
   },
   primaryButton: {
     minHeight: 58,
@@ -129,12 +118,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
   },
-  primaryButtonText: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '900',
-    letterSpacing: 0,
-  },
   planCard: {
     minHeight: 112,
     borderRadius: 8,
@@ -144,62 +127,5 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     gap: 16,
-  },
-  planTitle: {
-    color: '#FFFFFF',
-    fontSize: 24,
-    fontWeight: '900',
-    letterSpacing: 0,
-  },
-  planMeta: {
-    marginTop: 7,
-    color: '#A4A8B4',
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: '700',
-    letterSpacing: 0,
-  },
-  metricRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  metricTile: {
-    flex: 1,
-    borderRadius: 8,
-    backgroundColor: '#1C1D25',
-    padding: 16,
-  },
-  metricValue: {
-    color: '#FFFFFF',
-    fontSize: 22,
-    fontWeight: '900',
-    marginTop: 10,
-    letterSpacing: 0,
-  },
-  metricLabel: {
-    color: '#8E939E',
-    fontSize: 12,
-    fontWeight: '800',
-    marginTop: 3,
-    letterSpacing: 0,
-  },
-  tipCard: {
-    borderRadius: 8,
-    backgroundColor: '#232631',
-    padding: 18,
-  },
-  tipTitle: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '900',
-    letterSpacing: 0,
-  },
-  tipText: {
-    marginTop: 7,
-    color: '#C7CBD4',
-    fontSize: 14,
-    lineHeight: 21,
-    fontWeight: '700',
-    letterSpacing: 0,
   },
 });

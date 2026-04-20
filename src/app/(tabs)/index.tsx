@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View, ScrollView } from 'react-native';
+import { ScrollView, StyleSheet } from 'react-native';
 import { DashboardHeader } from 'components/dashboard/dashboard-header';
 import { MetricGridCard } from 'components/dashboard/metric-grid-card';
 import { MetricChips } from 'components/dashboard/metric-chips';
@@ -15,7 +15,7 @@ export default function HomeScreen() {
       >
         <MetricChips />
 
-        <View style={styles.metricRow}>
+        <ThemedView backgroundColor='transparent' style={styles.metricRow}>
           <MetricGridCard
             title="Calories"
             value="5,839"
@@ -34,9 +34,9 @@ export default function HomeScreen() {
             icon="water"
             iconColor="#222"
           />
-        </View>
+        </ThemedView>
 
-        <View style={styles.metricRow}>
+        <ThemedView backgroundColor='transparent' style={styles.metricRow}>
           <MetricGridCard
             title="Sleep"
             value="7.30"
@@ -55,9 +55,9 @@ export default function HomeScreen() {
             icon="barbell"
             iconColor="#222"
           />
-        </View>
+        </ThemedView>
 
-        <View style={{ height: 120 }} />
+        <ThemedView height={120} backgroundColor='transparent' />
       </ScrollView>
     </ThemedView>
   );

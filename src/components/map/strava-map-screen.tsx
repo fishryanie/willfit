@@ -1,12 +1,17 @@
+import {
+  BottomSheetBackdrop,
+  BottomSheetModal,
+  BottomSheetScrollView,
+  type BottomSheetBackdropProps,
+} from '@gorhom/bottom-sheet';
 import { ModernSwipeButton } from 'components/map/modern-swipe-button';
 import { ThemedText } from 'components/themed-text';
 import { ThemedView } from 'components/themed-view';
 import { CircularCarousel } from 'components/ui/molecules/circular-carousel';
-import { SplitView } from 'components/ui/molecules/split-view';
 import * as Location from 'expo-location';
 import { Download, Flame, Layers, LocateFixed, MapPinned, Pause, Play, RadioTower, Search, Sparkles, Timer, Waves } from 'lucide-react-native';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, type ListRenderItem, StyleSheet, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, StyleSheet, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { appToast } from 'utils/app-toast';
 import { storage } from 'utils/storage';
@@ -31,8 +36,6 @@ type RouteChoice = RouteSummary & {
   source: 'generated' | 'saved';
 };
 type RouteCarouselItem = { type: 'route'; route: RouteChoice } | { type: 'record' };
-type RecordTopItem = { id: 'summary' } | { id: 'metrics' } | { id: 'controls' };
-type RecordBottomItem = { id: 'route' } | { id: 'splits' };
 
 const ACTIVITY_MODE_LABELS: Record<ActivityMode, string> = {
   run: 'Chạy bộ',
@@ -54,7 +57,7 @@ const getNextActivityMode = (mode: ActivityMode): ActivityMode => {
 };
 
 export function StravaMapScreen() {
-  const { height, width } = useWindowDimensions();
+  const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const [center, setCenter] = useState<Coordinate>(DEFAULT_COORDINATE);
   const [recordPanelVisible, setRecordPanelVisible] = useState(false);
@@ -78,6 +81,7 @@ export function StravaMapScreen() {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [liveCoordinates, setLiveCoordinates] = useState<Coordinate[]>([]);
   const watchSubscription = useRef<Location.LocationSubscription | null>(null);
+  const recordSheetRef = useRef<BottomSheetModal>(null);
   const isPausedRef = useRef(false);
   const initialRouteBuilt = useRef(false);
   const liveCoordinatesRef = useRef<Coordinate[]>([]);
@@ -99,12 +103,7 @@ export function StravaMapScreen() {
     () => [...routeChoices.map(route => ({ type: 'route' as const, route })), { type: 'record' as const }],
     [routeChoices],
   );
-  const recordTopItems = useMemo<RecordTopItem[]>(() => [{ id: 'summary' }, { id: 'metrics' }, { id: 'controls' }], []);
-  const recordBottomItems = useMemo<RecordBottomItem[]>(() => [{ id: 'route' }, { id: 'splits' }], []);
-  const recordSplitMinTopHeight = Math.max(260, height * 0.34);
-  const recordSplitMaxTopHeight = Math.max(recordSplitMinTopHeight + 120, height - insets.top - insets.bottom - 220);
-  const recordSplitInitialTopHeight = Math.min(Math.max(360, height * 0.54), recordSplitMaxTopHeight);
-  const recordSplitSpringConfig = useMemo(() => ({ damping: 22, stiffness: 190, mass: 0.85 }), []);
+  const recordSheetSnapPoints = useMemo(() => ['46%', '78%'], []);
   const routeDistanceMeters = useMemo(() => calculateTrackDistance(routeCoordinates), [routeCoordinates]);
   const liveDistanceMeters = useMemo(() => calculateTrackDistance(liveCoordinates), [liveCoordinates]);
   const selectedRoute = useMemo(
@@ -216,6 +215,25 @@ export function StravaMapScreen() {
   const closeRecordSheet = useCallback(() => {
     setRecordPanelVisible(false);
   }, []);
+
+  const handleRecordSheetDismiss = useCallback(() => {
+    if (!isRecording) {
+      setRecordPanelVisible(false);
+    }
+  }, [isRecording]);
+
+  const renderRecordBackdrop = useCallback(
+    (props: BottomSheetBackdropProps) => (
+      <BottomSheetBackdrop
+        {...props}
+        appearsOnIndex={1}
+        disappearsOnIndex={-1}
+        opacity={0.12}
+        pressBehavior={isRecording ? 'none' : 'close'}
+      />
+    ),
+    [isRecording],
+  );
 
   const startRecording = useCallback(
     async (mode: 'route' | 'free' = 'route') => {
@@ -391,139 +409,19 @@ export function StravaMapScreen() {
   }, [isPaused, isRecording]);
 
   useEffect(() => {
+    if (recordPanelVisible || isRecording) {
+      recordSheetRef.current?.present();
+      return;
+    }
+
+    recordSheetRef.current?.dismiss();
+  }, [isRecording, recordPanelVisible]);
+
+  useEffect(() => {
     return () => {
       watchSubscription.current?.remove();
     };
   }, []);
-
-  const renderRecordTopItem = useCallback<ListRenderItem<RecordTopItem>>(
-    ({ item }) => {
-      if (item.id === 'summary') {
-        return (
-          <View style={styles.sectionHeader}>
-            <View style={styles.recordHeaderText}>
-              <ThemedText style={styles.sheetTitle}>
-                {isRecording ? recordingTitle : recordStartMode === 'route' ? recordingTitle : 'Record activity'}
-              </ThemedText>
-              <ThemedText style={styles.sheetSubtitle}>{isRecording ? 'Trượt để kết thúc và lưu lại cung đường.' : 'Vuốt để bắt đầu record.'}</ThemedText>
-            </View>
-            <View style={styles.sheetActionRow}>
-              {!isRecording && (
-                <TouchableOpacity activeOpacity={0.82} style={styles.changeRoutePill} onPress={closeRecordSheet}>
-                  <Search size={14} color='#111111' />
-                  <ThemedText style={styles.changeRouteText}>Đổi cung</ThemedText>
-                </TouchableOpacity>
-              )}
-              <TouchableOpacity
-                activeOpacity={0.82}
-                style={[styles.beaconPill, beaconEnabled && styles.beaconPillActive]}
-                onPress={() => setBeaconEnabled(value => !value)}>
-                <RadioTower size={15} color={beaconEnabled ? '#FFFFFF' : '#111111'} />
-                <ThemedText style={[styles.beaconText, beaconEnabled && styles.beaconTextActive]}>Beacon</ThemedText>
-              </TouchableOpacity>
-            </View>
-          </View>
-        );
-      }
-
-      if (item.id === 'metrics') {
-        return (
-          <>
-            <View style={styles.routeStats}>
-              <StatBlock label='Route' value={formatDistance(routeDistanceMeters)} />
-              <StatBlock label='Time' value={formatDuration(elapsedSeconds)} />
-              <StatBlock label='Distance' value={formatDistance(liveDistanceMeters)} />
-            </View>
-
-            <View style={styles.recordGrid}>
-              <StatBlock label='Pace' value={formatPace(liveDistanceMeters, elapsedSeconds)} />
-              <StatBlock label='Elevation' value={`${selectedRoute.elevationM} m`} />
-              <StatBlock label='Splits' value={liveDistanceMeters > 1000 ? '1 logged' : '--'} />
-              <StatBlock label='Source' value={routeSource === 'osrm' ? 'OSRM' : 'Local'} />
-            </View>
-          </>
-        );
-      }
-
-      return (
-        <View style={styles.recordControlsNew}>
-          {!isRecording ? (
-            <ModernSwipeButton label='Trượt để bắt đầu ghi' onComplete={() => startRecording(recordStartMode)} />
-          ) : (
-            <>
-              <View style={styles.secondaryControls}>
-                <TouchableOpacity activeOpacity={0.88} style={styles.pauseButtonNew} onPress={pauseRecording}>
-                  <View style={styles.pauseIconWrap}>
-                    {isPaused ? <Play size={20} color='#111111' fill='#111111' /> : <Pause size={20} color='#111111' fill='#111111' />}
-                  </View>
-                  <ThemedText style={styles.pauseLabel}>{isPaused ? 'Tiếp tục' : 'Tạm dừng'}</ThemedText>
-                </TouchableOpacity>
-              </View>
-              <ModernSwipeButton tone='finish' label='Trượt để kết thúc và lưu' onComplete={finishRecording} />
-            </>
-          )}
-        </View>
-      );
-    },
-    [
-      beaconEnabled,
-      closeRecordSheet,
-      elapsedSeconds,
-      finishRecording,
-      isPaused,
-      isRecording,
-      liveDistanceMeters,
-      pauseRecording,
-      recordStartMode,
-      recordingTitle,
-      routeDistanceMeters,
-      routeSource,
-      selectedRoute.elevationM,
-      startRecording,
-    ],
-  );
-
-  const renderRecordBottomItem = useCallback<ListRenderItem<RecordBottomItem>>(
-    ({ item }) => {
-      if (item.id === 'route') {
-        return (
-          <View style={styles.recordRouteDetail}>
-            <View style={styles.recordDetailRow}>
-              <ThemedText style={styles.recordDetailLabel}>Cung đường</ThemedText>
-              <ThemedText numberOfLines={1} style={styles.recordDetailValue}>
-                {recordStartMode === 'route' ? selectedRoute.title : 'Record tự do'}
-              </ThemedText>
-            </View>
-            <View style={styles.recordDetailRow}>
-              <ThemedText style={styles.recordDetailLabel}>Mục tiêu</ThemedText>
-              <ThemedText style={styles.recordDetailValue}>
-                {recordStartMode === 'route' ? `${selectedRoute.distanceKm.toFixed(1)} km` : 'Lưu track sau khi kết thúc'}
-              </ThemedText>
-            </View>
-            <View style={styles.recordDetailRow}>
-              <ThemedText style={styles.recordDetailLabel}>Dữ liệu route</ThemedText>
-              <ThemedText style={styles.recordDetailValue}>{routeSource === 'osrm' ? 'OSRM' : 'Local fallback'}</ThemedText>
-            </View>
-          </View>
-        );
-      }
-
-      return (
-        <View style={styles.liveSplits}>
-          <View style={styles.splitIcon}>
-            <Timer size={18} color='#FF8A00' />
-          </View>
-          <View style={styles.splitBody}>
-            <ThemedText style={styles.splitTitle}>Auto splits</ThemedText>
-            <ThemedText style={styles.splitMeta}>Mỗi kilomet sẽ được tổng hợp trong lúc record.</ThemedText>
-          </View>
-        </View>
-      );
-    },
-    [recordStartMode, routeSource, selectedRoute.distanceKm, selectedRoute.title],
-  );
-
-  const renderRecordSplitHeader = useCallback(() => <View />, []);
 
   const showRouteCarousel = !recordPanelVisible && !isRecording;
 
@@ -544,22 +442,22 @@ export function StravaMapScreen() {
         onMapPress={handleMapPress}
       />
 
-      <View style={[styles.topBar, { paddingTop: insets.top + 10 }]}>
-        <View style={styles.searchPill}>
+      <ThemedView backgroundColor='transparent' style={[styles.topBar, { paddingTop: insets.top + 10 }]}>
+        <ThemedView style={styles.searchPill}>
           <Search size={18} color='#6B7280' />
-          <ThemedText numberOfLines={1} style={styles.searchText}>
+          <ThemedText numberOfLines={1} color='#6B7280' fontSize={14} fontWeight='600' letterSpacing={0}>
             Tìm kiếm vị trí
           </ThemedText>
-        </View>
+        </ThemedView>
         <TouchableOpacity
           activeOpacity={0.78}
           style={styles.iconButton}
           onPress={() => setMapLayer(value => (value === 'standard' ? 'satellite' : 'standard'))}>
           <Layers size={20} color='#111111' />
         </TouchableOpacity>
-      </View>
+      </ThemedView>
 
-      <View style={[styles.mapControls, { top: insets.top + 74 }]}>
+      <ThemedView backgroundColor='transparent' style={[styles.mapControls, { top: insets.top + 74 }]}>
         <TouchableOpacity
           activeOpacity={0.78}
           style={[styles.floatingButton, followUser && styles.floatingButtonActive]}
@@ -578,14 +476,14 @@ export function StravaMapScreen() {
           onPress={() => setBeaconEnabled(value => !value)}>
           <RadioTower size={20} color={beaconEnabled ? '#FFFFFF' : '#111111'} />
         </TouchableOpacity>
-      </View>
+      </ThemedView>
 
-      <View style={[styles.statusPill, { top: insets.top + 78 }]}>
-        <View style={[styles.statusDot, routeSource === 'osrm' ? styles.statusDotOnline : styles.statusDotLocal]} />
-        <ThemedText numberOfLines={1} style={styles.statusText}>
+      <ThemedView style={[styles.statusPill, { top: insets.top + 78 }]}>
+        <ThemedView style={[styles.statusDot, routeSource === 'osrm' ? styles.statusDotOnline : styles.statusDotLocal]} />
+        <ThemedText numberOfLines={1} color='#111111' fontSize={12} fontWeight='700' letterSpacing={0}>
           {isRouting ? 'Đang dựng cung đường...' : routeSource === 'osrm' ? 'Route by OSRM' : locationStatus}
         </ThemedText>
-      </View>
+      </ThemedView>
 
       {!isRecording && (
         <TouchableOpacity
@@ -604,17 +502,21 @@ export function StravaMapScreen() {
             });
             setRecordPanelVisible(false);
           }}>
-          <ThemedText style={styles.searchHereText}>Tìm kiếm tại đây</ThemedText>
+          <ThemedText color='#FFFFFF' fontSize={14} fontWeight='900' letterSpacing={0}>
+            Tìm kiếm tại đây
+          </ThemedText>
         </TouchableOpacity>
       )}
 
       {showRouteCarousel && (
-        <View style={[styles.routeCarouselOverlay, { bottom: insets.bottom + 88 }]}>
-          <View style={styles.carouselFilterRow}>
-            <View style={styles.carouselFilterPill}>
+        <ThemedView backgroundColor='transparent' style={[styles.routeCarouselOverlay, { bottom: insets.bottom + 88 }]}>
+          <ThemedView backgroundColor='transparent' style={styles.carouselFilterRow}>
+            <ThemedView style={styles.carouselFilterPill}>
               <Flame size={15} color='#FF5A1F' />
-              <ThemedText style={styles.carouselFilterText}>Lộ trình</ThemedText>
-            </View>
+              <ThemedText color='#FFFFFF' fontSize={12} fontWeight='900' letterSpacing={0}>
+                Lộ trình
+              </ThemedText>
+            </ThemedView>
             <TouchableOpacity
               activeOpacity={0.82}
               style={styles.carouselFilterPill}
@@ -629,10 +531,12 @@ export function StravaMapScreen() {
                 }
               }}>
               <MapPinned size={15} color='#FFFFFF' />
-              <ThemedText style={styles.carouselFilterText}>{ACTIVITY_MODE_LABELS[activityMode]}</ThemedText>
+              <ThemedText color='#FFFFFF' fontSize={12} fontWeight='900' letterSpacing={0}>
+                {ACTIVITY_MODE_LABELS[activityMode]}
+              </ThemedText>
             </TouchableOpacity>
             {isRouting && <ActivityIndicator color='#FF5A1F' size='small' />}
-          </View>
+          </ThemedView>
 
           <CircularCarousel
             data={carouselItems}
@@ -652,110 +556,207 @@ export function StravaMapScreen() {
                 />
               ) : (
                 <TouchableOpacity activeOpacity={0.9} style={[styles.recordCarouselCard, { width: carouselCardWidth }]} onPress={openFreeRecordSheet}>
-                  <View style={styles.recordCardIcon}>
+                  <ThemedView style={styles.recordCardIcon}>
                     <Timer size={20} color='#FF5A1F' />
-                  </View>
-                  <View style={styles.recordCardBody}>
-                    <ThemedText numberOfLines={1} style={styles.routeCarouselTitle}>
+                  </ThemedView>
+                  <ThemedView backgroundColor='transparent' style={styles.recordCardBody}>
+                    <ThemedText flex numberOfLines={1} color='#FFFFFF' fontSize={15} fontWeight='900' letterSpacing={0}>
                       Ghi lại cung đường mới
                     </ThemedText>
-                    <ThemedText style={styles.routeCarouselMeta}>Tự record ngay, sau đó lưu track này để chạy lại lần sau.</ThemedText>
-                  </View>
+                    <ThemedText color='#D8DCE2' fontSize={12} fontWeight='800' letterSpacing={0}>
+                      Tự record ngay, sau đó lưu track này để chạy lại lần sau.
+                    </ThemedText>
+                  </ThemedView>
                 </TouchableOpacity>
               )
             }
           />
-        </View>
+        </ThemedView>
       )}
 
-      {(recordPanelVisible || isRecording) && (
-        <View style={styles.recordSplitOverlay}>
-          <SplitView
-            topSectionItems={recordTopItems}
-            bottomSectionItems={recordBottomItems}
-            bottomSectionTitle={isRecording ? 'Đang record' : 'Chuẩn bị'}
-            initialTopSectionHeight={recordSplitInitialTopHeight}
-            minSectionHeight={recordSplitMinTopHeight}
-            maxTopSectionHeight={recordSplitMaxTopHeight}
-            velocityThreshold={900}
-            springConfig={recordSplitSpringConfig}
-            containerBackgroundColor='#101114'
-            sectionBackgroundColor='#FFFFFF'
-            dividerBackgroundColor='#101114'
-            dragHandleColor='#FF5A1F'
-            renderTopItem={renderRecordTopItem}
-            renderBottomItem={renderRecordBottomItem}
-            renderHeader={renderRecordSplitHeader}
-            topKeyExtractor={item => item.id}
-            bottomKeyExtractor={item => item.id}
-            showHeader={false}
-            topListContentContainerStyle={styles.recordSplitTopContent}
-            bottomListContentContainerStyle={styles.recordSplitBottomContent}
-            sectionTitleStyle={styles.recordSplitSectionTitle}
-            sectionTitleTextColor='#111111'
-          />
-        </View>
-      )}
+      <BottomSheetModal
+        ref={recordSheetRef}
+        index={0}
+        snapPoints={recordSheetSnapPoints}
+        backdropComponent={renderRecordBackdrop}
+        enablePanDownToClose={!isRecording}
+        backgroundStyle={styles.recordSheetBackground}
+        handleIndicatorStyle={styles.recordSheetHandle}
+        onDismiss={handleRecordSheetDismiss}>
+        <BottomSheetScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={[styles.recordSheetContent, { paddingBottom: insets.bottom + 28 }]}>
+          <ThemedView row alignItems='flex-start' justifyContent='space-between' gap={12} backgroundColor='transparent' marginBottom={16}>
+            <ThemedView flex minWidth={0} backgroundColor='transparent'>
+              <ThemedText color='#111111' fontSize={22} lineHeight={28} fontWeight='900' letterSpacing={0}>
+                {isRecording ? recordingTitle : recordStartMode === 'route' ? recordingTitle : 'Record activity'}
+              </ThemedText>
+              <ThemedText color='#737780' fontSize={13} lineHeight={18} letterSpacing={0} marginTop={3}>
+                {isRecording ? 'Vuốt để kết thúc và lưu lại cung đường.' : 'Vuốt để bắt đầu record.'}
+              </ThemedText>
+            </ThemedView>
+
+            <ThemedView alignItems='flex-end' gap={8} backgroundColor='transparent'>
+              {!isRecording && (
+                <TouchableOpacity activeOpacity={0.82} style={styles.changeRoutePill} onPress={closeRecordSheet}>
+                  <Search size={14} color='#111111' />
+                  <ThemedText color='#111111' fontSize={12} fontWeight='900' letterSpacing={0}>
+                    Đổi cung
+                  </ThemedText>
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity
+                activeOpacity={0.82}
+                style={[styles.beaconPill, beaconEnabled && styles.beaconPillActive]}
+                onPress={() => setBeaconEnabled(value => !value)}>
+                <RadioTower size={15} color={beaconEnabled ? '#FFFFFF' : '#111111'} />
+                <ThemedText color={beaconEnabled ? '#FFFFFF' : '#111111'} fontSize={12} fontWeight='900' letterSpacing={0}>
+                  Beacon
+                </ThemedText>
+              </TouchableOpacity>
+            </ThemedView>
+          </ThemedView>
+
+          <ThemedView row gap={10} backgroundColor='transparent' marginBottom={10}>
+            <StatBlock label='Route' value={formatDistance(routeDistanceMeters)} />
+            <StatBlock label='Time' value={formatDuration(elapsedSeconds)} />
+            <StatBlock label='Distance' value={formatDistance(liveDistanceMeters)} />
+          </ThemedView>
+
+          <ThemedView row wrap gap={10} backgroundColor='transparent'>
+            <StatBlock label='Pace' value={formatPace(liveDistanceMeters, elapsedSeconds)} compact />
+            <StatBlock label='Elevation' value={`${selectedRoute.elevationM} m`} compact />
+            <StatBlock label='Splits' value={liveDistanceMeters > 1000 ? '1 logged' : '--'} compact />
+            <StatBlock label='Source' value={routeSource === 'osrm' ? 'OSRM' : 'Local'} compact />
+          </ThemedView>
+
+          <ThemedView gap={16} backgroundColor='transparent' marginTop={22}>
+            {!isRecording ? (
+              <ModernSwipeButton label='Trượt để bắt đầu ghi' onComplete={() => startRecording(recordStartMode)} />
+            ) : (
+              <>
+                <ThemedView row justifyContent='center' backgroundColor='transparent'>
+                  <TouchableOpacity activeOpacity={0.88} style={styles.pauseButtonNew} onPress={pauseRecording}>
+                    <ThemedView square={32} radius={16} backgroundColor='#FFFFFF' contentCenter style={styles.pauseIconShadow}>
+                      {isPaused ? <Play size={20} color='#111111' fill='#111111' /> : <Pause size={20} color='#111111' fill='#111111' />}
+                    </ThemedView>
+                    <ThemedText color='#111111' fontSize={14} fontWeight='800'>
+                      {isPaused ? 'Tiếp tục' : 'Tạm dừng'}
+                    </ThemedText>
+                  </TouchableOpacity>
+                </ThemedView>
+                <ModernSwipeButton tone='finish' label='Trượt để kết thúc và lưu' onComplete={finishRecording} />
+              </>
+            )}
+          </ThemedView>
+
+          <ThemedView marginTop={22} gap={12} backgroundColor='transparent'>
+            <ThemedText color='#111111' fontSize={17} fontWeight='900' letterSpacing={0}>
+              {isRecording ? 'Đang record' : 'Chuẩn bị'}
+            </ThemedText>
+
+            <ThemedView radius={8} backgroundColor='#F7F7F8' padding={14} gap={11}>
+              <RecordDetailRow label='Cung đường' value={recordStartMode === 'route' ? selectedRoute.title : 'Record tự do'} />
+              <RecordDetailRow
+                label='Mục tiêu'
+                value={recordStartMode === 'route' ? `${selectedRoute.distanceKm.toFixed(1)} km` : 'Lưu track sau khi kết thúc'}
+              />
+              <RecordDetailRow label='Dữ liệu route' value={routeSource === 'osrm' ? 'OSRM' : 'Local fallback'} />
+            </ThemedView>
+
+            <ThemedView row gap={12} alignItems='center' radius={8} padding={13} backgroundColor='#F7F7F8'>
+              <ThemedView square={38} radius={8} backgroundColor='#FFFFFF' contentCenter>
+                <Timer size={18} color='#FF8A00' />
+              </ThemedView>
+              <ThemedView flex minWidth={0} backgroundColor='transparent'>
+                <ThemedText color='#111111' fontWeight='900' fontSize={14} letterSpacing={0}>
+                  Auto splits
+                </ThemedText>
+                <ThemedText color='#737780' fontSize={12} fontWeight='700' marginTop={2} letterSpacing={0}>
+                  Mỗi kilomet sẽ được tổng hợp trong lúc record.
+                </ThemedText>
+              </ThemedView>
+            </ThemedView>
+          </ThemedView>
+        </BottomSheetScrollView>
+      </BottomSheetModal>
     </ThemedView>
   );
 }
 
-function StatBlock({ label, value }: { label: string; value: string }) {
+function StatBlock({ label, value, compact = false }: { label: string; value: string; compact?: boolean }) {
   return (
-    <View style={styles.statBlock}>
-      <ThemedText style={styles.statValue}>{value}</ThemedText>
-      <ThemedText style={styles.statLabel}>{label}</ThemedText>
-    </View>
+    <ThemedView flex={compact ? undefined : 1} width={compact ? '48%' : undefined} radius={8} padding={12} backgroundColor='#F7F7F8'>
+      <ThemedText color='#111111' fontSize={compact ? 16 : 18} fontWeight='900' letterSpacing={0}>
+        {value}
+      </ThemedText>
+      <ThemedText color='#777B84' fontSize={12} fontWeight='700' letterSpacing={0} marginTop={3}>
+        {label}
+      </ThemedText>
+    </ThemedView>
+  );
+}
+
+function RecordDetailRow({ label, value }: { label: string; value: string }) {
+  return (
+    <ThemedView row alignItems='center' justifyContent='space-between' gap={14} backgroundColor='transparent'>
+      <ThemedText color='#777B84' fontSize={12} fontWeight='800' letterSpacing={0}>
+        {label}
+      </ThemedText>
+      <ThemedText flex numberOfLines={1} textAlign='right' color='#111111' fontSize={13} fontWeight='900' letterSpacing={0}>
+        {value}
+      </ThemedText>
+    </ThemedView>
   );
 }
 
 function RouteCarouselCard({ route, width, active, onPress }: { route: RouteChoice; width: number; active: boolean; onPress: () => void }) {
   return (
-    <View style={[styles.routeCarouselCard, { width }, active && styles.routeCarouselCardActive]}>
+    <ThemedView style={[styles.routeCarouselCard, { width }, active && styles.routeCarouselCardActive]}>
       <TouchableOpacity activeOpacity={0.9} style={styles.routeCarouselTapArea} onPress={onPress}>
-        <View style={styles.routeThumbnail}>
-          <View style={styles.routeThumbnailSky} />
-          <View style={styles.routeThumbnailWater} />
-          <View style={styles.routeThumbnailRoad} />
-          <View style={styles.routeThumbnailLine} />
-        </View>
-        <View style={styles.routeCarouselBody}>
-          <View style={styles.routeCarouselTitleRow}>
-            <ThemedText numberOfLines={1} style={styles.routeCarouselTitle}>
+        <ThemedView style={styles.routeThumbnail}>
+          <ThemedView style={styles.routeThumbnailSky} />
+          <ThemedView style={styles.routeThumbnailWater} />
+          <ThemedView style={styles.routeThumbnailRoad} />
+          <ThemedView style={styles.routeThumbnailLine} />
+        </ThemedView>
+        <ThemedView backgroundColor='transparent' style={styles.routeCarouselBody}>
+          <ThemedView backgroundColor='transparent' style={styles.routeCarouselTitleRow}>
+            <ThemedText flex numberOfLines={1} color='#FFFFFF' fontSize={15} fontWeight='900' letterSpacing={0}>
               {route.title}
             </ThemedText>
-            <View style={[styles.routeCarouselBadge, route.source === 'saved' && styles.routeCarouselSavedBadge]}>
+            <ThemedView style={[styles.routeCarouselBadge, route.source === 'saved' && styles.routeCarouselSavedBadge]}>
               {route.source === 'saved' ? <Download size={12} color='#5BD67D' /> : <Sparkles size={12} color='#FF8A00' />}
-              <ThemedText style={[styles.routeCarouselBadgeText, route.source === 'saved' && styles.routeCarouselSavedText]}>
+              <ThemedText color={route.source === 'saved' ? '#5BD67D' : '#FF8A00'} fontSize={11} fontWeight='900' letterSpacing={0}>
                 {route.source === 'saved' ? 'Đã lưu' : 'Đề xuất'}
               </ThemedText>
-            </View>
-          </View>
+            </ThemedView>
+          </ThemedView>
 
-          <View style={styles.routeCarouselMetaRow}>
-            <ThemedText style={styles.routeCarouselMeta}>{route.distanceKm.toFixed(1)} km</ThemedText>
-            <View style={styles.routeMetaDot} />
-            <ThemedText style={styles.routeCarouselMeta}>{route.elevationM} m</ThemedText>
-            <View style={styles.routeMetaDot} />
-            <ThemedText style={styles.routeCarouselMeta}>0 giờ {route.estimatedMinutes} phút</ThemedText>
-          </View>
+          <ThemedView backgroundColor='transparent' style={styles.routeCarouselMetaRow}>
+            <ThemedText color='#D8DCE2' fontSize={12} fontWeight='800' letterSpacing={0}>{route.distanceKm.toFixed(1)} km</ThemedText>
+            <ThemedView style={styles.routeMetaDot} />
+            <ThemedText color='#D8DCE2' fontSize={12} fontWeight='800' letterSpacing={0}>{route.elevationM} m</ThemedText>
+            <ThemedView style={styles.routeMetaDot} />
+            <ThemedText color='#D8DCE2' fontSize={12} fontWeight='800' letterSpacing={0}>0 giờ {route.estimatedMinutes} phút</ThemedText>
+          </ThemedView>
 
-          <View style={styles.routeLocationRow}>
+          <ThemedView backgroundColor='transparent' style={styles.routeLocationRow}>
             <LocateFixed size={14} color='#C8CCD2' />
-            <ThemedText numberOfLines={1} style={styles.routeLocationText}>
+            <ThemedText numberOfLines={1} color='#C8CCD2' fontSize={12} fontWeight='800' letterSpacing={0}>
               Vị trí hiện tại
             </ThemedText>
-          </View>
+          </ThemedView>
 
-          <View style={styles.routePrivacyRow}>
+          <ThemedView backgroundColor='transparent' style={styles.routePrivacyRow}>
             <MapPinned size={14} color='#FF5A1F' />
-            <ThemedText numberOfLines={1} style={styles.routePrivacyText}>
+            <ThemedText flex numberOfLines={1} color='#FF5A1F' fontSize={12} fontWeight='900' letterSpacing={0}>
               Được thiết kế riêng cho bạn
             </ThemedText>
-          </View>
-        </View>
+          </ThemedView>
+        </ThemedView>
       </TouchableOpacity>
-    </View>
+    </ThemedView>
   );
 }
 
@@ -784,12 +785,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowRadius: 14,
     elevation: 5,
-  },
-  searchText: {
-    color: '#6B7280',
-    fontSize: 14,
-    fontWeight: '600',
-    letterSpacing: 0,
   },
   iconButton: {
     width: 46,
@@ -841,12 +836,6 @@ const styles = StyleSheet.create({
   statusDotLocal: {
     backgroundColor: '#FF8A00',
   },
-  statusText: {
-    color: '#111111',
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 0,
-  },
   searchHereButton: {
     position: 'absolute',
     alignSelf: 'center',
@@ -855,12 +844,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#FF5A1F',
     justifyContent: 'center',
     paddingHorizontal: 20,
-  },
-  searchHereText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '900',
-    letterSpacing: 0,
   },
   routeCarouselOverlay: {
     position: 'absolute',
@@ -884,12 +867,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 7,
-  },
-  carouselFilterText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 0,
   },
   routeCarouselContent: {
     marginTop: 0,
@@ -969,13 +946,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: 8,
   },
-  routeCarouselTitle: {
-    flex: 1,
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '900',
-    letterSpacing: 0,
-  },
   routeCarouselBadge: {
     minHeight: 24,
     borderRadius: 8,
@@ -988,27 +958,12 @@ const styles = StyleSheet.create({
   routeCarouselSavedBadge: {
     backgroundColor: 'rgba(54, 211, 153, 0.14)',
   },
-  routeCarouselBadgeText: {
-    color: '#FF8A00',
-    fontSize: 11,
-    fontWeight: '900',
-    letterSpacing: 0,
-  },
-  routeCarouselSavedText: {
-    color: '#5BD67D',
-  },
   routeCarouselMetaRow: {
     marginTop: 7,
     flexDirection: 'row',
     alignItems: 'center',
     flexWrap: 'wrap',
     gap: 7,
-  },
-  routeCarouselMeta: {
-    color: '#D8DCE2',
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 0,
   },
   routeMetaDot: {
     width: 4,
@@ -1022,24 +977,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
   },
-  routeLocationText: {
-    color: '#C8CCD2',
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 0,
-  },
   routePrivacyRow: {
     marginTop: 5,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-  },
-  routePrivacyText: {
-    flex: 1,
-    color: '#FF5A1F',
-    fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 0,
   },
   recordCarouselCard: {
     minHeight: 118,
@@ -1063,122 +1005,25 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
   },
-  recordSplitOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 40,
-    backgroundColor: '#101114',
-  },
-  recordSplitTopContent: {
-    gap: 14,
-    padding: 16,
-    paddingBottom: 22,
-  },
-  recordSplitBottomContent: {
-    gap: 12,
-    padding: 16,
-    paddingBottom: 34,
-  },
-  recordSplitSectionTitle: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 16,
-    paddingTop: 12,
-  },
-  recordRouteDetail: {
-    borderRadius: 8,
-    backgroundColor: '#F7F7F8',
-    padding: 14,
-    gap: 11,
-  },
-  recordDetailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 14,
-  },
-  recordDetailLabel: {
-    color: '#777B84',
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 0,
-  },
-  recordDetailValue: {
-    flex: 1,
-    color: '#111111',
-    fontSize: 13,
-    fontWeight: '900',
-    letterSpacing: 0,
-    textAlign: 'right',
-  },
-  sheet: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
+  recordSheetBackground: {
+    backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 8,
     borderTopRightRadius: 8,
-    backgroundColor: '#FFFFFF',
     shadowColor: '#000',
-    shadowOpacity: 0.22,
+    shadowOpacity: 0.2,
     shadowOffset: { width: 0, height: -8 },
     shadowRadius: 20,
-    elevation: 12,
-    overflow: 'hidden',
+    elevation: 14,
   },
-  handleWrap: {
-    alignItems: 'center',
-    paddingTop: 9,
-    paddingBottom: 7,
-  },
-  handle: {
+  recordSheetHandle: {
     width: 42,
     height: 4,
     borderRadius: 2,
-    backgroundColor: '#D1D5DB',
+    backgroundColor: '#FF5A1F',
   },
-  panelTabs: {
-    flexDirection: 'row',
-    marginHorizontal: 14,
-    padding: 4,
-    borderRadius: 8,
-    backgroundColor: '#F1F2F4',
-  },
-  panelTab: {
-    flex: 1,
-    minHeight: 36,
-    borderRadius: 7,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  panelTabActive: {
-    backgroundColor: '#111111',
-  },
-  panelTabText: {
-    color: '#60646C',
-    fontWeight: '800',
-    fontSize: 13,
-    letterSpacing: 0,
-  },
-  panelTabTextActive: {
-    color: '#FFFFFF',
-  },
-  sheetContent: {
-    padding: 16,
-    paddingBottom: 32,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 12,
-    marginBottom: 14,
-  },
-  recordHeaderText: {
-    flex: 1,
-    minWidth: 0,
-  },
-  sheetActionRow: {
-    alignItems: 'flex-end',
-    gap: 8,
+  recordSheetContent: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
   },
   changeRoutePill: {
     minHeight: 34,
@@ -1188,412 +1033,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-  },
-  changeRouteText: {
-    color: '#111111',
-    fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 0,
-  },
-  sheetTitle: {
-    color: '#111111',
-    fontSize: 22,
-    lineHeight: 26,
-    fontWeight: '800',
-    letterSpacing: 0,
-  },
-  sheetSubtitle: {
-    color: '#737780',
-    fontSize: 13,
-    lineHeight: 18,
-    marginTop: 4,
-    letterSpacing: 0,
-  },
-  modeRow: {
-    gap: 10,
-    paddingBottom: 12,
-  },
-  modeChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 7,
-    borderRadius: 8,
-    paddingHorizontal: 13,
-    paddingVertical: 10,
-    backgroundColor: '#F1F2F4',
-  },
-  modeChipActive: {
-    backgroundColor: '#FF5A1F',
-  },
-  modeText: {
-    color: '#111111',
-    fontWeight: '800',
-    fontSize: 13,
-    letterSpacing: 0,
-  },
-  modeTextActive: {
-    color: '#FFFFFF',
-  },
-  preferenceGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 8,
-  },
-  preferenceChip: {
-    minWidth: '48%',
-    flex: 1,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    backgroundColor: '#F7F7F8',
-    borderWidth: 1,
-    borderColor: '#ECEEF1',
-  },
-  preferenceLabel: {
-    color: '#777B84',
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 0,
-  },
-  preferenceValue: {
-    marginTop: 3,
-    color: '#111111',
-    fontSize: 14,
-    fontWeight: '900',
-    letterSpacing: 0,
-  },
-  routeStats: {
-    flexDirection: 'row',
-    gap: 10,
-    marginVertical: 8,
-  },
-  statBlock: {
-    flex: 1,
-    borderRadius: 8,
-    padding: 12,
-    backgroundColor: '#F7F7F8',
-  },
-  statValue: {
-    color: '#111111',
-    fontSize: 18,
-    fontWeight: '900',
-    letterSpacing: 0,
-  },
-  statLabel: {
-    marginTop: 3,
-    color: '#777B84',
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 0,
-  },
-  actionRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 8,
-    marginBottom: 12,
-  },
-  actionButton: {
-    flex: 1,
-    minHeight: 42,
-    borderRadius: 8,
-    backgroundColor: '#F1F2F4',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-  },
-  actionButtonActive: {
-    backgroundColor: '#111111',
-  },
-  actionText: {
-    color: '#111111',
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 0,
-  },
-  actionTextActive: {
-    color: '#FFFFFF',
-  },
-  routeCard: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 12,
-    padding: 13,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#ECEEF1',
-    marginBottom: 10,
-  },
-  routeCardActive: {
-    borderColor: '#FF5A1F',
-    backgroundColor: '#FFF5F0',
-  },
-  routePreview: {
-    width: 78,
-    height: 78,
-    borderRadius: 8,
-    backgroundColor: '#111111',
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  routePreviewGlow: {
-    position: 'absolute',
-    width: 96,
-    height: 44,
-    borderRadius: 8,
-    backgroundColor: 'rgba(255, 90, 31, 0.78)',
-    transform: [{ rotate: '-28deg' }],
-  },
-  routeCardBody: {
-    flex: 1,
-  },
-  routeCardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 10,
-  },
-  routeTitle: {
-    flex: 1,
-    color: '#111111',
-    fontWeight: '900',
-    fontSize: 15,
-    letterSpacing: 0,
-  },
-  routeBadge: {
-    minHeight: 26,
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    backgroundColor: '#FFF0E8',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  savedBadge: {
-    backgroundColor: '#EAF9F0',
-  },
-  routeBadgeText: {
-    color: '#FF5A1F',
-    fontSize: 11,
-    fontWeight: '900',
-    letterSpacing: 0,
-  },
-  savedBadgeText: {
-    color: '#198D4C',
-  },
-  routeSurface: {
-    marginTop: 2,
-    color: '#FF5A1F',
-    fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 0,
-  },
-  routeMeta: {
-    marginTop: 4,
-    color: '#737780',
-    fontSize: 12,
-    fontWeight: '600',
-    letterSpacing: 0,
-  },
-  routeStartWrap: {
-    marginTop: 12,
-  },
-  routePreviewText: {
-    marginTop: 8,
-    color: '#737780',
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 0,
-  },
-  directRecordCard: {
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#ECEEF1',
-    backgroundColor: '#FFFFFF',
-    padding: 13,
-    gap: 12,
-    marginTop: 2,
-    marginBottom: 12,
-  },
-  directRecordTitle: {
-    color: '#111111',
-    fontSize: 16,
-    fontWeight: '900',
-    letterSpacing: 0,
-  },
-  directRecordMeta: {
-    marginTop: 4,
-    color: '#737780',
-    fontSize: 12,
-    lineHeight: 17,
-    fontWeight: '700',
-    letterSpacing: 0,
-  },
-  poiPanel: {
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#ECEEF1',
-    padding: 12,
-    marginBottom: 12,
-    backgroundColor: '#FFFFFF',
-  },
-  poiHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  poiTitle: {
-    color: '#111111',
-    fontSize: 14,
-    fontWeight: '900',
-    letterSpacing: 0,
-  },
-  poiMeta: {
-    marginTop: 2,
-    color: '#737780',
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 0,
-  },
-  poiRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingVertical: 9,
-    borderTopWidth: 1,
-    borderTopColor: '#F1F2F4',
-  },
-  poiIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: '#F1F2F4',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  poiBody: {
-    flex: 1,
-  },
-  poiName: {
-    color: '#111111',
-    fontSize: 13,
-    fontWeight: '900',
-    letterSpacing: 0,
-  },
-  poiDistance: {
-    marginTop: 2,
-    color: '#737780',
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 0,
-  },
-  poiCta: {
-    color: '#FF5A1F',
-    fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 0,
-  },
-  smallToggle: {
-    width: 40,
-    height: 40,
-    borderRadius: 8,
-    backgroundColor: '#F1F2F4',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  smallToggleActive: {
-    backgroundColor: '#111111',
-  },
-  segmentHero: {
-    minHeight: 96,
-    borderRadius: 8,
-    backgroundColor: '#111111',
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  segmentHeroTitle: {
-    color: '#FFFFFF',
-    fontSize: 20,
-    fontWeight: '900',
-    letterSpacing: 0,
-  },
-  segmentHeroMeta: {
-    color: '#D1D5DB',
-    marginTop: 6,
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 0,
-  },
-  segmentHeroActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  segmentFilterRow: {
-    gap: 8,
-    paddingBottom: 12,
-  },
-  segmentFilterChip: {
-    minHeight: 34,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#F1F2F4',
-  },
-  segmentFilterChipActive: {
-    backgroundColor: '#111111',
-  },
-  segmentFilterText: {
-    color: '#111111',
-    fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 0,
-  },
-  segmentFilterTextActive: {
-    color: '#FFFFFF',
-  },
-  segmentCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    padding: 12,
-    borderRadius: 8,
-    backgroundColor: '#F7F7F8',
-    marginBottom: 9,
-  },
-  segmentCardActive: {
-    backgroundColor: '#FFF5F0',
-  },
-  segmentIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
-  },
-  segmentContent: {
-    flex: 1,
-  },
-  segmentTitle: {
-    color: '#111111',
-    fontSize: 15,
-    fontWeight: '900',
-    letterSpacing: 0,
-  },
-  segmentMeta: {
-    marginTop: 3,
-    color: '#737780',
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 0,
   },
   beaconPill: {
     minHeight: 34,
@@ -1607,30 +1046,6 @@ const styles = StyleSheet.create({
   beaconPillActive: {
     backgroundColor: '#FF5A1F',
   },
-  beaconText: {
-    color: '#111111',
-    fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 0,
-  },
-  beaconTextActive: {
-    color: '#FFFFFF',
-  },
-  recordGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-  recordControlsNew: {
-    gap: 16,
-    marginTop: 20,
-    width: '100%',
-  },
-  secondaryControls: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginBottom: 4,
-  },
   pauseButtonNew: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1640,105 +1055,11 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 100,
   },
-  pauseIconWrap: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
+  pauseIconShadow: {
     shadowColor: '#000',
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
     elevation: 2,
-  },
-  pauseLabel: {
-    color: '#111111',
-    fontSize: 14,
-    fontWeight: '800',
-  },
-  recordControls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginTop: 18,
-  },
-  finishSliderWrap: {
-    flex: 1,
-  },
-  startButton: {
-    flex: 1,
-    minHeight: 58,
-    borderRadius: 8,
-    backgroundColor: '#FF5A1F',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  startButtonText: {
-    color: '#FFFFFF',
-    fontSize: 17,
-    fontWeight: '900',
-    letterSpacing: 0,
-  },
-  pauseButton: {
-    width: 58,
-    height: 58,
-    borderRadius: 8,
-    backgroundColor: '#F1F2F4',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stopButton: {
-    flex: 1,
-    minHeight: 58,
-    borderRadius: 8,
-    backgroundColor: '#111111',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  stopButtonText: {
-    color: '#FFFFFF',
-    fontSize: 17,
-    fontWeight: '900',
-    letterSpacing: 0,
-  },
-  liveSplits: {
-    marginTop: 16,
-    borderRadius: 8,
-    padding: 13,
-    backgroundColor: '#F7F7F8',
-    flexDirection: 'row',
-    gap: 12,
-    alignItems: 'center',
-  },
-  splitIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 8,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  splitBody: {
-    flex: 1,
-    minWidth: 0,
-  },
-  splitTitle: {
-    color: '#111111',
-    fontWeight: '900',
-    fontSize: 14,
-    letterSpacing: 0,
-  },
-  splitMeta: {
-    color: '#737780',
-    fontSize: 12,
-    fontWeight: '700',
-    marginTop: 2,
-    letterSpacing: 0,
   },
 });

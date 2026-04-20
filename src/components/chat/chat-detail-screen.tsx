@@ -1,168 +1,254 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { ArrowLeft, Ellipsis, Phone, Video } from 'lucide-react-native';
-import { useMemo, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, View } from 'react-native';
+import { ArrowLeft, ChevronDown, UserRound } from 'lucide-react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  FlatList,
+  Image,
+  ImageBackground,
+  type ImageSourcePropType,
+  KeyboardAvoidingView,
+  type ListRenderItemInfo,
+  Platform,
+  Pressable,
+  StyleSheet,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText, ThemedView } from 'components/base';
-import { useThemeColor } from 'hooks/use-theme-color';
-import { getConversationById, type ChatMessage } from './data';
+import { CHAT_BACKGROUND, CHAT_COLORS, getConversationById, type ChatConversation, type ChatMessage } from './data';
 import { MessageComposer } from './message-composer';
 
 export function ChatDetailScreen() {
   const params = useLocalSearchParams<{ id: string }>();
   const conversation = getConversationById(params.id);
   const insets = useSafeAreaInsets();
-  const backgroundColor = useThemeColor({}, 'background');
-  const cardColor = useThemeColor({}, 'card');
-  const mutedColor = useThemeColor({}, 'secondary');
-  const textColor = useThemeColor({}, 'text');
+  const listRef = useRef<FlatList<ChatMessage>>(null);
   const [messages, setMessages] = useState<ChatMessage[]>(conversation.messages);
 
-  const reversedMessages = useMemo(() => [...messages].reverse(), [messages]);
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      listRef.current?.scrollToEnd({ animated: true });
+    });
+  }, [messages.length]);
 
-  const handleSend = (body: string) => {
+  const renderMessage = useCallback(
+    ({ item }: ListRenderItemInfo<ChatMessage>) => <MessageBubble message={item} conversation={conversation} />,
+    [conversation],
+  );
+
+  const handleSend = (text: string) => {
     setMessages(current => [
       ...current,
       {
         id: `local-${Date.now()}`,
         author: 'me',
-        body,
-        time: 'Now',
+        text,
+        time: formatTime(new Date()),
       },
     ]);
   };
 
   return (
-    <ThemedView flex={1} backgroundColor={backgroundColor}>
-      <View style={[styles.header, { paddingTop: insets.top + 10, backgroundColor }]}>
-        <Pressable accessibilityRole='button' style={[styles.iconButton, { backgroundColor: cardColor }]} onPress={() => router.back()}>
-          <ArrowLeft size={21} color={textColor} />
-        </Pressable>
-
-        <View style={styles.headerIdentity}>
-          <View style={[styles.avatar, { backgroundColor: conversation.accent }]}>
-            <ThemedText color={conversation.color} fontSize={14} fontWeight='900'>
-              {conversation.avatar}
-            </ThemedText>
-          </View>
-          <View style={styles.headerCopy}>
-            <ThemedText numberOfLines={1} fontSize={17} fontWeight='900'>
-              {conversation.name}
-            </ThemedText>
-            <ThemedText numberOfLines={1} color={mutedColor} fontSize={12} fontWeight='800'>
-              {conversation.status === 'online' ? 'Online now' : conversation.lastActive}
-            </ThemedText>
-          </View>
-        </View>
-
-        <View style={styles.headerActions}>
-          <Pressable accessibilityRole='button' style={[styles.iconButton, { backgroundColor: cardColor }]}>
-            <Phone size={18} color={textColor} />
-          </Pressable>
-          <Pressable accessibilityRole='button' style={[styles.iconButton, { backgroundColor: cardColor }]}>
-            <Video size={18} color={textColor} />
-          </Pressable>
-          <Pressable accessibilityRole='button' style={[styles.iconButton, { backgroundColor: cardColor }]}>
-            <Ellipsis size={18} color={textColor} />
-          </Pressable>
-        </View>
-      </View>
-
-      <FlatList
-        data={reversedMessages}
-        keyExtractor={item => item.id}
-        inverted
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.messages}
-        renderItem={({ item }) => <MessageBubble message={item} accentColor={conversation.color} mutedColor={mutedColor} />}
-      />
-
-      <MessageComposer bottomInset={insets.bottom} onSend={handleSend} />
+    <ThemedView flex={1} backgroundColor={CHAT_COLORS.white}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.keyboardView}>
+        <ChatHeader conversation={conversation} topInset={insets.top} />
+        <ImageBackground source={CHAT_BACKGROUND} style={styles.chatBackground} resizeMode='cover'>
+          <FlatList
+            ref={listRef}
+            data={messages}
+            keyExtractor={item => item.id}
+            renderItem={renderMessage}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps='never'
+            contentContainerStyle={styles.messagesContainer}
+            ListFooterComponent={<ScrollToBottomHint />}
+          />
+          <MessageComposer bottomInset={insets.bottom} onSend={handleSend} />
+        </ImageBackground>
+      </KeyboardAvoidingView>
     </ThemedView>
   );
 }
 
-function MessageBubble({ message, accentColor, mutedColor }: { message: ChatMessage; accentColor: string; mutedColor: string }) {
-  const isMe = message.author === 'me';
-
+function ChatHeader({ conversation, topInset }: { conversation: ChatConversation; topInset: number }) {
   return (
-    <View style={[styles.messageRow, isMe ? styles.myMessageRow : styles.coachMessageRow]}>
-      <View style={[styles.bubble, isMe ? { backgroundColor: accentColor } : styles.coachBubble]}>
-        <ThemedText color={isMe ? '#111111' : '#FFFFFF'} fontSize={15} lineHeight={21} fontWeight='700'>
-          {message.body}
+    <ThemedView style={[styles.header, { height: 52 + topInset, paddingTop: topInset }]}>
+      <Pressable accessibilityRole='button' style={styles.backButton} onPress={() => router.back()}>
+        <ArrowLeft size={20} strokeWidth={2} color={CHAT_COLORS.gray1000} />
+      </Pressable>
+      <ChatAvatar source={conversation.avatar} name={conversation.name} size={36} />
+      <ThemedView backgroundColor='transparent' style={styles.headerCopy}>
+        <ThemedText numberOfLines={1} fontSize={16} fontWeight='600' color={CHAT_COLORS.gray1000}>
+          {conversation.name}
         </ThemedText>
-      </View>
-      <ThemedText color={mutedColor} fontSize={11} fontWeight='800' marginTop={5}>
-        {message.time}
-      </ThemedText>
-    </View>
+        <ThemedView backgroundColor='transparent' style={styles.statusRow}>
+          <ThemedView style={styles.activeDot} />
+          <ThemedText fontSize={12} fontWeight='400' color={CHAT_COLORS.gray600}>
+            {conversation.status}
+          </ThemedText>
+        </ThemedView>
+      </ThemedView>
+    </ThemedView>
   );
 }
 
+function MessageBubble({ message, conversation }: { message: ChatMessage; conversation: ChatConversation }) {
+  const isMe = message.author === 'me';
+
+  return (
+    <ThemedView backgroundColor='transparent' style={[styles.messageRow, isMe ? styles.myMessageRow : styles.coachMessageRow]}>
+      {!isMe ? <ChatAvatar source={conversation.avatar} name={conversation.name} size={36} /> : null}
+      <ThemedView style={[styles.bubble, isMe ? styles.myBubble : styles.coachBubble]}>
+        {message.image ? (
+          <Image source={{ uri: message.image }} resizeMode='cover' style={styles.messageImage} />
+        ) : (
+          <ThemedText fontSize={16} fontWeight='400' lineHeight={22} color={CHAT_COLORS.gray1000}>
+            {message.text}
+          </ThemedText>
+        )}
+        {!message.image ? (
+          <ThemedText
+            alignSelf={isMe ? 'flex-end' : 'flex-start'}
+            color={isMe ? CHAT_COLORS.gray700 : CHAT_COLORS.gray400}
+            fontSize={12}
+            fontWeight='500'
+            marginTop={4}>
+            {message.time}
+          </ThemedText>
+        ) : null}
+      </ThemedView>
+    </ThemedView>
+  );
+}
+
+function ChatAvatar({ source, name, size }: { source?: ImageSourcePropType; name: string; size: number }) {
+  if (source) {
+    return <Image source={source} resizeMode='cover' style={[styles.avatar, { width: size, height: size, borderRadius: size / 2 }]} />;
+  }
+
+  const initials = getInitials(name);
+
+  return (
+    <ThemedView style={[styles.avatarFallback, { width: size, height: size, borderRadius: size / 2 }]}>
+      {initials ? (
+        <ThemedText color={CHAT_COLORS.white} fontSize={size / 3.5} fontWeight='600'>
+          {initials}
+        </ThemedText>
+      ) : (
+        <UserRound size={size / 2.5} color={CHAT_COLORS.white} />
+      )}
+    </ThemedView>
+  );
+}
+
+function ScrollToBottomHint() {
+  return (
+    <ThemedView style={styles.scrollHint}>
+      <ChevronDown size={20} color={CHAT_COLORS.gray700} />
+    </ThemedView>
+  );
+}
+
+function getInitials(name: string) {
+  return name
+    .replace(/[^\w\s]/gi, '')
+    .split(' ')
+    .filter(Boolean)
+    .map(word => word.charAt(0).toUpperCase())
+    .join('');
+}
+
+function formatTime(date: Date) {
+  return new Intl.DateTimeFormat('vi-VN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(date);
+}
+
 const styles = StyleSheet.create({
-  header: {
-    minHeight: 96,
-    paddingHorizontal: 14,
-    paddingBottom: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: 'rgba(142,147,158,0.24)',
-  },
-  iconButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerIdentity: {
+  keyboardView: {
     flex: 1,
-    minWidth: 0,
+  },
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 12,
+    paddingHorizontal: 8,
+    backgroundColor: CHAT_COLORS.white,
+  },
+  backButton: {
+    padding: 8,
   },
   headerCopy: {
     flex: 1,
-    minWidth: 0,
+    gap: 2,
   },
-  headerActions: {
+  statusRow: {
     flexDirection: 'row',
-    gap: 7,
-  },
-  avatar: {
-    width: 42,
-    height: 42,
-    borderRadius: 8,
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 5,
   },
-  messages: {
-    paddingHorizontal: 14,
-    paddingTop: 22,
-    paddingBottom: 12,
+  activeDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: CHAT_COLORS.green500,
+  },
+  chatBackground: {
+    flex: 1,
+  },
+  messagesContainer: {
+    flexGrow: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
     gap: 12,
   },
   messageRow: {
-    maxWidth: '82%',
-  },
-  myMessageRow: {
-    alignSelf: 'flex-end',
-    alignItems: 'flex-end',
+    maxWidth: '86%',
+    flexDirection: 'row',
+    gap: 8,
   },
   coachMessageRow: {
     alignSelf: 'flex-start',
-    alignItems: 'flex-start',
+    alignItems: 'flex-end',
+  },
+  myMessageRow: {
+    alignSelf: 'flex-end',
+    justifyContent: 'flex-end',
   },
   bubble: {
+    minHeight: 38,
     borderRadius: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 11,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
   coachBubble: {
-    backgroundColor: '#23242B',
+    backgroundColor: CHAT_COLORS.white,
+  },
+  myBubble: {
+    backgroundColor: CHAT_COLORS.primary200,
+  },
+  messageImage: {
+    width: 188,
+    height: 250,
+    borderRadius: 5,
+  },
+  avatar: {
+    backgroundColor: CHAT_COLORS.antiFlashWhite,
+  },
+  avatarFallback: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: CHAT_COLORS.primary,
+  },
+  scrollHint: {
+    width: 32,
+    height: 32,
+    alignSelf: 'center',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 16,
+    backgroundColor: CHAT_COLORS.white,
   },
 });

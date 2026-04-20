@@ -23,9 +23,7 @@ export default function TabTwoScreen() {
       <ThemedView row gap={8}>
         <ThemedText
           type="title"
-          style={{
-            fontFamily: Fonts.rounded,
-          }}>
+          fontFamily={Fonts.rounded}>
           Explore
         </ThemedText>
       </ThemedView>
@@ -79,7 +77,7 @@ export default function TabTwoScreen() {
           This template includes an example of an animated component. The{' '}
           <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
           the powerful{' '}
-          <ThemedText type="defaultSemiBold" style={{ fontFamily: Fonts.mono }}>
+          <ThemedText type="defaultSemiBold" fontFamily={Fonts.mono}>
             react-native-reanimated
           </ThemedText>{' '}
           library to create a waving hand animation.

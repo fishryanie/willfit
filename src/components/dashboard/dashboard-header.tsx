@@ -54,16 +54,22 @@ export function DashboardHeader({
           {avatarUrl ? (
             <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
           ) : (
-            <ThemedText style={[styles.avatarInitials, { color: avatarTextColor }]}>
+            <ThemedText color={avatarTextColor} fontSize={14} fontWeight='700' letterSpacing={0}>
               {getInitials(name)}
             </ThemedText>
           )}
         </ThemedView>
         <ThemedView gap={5} backgroundColor="transparent" style={styles.profileText}>
-          <ThemedText style={[styles.greeting, { color: mutedColor }]}>Welcome</ThemedText>
+          <ThemedText color={mutedColor} fontSize={14} lineHeight={18} letterSpacing={0}>
+            Welcome
+          </ThemedText>
           <ThemedText
             numberOfLines={1}
-            style={[styles.name, { color: mutedColor }]}
+            color={mutedColor}
+            fontSize={16}
+            lineHeight={20}
+            fontWeight='600'
+            letterSpacing={0}
           >
             {name}
           </ThemedText>
@@ -134,24 +140,8 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  avatarInitials: {
-    fontSize: 14,
-    fontWeight: '700',
-    letterSpacing: 0,
-  },
   profileText: {
     flexShrink: 1,
-  },
-  greeting: {
-    fontSize: 14,
-    lineHeight: 18,
-    letterSpacing: 0,
-  },
-  name: {
-    fontSize: 16,
-    lineHeight: 20,
-    fontWeight: '600',
-    letterSpacing: 0,
   },
   iconButton: {
     width: 28,

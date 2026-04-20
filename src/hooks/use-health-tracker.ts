@@ -69,7 +69,7 @@ export function useHealthTracker() {
       subscription?.remove();
       locationSubscription?.remove();
     };
-  }, []);
+  }, [distanceAnimated, stepsAnimated]);
 
   return {
     stepsAnimated,
