@@ -1,23 +1,6 @@
 import { Pressable, StyleSheet } from 'react-native';
 
-import { ThemedText } from 'components/themed-text';
-import { ThemedView } from 'components/themed-view';
-import { Coordinate, MapLayer, SegmentSummary } from './types';
-
-type RouteMapProps = {
-  center: Coordinate;
-  routeCoordinates: Coordinate[];
-  liveCoordinates: Coordinate[];
-  waypoints: Coordinate[];
-  heatRoutes: Coordinate[][];
-  segments: SegmentSummary[];
-  selectedSegmentId?: string;
-  showHeatmap: boolean;
-  showSegments: boolean;
-  mapLayer: MapLayer;
-  followUser: boolean;
-  onMapPress: (coordinate: Coordinate) => void;
-};
+import { ThemedText, ThemedView } from 'components/base';
 
 export function RouteMap({
   center,
@@ -97,8 +80,12 @@ export function RouteMap({
       ))}
 
       <ThemedView style={styles.notice}>
-        <ThemedText color='#111111' fontWeight='800'>Map preview</ThemedText>
-        <ThemedText color='#555555' fontSize={12} marginTop={2}>Native maps render on iOS/Android. Web keeps route controls testable.</ThemedText>
+        <ThemedText color='#111111' fontWeight='800'>
+          Map preview
+        </ThemedText>
+        <ThemedText color='#555555' fontSize={12} marginTop={2}>
+          Native maps render on iOS/Android. Web keeps route controls testable.
+        </ThemedText>
       </ThemedView>
     </Pressable>
   );

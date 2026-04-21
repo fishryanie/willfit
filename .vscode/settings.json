@@ -4,11 +4,5 @@
     "source.organizeImports": "explicit",
     "source.sortMembers": "explicit"
   },
-  "cSpell.words": [
-    "mmkv",
-    "Pressable",
-    "reacticx",
-    "willfit",
-    "worklets"
-  ]
+  "cSpell.words": ["gorhom", "mmkv", "Pressable", "reacticx", "willfit", "worklets"]
 }

@@ -12,21 +12,12 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { BlurView } from 'expo-blur';
-import type {
-  DialogCloseProps,
-  DialogComponent,
-  DialogProps,
-  DialogTriggerProps,
-  DialogBackdropProps,
-  ExtendedDialogContextType,
-  ExtendedDialogContentProps,
-} from './types';
 import { scheduleOnRN } from 'react-native-worklets';
 
 const AnimatedBlurView = Animated.createAnimatedComponent(BlurView);
-const DialogContext = createContext<ExtendedDialogContextType | undefined>(undefined);
+const DialogContext = createContext<ExtendedDialogContextValue | undefined>(undefined);
 
-const useDialogContext = (): ExtendedDialogContextType => {
+const useDialogContext = (): ExtendedDialogContextValue => {
   const context = useContext(DialogContext);
   if (!context) {
     throw new Error('Dialog components must be used within Dialog');

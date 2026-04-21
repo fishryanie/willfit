@@ -1,24 +1,22 @@
-import { useContext, useEffect, useState } from 'react';
-import { useColorScheme as useRNColorScheme } from 'react-native';
+import { useEffect, useState } from 'react';
 
-import { ThemeContext } from 'components/ui/organisms/theme-switch/context';
+import { ThemeMode } from 'constants/theme';
+import { useThemeMode } from 'store/use-theme-store';
 
 /**
  * To support static rendering, this value needs to be re-calculated on the client side for web
  */
 export function useColorScheme() {
-  const themeContext = useContext(ThemeContext);
+  const theme = useThemeMode();
   const [hasHydrated, setHasHydrated] = useState(false);
 
   useEffect(() => {
     setHasHydrated(true);
   }, []);
 
-  const colorScheme = useRNColorScheme();
-
   if (hasHydrated) {
-    return themeContext?.theme ?? colorScheme;
+    return theme;
   }
 
-  return themeContext?.theme ?? 'light';
+  return ThemeMode.Light;
 }

@@ -1,7 +1,6 @@
 import React from 'react';
 import { StyleSheet } from 'react-native';
-import { ThemedText } from 'components/themed-text';
-import { ThemedView } from 'components/themed-view';
+import { ThemedText, ThemedView } from 'components/base';
 import { CircularProgress } from '../ui/organisms/circular-progress';
 import { useSharedValue } from 'react-native-reanimated';
 import { Flame, Utensils, Zap } from 'lucide-react-native';

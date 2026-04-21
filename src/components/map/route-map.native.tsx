@@ -1,25 +1,7 @@
+import { ThemedView } from 'components/base';
 import { useEffect, useRef } from 'react';
-import MapView, { Circle, Marker, Polyline, type MapPressEvent } from 'react-native-maps';
 import { StyleSheet } from 'react-native';
-
-import { ThemedView } from 'components/themed-view';
-import { ActivityMode, Coordinate, MapLayer, SegmentSummary } from './types';
-
-type RouteMapProps = {
-  center: Coordinate;
-  routeCoordinates: Coordinate[];
-  liveCoordinates: Coordinate[];
-  waypoints: Coordinate[];
-  heatRoutes: Coordinate[][];
-  segments: SegmentSummary[];
-  selectedSegmentId?: string;
-  showHeatmap: boolean;
-  showSegments: boolean;
-  mapLayer: MapLayer;
-  activityMode: ActivityMode;
-  followUser: boolean;
-  onMapPress: (coordinate: Coordinate) => void;
-};
+import MapView, { Circle, Marker, Polyline, type MapPressEvent } from 'react-native-maps';
 
 export function RouteMap({
   center,
@@ -102,33 +84,11 @@ export function RouteMap({
             />
           ))}
 
-        {routeCoordinates.length > 1 && (
-          <Polyline
-            coordinates={routeCoordinates}
-            strokeColor='#FF5A1F'
-            strokeWidth={6}
-            lineCap='round'
-            lineJoin='round'
-          />
-        )}
+        {routeCoordinates.length > 1 && <Polyline coordinates={routeCoordinates} strokeColor='#FF5A1F' strokeWidth={6} lineCap='round' lineJoin='round' />}
 
-        {liveCoordinates.length > 1 && (
-          <Polyline
-            coordinates={liveCoordinates}
-            strokeColor='#1E90FF'
-            strokeWidth={5}
-            lineCap='round'
-            lineJoin='round'
-          />
-        )}
+        {liveCoordinates.length > 1 && <Polyline coordinates={liveCoordinates} strokeColor='#1E90FF' strokeWidth={5} lineCap='round' lineJoin='round' />}
 
-        <Circle
-          center={center}
-          radius={70}
-          fillColor='rgba(30, 144, 255, 0.14)'
-          strokeColor='rgba(30, 144, 255, 0.45)'
-          strokeWidth={1}
-        />
+        <Circle center={center} radius={70} fillColor='rgba(30, 144, 255, 0.14)' strokeColor='rgba(30, 144, 255, 0.45)' strokeWidth={1} />
 
         <Marker coordinate={center} anchor={{ x: 0.5, y: 0.5 }}>
           <ThemedView style={styles.currentLocationMarker}>

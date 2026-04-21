@@ -4,8 +4,7 @@ import { Modal, Pressable, ScrollView, StyleSheet, TextInput, TouchableOpacity, 
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { ThemedText } from 'components/themed-text';
-import { ThemedView } from 'components/themed-view';
+import { ThemedText, ThemedView } from 'components/base';
 import { appToast } from 'utils/app-toast';
 
 type WorkoutSet = {

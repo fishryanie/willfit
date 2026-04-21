@@ -1,12 +1,11 @@
+import { ThemedView } from 'components/base';
+import { AnimatedMaskedText } from 'components/ui/molecules/animated-masked-text/AnimatedMaskedText';
+import { RippleRect } from 'components/ui/organisms/skia-ripple';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ChevronRight } from 'lucide-react-native';
 import { useState } from 'react';
 import { StyleSheet } from 'react-native';
 import SwipeButton from 'rn-swipe-button';
-
-import { ThemedView } from 'components/themed-view';
-import { AnimatedMaskedText } from 'components/ui/molecules/animated-masked-text/AnimatedMaskedText';
-import { RippleRect } from 'components/ui/organisms/skia-ripple';
 
 type ModernSwipeButtonProps = {
   label: string;

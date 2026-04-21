@@ -1,12 +1,6 @@
-import {
-  BottomSheetBackdrop,
-  BottomSheetModal,
-  BottomSheetScrollView,
-  type BottomSheetBackdropProps,
-} from '@gorhom/bottom-sheet';
+import { BottomSheetBackdrop, BottomSheetModal, BottomSheetScrollView, type BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
 import { ModernSwipeButton } from 'components/map/modern-swipe-button';
-import { ThemedText } from 'components/themed-text';
-import { ThemedView } from 'components/themed-view';
+import { ThemedText, ThemedView } from 'components/base';
 import { CircularCarousel } from 'components/ui/molecules/circular-carousel';
 import * as Location from 'expo-location';
 import { Download, Flame, Layers, LocateFixed, MapPinned, Pause, Play, RadioTower, Search, Sparkles, Timer, Waves } from 'lucide-react-native';
@@ -15,7 +9,7 @@ import { ActivityIndicator, StyleSheet, TouchableOpacity, useWindowDimensions } 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { appToast } from 'utils/app-toast';
 import { storage } from 'utils/storage';
-import { RouteMap } from './route-map';
+import { RouteMap } from 'components/map/route-map';
 import {
   DEFAULT_COORDINATE,
   calculateTrackDistance,
@@ -28,7 +22,6 @@ import {
   formatDuration,
   formatPace,
 } from './route-utils';
-import { ActivityMode, Coordinate, MapLayer, RouteSummary } from './types';
 
 type RouteChoice = RouteSummary & {
   coordinates?: Coordinate[];
@@ -224,13 +217,7 @@ export function StravaMapScreen() {
 
   const renderRecordBackdrop = useCallback(
     (props: BottomSheetBackdropProps) => (
-      <BottomSheetBackdrop
-        {...props}
-        appearsOnIndex={1}
-        disappearsOnIndex={-1}
-        opacity={0.12}
-        pressBehavior={isRecording ? 'none' : 'close'}
-      />
+      <BottomSheetBackdrop {...props} appearsOnIndex={1} disappearsOnIndex={-1} opacity={0.12} pressBehavior={isRecording ? 'none' : 'close'} />
     ),
     [isRecording],
   );
@@ -583,9 +570,7 @@ export function StravaMapScreen() {
         backgroundStyle={styles.recordSheetBackground}
         handleIndicatorStyle={styles.recordSheetHandle}
         onDismiss={handleRecordSheetDismiss}>
-        <BottomSheetScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={[styles.recordSheetContent, { paddingBottom: insets.bottom + 28 }]}>
+        <BottomSheetScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.recordSheetContent, { paddingBottom: insets.bottom + 28 }]}>
           <ThemedView row alignItems='flex-start' justifyContent='space-between' gap={12} backgroundColor='transparent' marginBottom={16}>
             <ThemedView flex minWidth={0} backgroundColor='transparent'>
               <ThemedText color='#111111' fontSize={22} lineHeight={28} fontWeight='900' letterSpacing={0}>
@@ -734,11 +719,17 @@ function RouteCarouselCard({ route, width, active, onPress }: { route: RouteChoi
           </ThemedView>
 
           <ThemedView backgroundColor='transparent' style={styles.routeCarouselMetaRow}>
-            <ThemedText color='#D8DCE2' fontSize={12} fontWeight='800' letterSpacing={0}>{route.distanceKm.toFixed(1)} km</ThemedText>
+            <ThemedText color='#D8DCE2' fontSize={12} fontWeight='800' letterSpacing={0}>
+              {route.distanceKm.toFixed(1)} km
+            </ThemedText>
             <ThemedView style={styles.routeMetaDot} />
-            <ThemedText color='#D8DCE2' fontSize={12} fontWeight='800' letterSpacing={0}>{route.elevationM} m</ThemedText>
+            <ThemedText color='#D8DCE2' fontSize={12} fontWeight='800' letterSpacing={0}>
+              {route.elevationM} m
+            </ThemedText>
             <ThemedView style={styles.routeMetaDot} />
-            <ThemedText color='#D8DCE2' fontSize={12} fontWeight='800' letterSpacing={0}>0 giờ {route.estimatedMinutes} phút</ThemedText>
+            <ThemedText color='#D8DCE2' fontSize={12} fontWeight='800' letterSpacing={0}>
+              0 giờ {route.estimatedMinutes} phút
+            </ThemedText>
           </ThemedView>
 
           <ThemedView backgroundColor='transparent' style={styles.routeLocationRow}>

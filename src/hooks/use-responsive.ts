@@ -17,10 +17,5 @@ export function useResponsive() {
     return Math.round(size * scale);
   };
 
-  return {
-    width,
-    height,
-    rf,
-    rv,
-  };
+  return { width, height, rf, rv };
 }

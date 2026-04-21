@@ -2,7 +2,6 @@ import React, { memo, useEffect, useRef, useState } from 'react';
 import { Animated, Text, StyleSheet, Easing, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import MaskedView from '@react-native-masked-view/masked-view';
-import type { IAnimatedMaskedText } from './AnimatedMaskedText.types';
 
 function AnimatedMaskedTextComponent({
   children,
@@ -10,7 +9,7 @@ function AnimatedMaskedTextComponent({
   speed = 1,
   colors = ['transparent', 'rgba(255,255,255,0.5)', 'rgba(255,255,255,1)', 'rgba(255,255,255,0.2)', 'transparent'],
   baseTextColor = '#000000',
-}: IAnimatedMaskedText): React.ReactElement {
+}: AnimatedMaskedTextProps): React.ReactElement {
   const shimmerTranslate = useRef<Animated.Value>(new Animated.Value(0)).current;
   const [textWidth, setTextWidth] = useState<number>(0);
   const [textHeight, setTextHeight] = useState<number>(0);

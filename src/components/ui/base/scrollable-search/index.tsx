@@ -29,24 +29,16 @@ import Animated, {
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { scheduleOnRN } from "react-native-worklets";
-import type {
-  IAnimatedComponent,
-  IFocusedScreen,
-  IOverlay,
-  IScrollableSearch,
-  IScrollableSearchContext,
-  IScrollContent,
-} from "./types";
 
 const AnimatedBlurView =
   Animated.createAnimatedComponent<BlurViewProps>(BlurView);
 
-const ScrollableSearchContext = createContext<IScrollableSearchContext | null>(
+const ScrollableSearchContext = createContext<ScrollableSearchContextValue | null>(
   null,
 );
 
 const useScrollableSearch = () => {
-  const context = useContext<IScrollableSearchContext | null>(
+  const context = useContext<ScrollableSearchContextValue | null>(
     ScrollableSearchContext,
   );
   if (!context) {
@@ -57,11 +49,11 @@ const useScrollableSearch = () => {
   return context;
 };
 
-const ScrollableSearchRoot: React.FC<IScrollableSearch> &
-  React.FunctionComponent<IScrollableSearch> = memo<IScrollableSearch>(
+const ScrollableSearchRoot: React.FC<ScrollableSearchRootProps> &
+  React.FunctionComponent<ScrollableSearchRootProps> = memo<ScrollableSearchRootProps>(
   ({
     children,
-  }: IScrollableSearch): React.ReactNode &
+  }: ScrollableSearchRootProps): React.ReactNode &
     React.JSX.Element &
     React.ReactNode => {
     const [isFocused, setIsFocused] = useState<boolean>(false);
@@ -95,7 +87,7 @@ const ScrollableSearchRoot: React.FC<IScrollableSearch> &
       };
     }, []);
 
-    const value = useMemo<IScrollableSearchContext>(
+    const value = useMemo<ScrollableSearchContextValue>(
       () => ({
         isFocused,
         setIsFocused: setIsFocusedWithDelay,
@@ -117,13 +109,13 @@ const ScrollableSearchRoot: React.FC<IScrollableSearch> &
 
 ScrollableSearchRoot.displayName = "ScrollableSearchRoot";
 
-const ScrollContent: React.FC<IScrollContent> &
-  React.FunctionComponent<IScrollContent> = memo<IScrollContent>(
+const ScrollContent: React.FC<ScrollableSearchScrollContentProps> &
+  React.FunctionComponent<ScrollableSearchScrollContentProps> = memo<ScrollableSearchScrollContentProps>(
   ({
     children,
     pullThreshold = 80,
     contentContainerStyle,
-  }: IScrollContent): React.ReactNode & React.JSX.Element & React.ReactNode => {
+  }: ScrollableSearchScrollContentProps): React.ReactNode & React.JSX.Element & React.ReactNode => {
     const {
       scrollY,
       pullDistance,
@@ -187,8 +179,8 @@ const ScrollContent: React.FC<IScrollContent> &
 
 ScrollContent.displayName = "ScrollableSearchScrollContent";
 
-const AnimatedComponent: React.FC<IAnimatedComponent> &
-  React.FunctionComponent<IAnimatedComponent> = memo<IAnimatedComponent>(
+const AnimatedComponent: React.FC<ScrollableSearchAnimatedComponentProps> &
+  React.FunctionComponent<ScrollableSearchAnimatedComponentProps> = memo<ScrollableSearchAnimatedComponentProps>(
   ({
     children,
     focusedOffset = -90,
@@ -200,7 +192,7 @@ const AnimatedComponent: React.FC<IAnimatedComponent> &
       stiffness: 120,
       mass: 0.6,
     },
-  }: IAnimatedComponent): React.ReactNode &
+  }: ScrollableSearchAnimatedComponentProps): React.ReactNode &
     React.JSX.Element &
     React.ReactNode => {
     const { isFocused, pullDistance, onPullToFocusCallback } =
@@ -259,15 +251,15 @@ const AnimatedComponent: React.FC<IAnimatedComponent> &
 
 AnimatedComponent.displayName = "ScrollableSearchAnimatedComponent";
 
-const Overlay: React.FC<IOverlay> & React.FunctionComponent<IOverlay> =
-  memo<IOverlay>(
+const Overlay: React.FC<ScrollableSearchOverlayProps> & React.FunctionComponent<ScrollableSearchOverlayProps> =
+  memo<ScrollableSearchOverlayProps>(
     ({
       children,
       onPress,
       enableBlur = true,
       blurTint = "dark",
       maxBlurIntensity = 80,
-    }: IOverlay): React.ReactNode & React.JSX.Element & React.ReactNode => {
+    }: ScrollableSearchOverlayProps): React.ReactNode & React.JSX.Element & React.ReactNode => {
       const { isFocused, pullDistance, setIsFocused } = useScrollableSearch();
 
       const animatedBlurProps = useAnimatedProps(() => {
@@ -351,11 +343,11 @@ const Overlay: React.FC<IOverlay> & React.FunctionComponent<IOverlay> =
 
 Overlay.displayName = "ScrollableSearchOverlay";
 
-const FocusedScreen: React.FC<IFocusedScreen> &
-  React.FunctionComponent<IFocusedScreen> = memo<IFocusedScreen>(
+const FocusedScreen: React.FC<ScrollableSearchFocusedScreenProps> &
+  React.FunctionComponent<ScrollableSearchFocusedScreenProps> = memo<ScrollableSearchFocusedScreenProps>(
   ({
     children,
-  }: IFocusedScreen): React.ReactNode & React.JSX.Element & React.ReactNode => {
+  }: ScrollableSearchFocusedScreenProps): React.ReactNode & React.JSX.Element & React.ReactNode => {
     const { isFocused } = useScrollableSearch();
 
     const animatedStylez = useAnimatedStyle(() => {
@@ -380,7 +372,7 @@ const FocusedScreen: React.FC<IFocusedScreen> &
 FocusedScreen.displayName = "ScrollableSearchFocusedScreen";
 
 const ScrollableSearch = Object.assign(
-  memo<IScrollableSearch>(ScrollableSearchRoot),
+  memo<ScrollableSearchRootProps>(ScrollableSearchRoot),
   {
     ScrollContent,
     AnimatedComponent,

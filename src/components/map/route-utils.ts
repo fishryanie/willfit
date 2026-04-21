@@ -1,5 +1,3 @@
-import { ActivityMode, Coordinate, RouteSummary, SegmentSummary } from './types';
-
 export const DEFAULT_COORDINATE: Coordinate = {
   latitude: 10.7769,
   longitude: 106.7009,
@@ -33,9 +31,7 @@ export function calculateDistance(from: Coordinate, to: Coordinate) {
   const fromLatitude = degreesToRadians(from.latitude);
   const toLatitude = degreesToRadians(to.latitude);
 
-  const a =
-    Math.sin(latitudeDelta / 2) ** 2 +
-    Math.cos(fromLatitude) * Math.cos(toLatitude) * Math.sin(longitudeDelta / 2) ** 2;
+  const a = Math.sin(latitudeDelta / 2) ** 2 + Math.cos(fromLatitude) * Math.cos(toLatitude) * Math.sin(longitudeDelta / 2) ** 2;
 
   return EARTH_RADIUS_KM * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
@@ -68,16 +64,10 @@ export function coordinateAtDistance(center: Coordinate, distanceKm: number, bea
   const latitude = degreesToRadians(center.latitude);
   const longitude = degreesToRadians(center.longitude);
 
-  const nextLatitude = Math.asin(
-    Math.sin(latitude) * Math.cos(angularDistance) +
-      Math.cos(latitude) * Math.sin(angularDistance) * Math.cos(bearing),
-  );
+  const nextLatitude = Math.asin(Math.sin(latitude) * Math.cos(angularDistance) + Math.cos(latitude) * Math.sin(angularDistance) * Math.cos(bearing));
   const nextLongitude =
     longitude +
-    Math.atan2(
-      Math.sin(bearing) * Math.sin(angularDistance) * Math.cos(latitude),
-      Math.cos(angularDistance) - Math.sin(latitude) * Math.sin(nextLatitude),
-    );
+    Math.atan2(Math.sin(bearing) * Math.sin(angularDistance) * Math.cos(latitude), Math.cos(angularDistance) - Math.sin(latitude) * Math.sin(nextLatitude));
 
   return {
     latitude: radiansToDegrees(nextLatitude),
@@ -261,10 +251,7 @@ export function createSegments(center: Coordinate): SegmentSummary[] {
       grade: '+1.4%',
       bestTime: '2:48',
       starred: true,
-      coordinates: [
-        coordinateAtDistance(center, 0.55, 22),
-        coordinateAtDistance(center, 1.25, 43),
-      ],
+      coordinates: [coordinateAtDistance(center, 0.55, 22), coordinateAtDistance(center, 1.25, 43)],
     },
     {
       id: 'riverside-push',
@@ -273,10 +260,7 @@ export function createSegments(center: Coordinate): SegmentSummary[] {
       grade: 'flat',
       bestTime: '5:12',
       starred: false,
-      coordinates: [
-        coordinateAtDistance(center, 0.7, 125),
-        coordinateAtDistance(center, 1.55, 146),
-      ],
+      coordinates: [coordinateAtDistance(center, 0.7, 125), coordinateAtDistance(center, 1.55, 146)],
     },
     {
       id: 'park-climb',
@@ -285,10 +269,7 @@ export function createSegments(center: Coordinate): SegmentSummary[] {
       grade: '+3.8%',
       bestTime: '3:05',
       starred: true,
-      coordinates: [
-        coordinateAtDistance(center, 0.75, 250),
-        coordinateAtDistance(center, 1.28, 230),
-      ],
+      coordinates: [coordinateAtDistance(center, 0.75, 250), coordinateAtDistance(center, 1.28, 230)],
     },
   ];
 }

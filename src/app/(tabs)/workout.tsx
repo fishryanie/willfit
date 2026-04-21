@@ -1,5 +1,5 @@
-import { StravaMapScreen } from 'components/map/strava-map-screen';
+import { MapScreen } from 'components/map/map-screen';
 
 export default function WorkoutScreen() {
-  return <StravaMapScreen />;
+  return <MapScreen />;
 }

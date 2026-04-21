@@ -1,11 +1,11 @@
 import React from 'react';
-import { StyleSheet, useColorScheme } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { useDerivedValue } from 'react-native-reanimated';
 import { CircularProgress } from 'components/ui/organisms/circular-progress';
 import { RollingCounter } from 'components/ui/organisms/rolling-counter';
-import { ThemedText } from 'components/themed-text';
-import { ThemedView } from 'components/themed-view';
+import { ThemedText, ThemedView } from 'components/base';
 import { useHealthTracker } from 'hooks/use-health-tracker';
+import { useColorScheme } from 'hooks/use-color-scheme';
 import { ChartColumnIncreasing, Footprints, Map } from 'lucide-react-native';
 
 const STEP_GOAL = 10000;

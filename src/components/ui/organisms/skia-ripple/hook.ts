@@ -1,11 +1,8 @@
 import { useDerivedValue, useSharedValue } from 'react-native-reanimated';
-import type { IRippleImage as IRipple } from './types';
 import { useClock, vec } from '@shopify/react-native-skia';
 import { Gesture } from 'react-native-gesture-handler';
 
-type IUseRipple = Required<Pick<IRipple, 'amplitude' | 'frequency' | 'speed' | 'decay' | 'duration' | 'width' | 'height'>>;
-
-const useRipple = <T extends IUseRipple>(options: T) => {
+const useRipple = <T extends RippleOptions>(options: T) => {
   const { amplitude, decay, duration, frequency, height, speed, width } = options;
   const clock = useClock();
   const touchX = useSharedValue(width / 2);

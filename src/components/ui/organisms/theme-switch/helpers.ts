@@ -1,26 +1,20 @@
 import { Easing } from 'react-native-reanimated';
-import { EasingType } from './types';
+
+import { EasingType } from 'constants/theme';
 
 const wait = async <T extends number>(ms: T): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
 
 const getEasingFunction = <T extends EasingType>(easing: T): ((value: number) => number) => {
-  const easingValue = easing;
-
-  switch (easingValue) {
+  switch (easing) {
     case EasingType.Linear:
-    case 'linear':
       return Easing.linear;
     case EasingType.Ease:
-    case 'ease':
       return Easing.ease;
     case EasingType.EaseIn:
-    case 'easeIn':
       return Easing.in(Easing.ease);
     case EasingType.EaseOut:
-    case 'easeOut':
       return Easing.out(Easing.ease);
     case EasingType.EaseInOut:
-    case 'easeInOut':
     default:
       return Easing.inOut(Easing.ease);
   }

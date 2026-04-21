@@ -2,7 +2,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const STORAGE_KEY = {
   SAVED_ROUTES: 'willfit:saved-routes',
-  THEME_MODE: 'willfit:theme-mode',
   REFRESH_TOKEN: 'willfit:rfk_v1_z9x_auth'
 } as const;
 

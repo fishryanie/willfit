@@ -1,4 +1,4 @@
-import { Toast, type ToastOptions } from 'components/ui/molecules/Toast';
+import { Toast } from 'components/ui/molecules/Toast';
 
 type AppToastOptions = Omit<ToastOptions, 'type' | 'position'> & {
   position?: ToastOptions['position'];

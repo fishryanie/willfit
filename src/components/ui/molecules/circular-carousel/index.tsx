@@ -1,6 +1,5 @@
 import { Dimensions, StyleSheet, View } from "react-native";
 import React from "react";
-import type { CircularCarouselItemProps, CircularCarouselProps } from "./types";
 import { BlurView, type BlurViewProps } from "expo-blur";
 import Animated, {
   interpolate,

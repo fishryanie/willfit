@@ -4,8 +4,7 @@ import React, { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { ThemedText } from 'components/themed-text';
-import { ThemedView } from 'components/themed-view';
+import { ThemedText, ThemedView } from 'components/base';
 import { WorkoutEntrySheet } from 'components/workout/workout-entry-sheet';
 
 export default function AddScreen() {

@@ -1,4 +1,3 @@
-import type { Toast, ToastContextValue, ToastOptions } from '../Toast.types';
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 
 const DEFAULT_TOAST_OPTIONS: Required<ToastOptions> = {
@@ -23,12 +22,12 @@ export const useToast = (): ToastContextValue => {
 };
 
 export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [toasts, setToasts] = useState<Toast[]>([]);
+  const [toasts, setToasts] = useState<ToastItem[]>([]);
   const [expandedToasts, setExpandedToasts] = useState<Set<string>>(new Set());
 
   const show = useCallback((content: React.ReactNode | string, options?: ToastOptions): string => {
     const id = Math.random().toString(36).substring(2, 9);
-    const toast: Toast = {
+    const toast: ToastItem = {
       id,
       content,
       options: {

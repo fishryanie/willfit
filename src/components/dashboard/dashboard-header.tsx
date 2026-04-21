@@ -1,7 +1,6 @@
 import { StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { Bell, ScanQrCode, Search } from 'lucide-react-native';
-import { ThemedText } from 'components/themed-text';
-import { ThemedView } from 'components/themed-view';
+import { ThemedText, ThemedView } from 'components/base';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeColor } from 'hooks/use-theme-color';
 import { useAppDrawer } from 'components/drawer/app-drawer';

@@ -1,5 +1,4 @@
 import { CircleAlert, CircleCheck, CircleX, Info, type LucideIcon } from 'lucide-react-native';
-import type { Toast as ToastType, ToastType as ToastVariant } from './Toast.types';
 import { useToast } from './context/ToastContext';
 import React, { useCallback, useEffect, useRef } from 'react';
 import { LayoutAnimation, Platform, Pressable, StyleSheet, Text, TouchableOpacity, UIManager, View } from 'react-native';
@@ -11,13 +10,7 @@ if (Platform.OS === 'android') {
   }
 }
 
-interface ToastProps {
-  toast: ToastType;
-  index: number;
-  onHeightChange?: (id: string, height: number) => void;
-}
-
-const getBackgroundColor = (type: ToastVariant) => {
+const getBackgroundColor = (type: ToastType) => {
   switch (type) {
     case 'success':
       return '#10B981';
@@ -32,7 +25,7 @@ const getBackgroundColor = (type: ToastVariant) => {
   }
 };
 
-const getIconForType = (type: ToastVariant): LucideIcon | null => {
+const getIconForType = (type: ToastType): LucideIcon | null => {
   switch (type) {
     case 'success':
       return CircleCheck;
@@ -46,7 +39,7 @@ const getIconForType = (type: ToastVariant): LucideIcon | null => {
       return null;
   }
 };
-export const Toast: React.FC<ToastProps> = ({ toast, index }) => {
+export const Toast: React.FC<ToastViewProps> = ({ toast, index }) => {
   const prevIndexRef = useRef<number>(-1);
 
   const { dismiss, expandedToasts, expandToast, collapseToast } = useToast();

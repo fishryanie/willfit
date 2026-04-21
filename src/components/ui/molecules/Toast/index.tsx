@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { ToastProvider, useToast } from './context/ToastContext';
 import { ToastViewport } from './ToastViewPort';
-import type { ToastOptions, ToastProps } from './Toast.types';
+
 type ToastRef = {
   show?: (content: React.ReactNode | string, options?: ToastOptions) => string;
   update?: (id: string, content: React.ReactNode | string, options?: ToastOptions) => void;
@@ -22,7 +22,7 @@ const ToastController: React.FC = () => {
   return null;
 };
 
-export const ToastProviderWithViewport: React.FC<ToastProps> = ({ children }) => {
+export const ToastProviderWithViewport: React.FC<ToastProviderWithViewportProps> = ({ children }) => {
   return (
     <ToastProvider>
       <ToastController />
@@ -64,4 +64,3 @@ export const Toast = {
 };
 
 export { ToastProvider, useToast } from './context/ToastContext';
-export type { ToastOptions, ToastType, ToastPosition } from './Toast.types';

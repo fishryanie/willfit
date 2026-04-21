@@ -1,16 +1,16 @@
-import { useEffect, useState, useRef } from 'react';
-import { Pedometer } from 'expo-sensors';
 import * as Location from 'expo-location';
+import { Pedometer } from 'expo-sensors';
+import { useEffect, useRef, useState } from 'react';
 import { useSharedValue, withTiming } from 'react-native-reanimated';
 
 export function useHealthTracker() {
   const [isPedometerAvailable, setIsPedometerAvailable] = useState('checking');
   const [isPermissionsGranted, setIsPermissionsGranted] = useState(false);
-  
+
   // Shared values for animations
   const stepsAnimated = useSharedValue(0);
   const distanceAnimated = useSharedValue(0); // in meters
-  
+
   // State for simple display
   const [steps, setSteps] = useState(0);
   const [distance, setDistance] = useState(0);
@@ -34,7 +34,7 @@ export function useHealthTracker() {
         setIsPermissionsGranted(true);
 
         // 3. Subscribe to Pedometer
-        subscription = Pedometer.watchStepCount((result) => {
+        subscription = Pedometer.watchStepCount(result => {
           stepsAnimated.value = withTiming(result.steps);
           setSteps(result.steps);
         });
@@ -45,20 +45,20 @@ export function useHealthTracker() {
             accuracy: Location.Accuracy.High,
             distanceInterval: 5, // update every 5 meters
           },
-          (location) => {
+          location => {
             if (lastLocation.current) {
               const d = getDistance(
                 lastLocation.current.coords.latitude,
                 lastLocation.current.coords.longitude,
                 location.coords.latitude,
-                location.coords.longitude
+                location.coords.longitude,
               );
               const newDistance = distanceAnimated.value + d;
               distanceAnimated.value = withTiming(newDistance);
               setDistance(newDistance);
             }
             lastLocation.current = location;
-          }
+          },
         );
       }
     }
@@ -89,9 +89,7 @@ function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
   const Δφ = ((lat2 - lat1) * Math.PI) / 180;
   const Δλ = ((lon2 - lon1) * Math.PI) / 180;
 
-  const a =
-    Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-    Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+  const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
   return R * c;

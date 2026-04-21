@@ -16,7 +16,6 @@ import Animated, {
   interpolate,
 } from "react-native-reanimated";
 import { BlurView } from "expo-blur";
-import type { SearchBarProps } from "./SearchBar.types";
 import { scheduleOnRN } from "react-native-worklets";
 import { CircleX, Search } from "lucide-react-native";
 

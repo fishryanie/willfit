@@ -14,7 +14,6 @@ import Animated, {
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import { SPRING_CONFIG } from "./const";
-import type { ICounter, IReusableDigit } from "./types";
 
 const AnimatedBlur = Animated.createAnimatedComponent(BlurView);
 
@@ -32,7 +31,7 @@ const getDigitCount = <T extends number>(num: T): number => {
   return Math.max(Math.abs(Math.floor(num)).toString().length, 1);
 };
 
-const CounterDigit: FC<IReusableDigit> = memo<IReusableDigit>(
+const CounterDigit: FC<RollingCounterDigitProps> = memo<RollingCounterDigitProps>(
   ({
     place,
     counterValue,
@@ -42,7 +41,7 @@ const CounterDigit: FC<IReusableDigit> = memo<IReusableDigit>(
     fontSize,
     springConfig,
     digitStyle,
-  }: IReusableDigit):
+  }: RollingCounterDigitProps):
     | (React.JSX.Element & React.ReactNode & React.ReactElement)
     | null => {
     const currentDigit = useDerivedValue<number>(() =>
@@ -146,7 +145,7 @@ const CounterDigit: FC<IReusableDigit> = memo<IReusableDigit>(
 
 CounterDigit.displayName = "CounterDigit";
 
-const RollingCounter: FC<ICounter> = memo(
+const RollingCounter: FC<RollingCounterProps> = memo(
   ({
     value,
     height = 60,
@@ -155,7 +154,7 @@ const RollingCounter: FC<ICounter> = memo(
     color = "#000",
     springConfig = SPRING_CONFIG,
     digitStyle,
-  }: ICounter):
+  }: RollingCounterProps):
     | (React.JSX.Element & React.ReactNode & React.ReactElement)
     | null => {
     const internalCounter = useSharedValue<number>(0);

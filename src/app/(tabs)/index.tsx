@@ -3,7 +3,7 @@ import { ScrollView, StyleSheet } from 'react-native';
 import { DashboardHeader } from 'components/dashboard/dashboard-header';
 import { MetricGridCard } from 'components/dashboard/metric-grid-card';
 import { MetricChips } from 'components/dashboard/metric-chips';
-import { ThemedView } from 'components/themed-view';
+import { ThemedView } from 'components/base';
 
 export default function HomeScreen() {
   return (

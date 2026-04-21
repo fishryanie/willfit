@@ -7,7 +7,6 @@ import { GestureDetector } from 'react-native-gesture-handler';
 import { RIPPLE_SHADER_SOURCE } from './conf';
 import { useRipple } from './hook';
 // @ts-nocheck
-import type { IRippleSkiaEffect, IRippleImage, IRippleRect } from './types';
 
 const RIPPLE_SHADER = Skia?.RuntimeEffect?.Make?.(RIPPLE_SHADER_SOURCE) ?? null;
 
@@ -22,7 +21,7 @@ function SkiaRippleEffectComponent({
   duration = 4,
   borderRadius = 0,
   style,
-}: IRippleSkiaEffect): React.ReactElement {
+}: RippleSkiaEffectProps): React.ReactElement {
   const { uniforms, tap } = useRipple({
     amplitude,
     decay,
@@ -81,7 +80,7 @@ function RippleImageComponent({
   borderRadius = 0,
   style,
   fit = 'cover',
-}: IRippleImage): React.ReactElement {
+}: RippleImageProps): React.ReactElement {
   const image = useImage(source);
   const { uniforms, tap } = useRipple({
     amplitude,
@@ -142,7 +141,7 @@ function RippleRectComponent({
   style,
   childrenPointerEvents = 'none',
   children,
-}: IRippleRect): React.ReactElement {
+}: RippleRectProps): React.ReactElement {
   const { uniforms, tap } = useRipple({
     amplitude,
     decay,

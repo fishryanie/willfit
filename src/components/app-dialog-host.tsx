@@ -2,8 +2,7 @@ import { LogIn, Trash2, TriangleAlert } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 
-import { ThemedText } from 'components/themed-text';
-import { ThemedView } from 'components/themed-view';
+import { ThemedText, ThemedView } from 'components/base';
 import { Dialog } from 'components/ui/organisms/dialog';
 import { appDialog, type AppDialogState, type AppDialogTone } from 'utils/app-dialog';
 

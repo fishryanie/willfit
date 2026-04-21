@@ -2,12 +2,11 @@ import React, { memo } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import Animated, { useAnimatedProps } from "react-native-reanimated";
 import { Circle, Svg, type CircleProps } from "react-native-svg";
-import type { ICircularProgress } from "./types";
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
-export const CircularProgress: React.FC<ICircularProgress> =
-  memo<ICircularProgress>((props: ICircularProgress): React.ReactNode => {
+export const CircularProgress: React.FC<CircularProgressProps> =
+  memo<CircularProgressProps>((props: CircularProgressProps): React.ReactNode => {
     const {
       progress,
       size = 50,

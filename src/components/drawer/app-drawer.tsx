@@ -5,10 +5,9 @@ import { type GestureResponderEvent, Pressable, StyleSheet, TouchableOpacity, us
 import Animated, { Extrapolation, interpolate, useAnimatedStyle, useDerivedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { ThemedText } from 'components/themed-text';
-import { ThemedView } from 'components/themed-view';
-import { useTheme } from 'components/ui/organisms/theme-switch/hooks';
-import { AnimationType, EasingType } from 'components/ui/organisms/theme-switch/types';
+import { ThemedText, ThemedView } from 'components/base';
+import { AnimationType, EasingType } from 'constants/theme';
+import { useTheme } from 'store/use-theme-store';
 
 type DrawerContextValue = {
   openDrawer: () => void;

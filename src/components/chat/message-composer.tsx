@@ -2,7 +2,7 @@ import { Camera, ImagePlus, Send } from 'lucide-react-native';
 import { useState } from 'react';
 import { Pressable, StyleSheet, TextInput } from 'react-native';
 
-import { ThemedView } from 'components/themed-view';
+import { ThemedView } from 'components/base';
 import { CHAT_COLORS } from './data';
 
 type MessageComposerProps = {

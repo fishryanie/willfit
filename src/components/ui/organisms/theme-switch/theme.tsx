@@ -1,10 +1,171 @@
 import React, { useState, useRef, forwardRef, useImperativeHandle } from 'react';
 import { Canvas, Circle, Group, Image, Mask, Rect, SkImage, makeImageFromView } from '@shopify/react-native-skia';
-import { Dimensions, PixelRatio, StyleSheet, View } from 'react-native';
-import { useSharedValue, withTiming } from 'react-native-reanimated';
-import { ThemeMode, AnimationType, type ThemeSwitcherProps, type ThemeSwitcherRef } from './types';
-import { DEFAULT_ANIMATION_DURATION, DEFAULT_ANIMATION_TYPE, DEFAULT_SWITCH_DELAY, DEFAULT_EASING } from './conf';
+import { PixelRatio, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { useSharedValue, withTiming, type SharedValue } from 'react-native-reanimated';
+import {
+  AnimationType,
+  DEFAULT_ANIMATION_DURATION,
+  DEFAULT_ANIMATION_TYPE,
+  DEFAULT_EASING,
+  DEFAULT_SWITCH_DELAY,
+  ThemeMode,
+} from 'constants/theme';
+
 import { wait, getEasingFunction, getMaxRadius } from './helpers';
+
+type ThemeSwitchAnimationOptions = {
+  type: AnimationType;
+  centerX: number;
+  centerY: number;
+  screenWidth: number;
+  screenHeight: number;
+  duration: number;
+  easing: (value: number) => number;
+};
+
+const setSharedValue = (sharedValue: SharedValue<number>, value: number) => {
+  sharedValue.value = value;
+};
+
+const animateSharedValue = (sharedValue: SharedValue<number>, value: number, duration: number, easing: (value: number) => number) => {
+  sharedValue.value = withTiming(value, {
+    duration,
+    easing,
+  });
+};
+
+function useThemeSwitchAnimationValues(screenWidth: number, screenHeight: number) {
+  const circleRadius = useSharedValue(0);
+  const circleCenterX = useSharedValue(screenWidth / 2);
+  const circleCenterY = useSharedValue(screenHeight / 2);
+  const wipePosition = useSharedValue(0);
+
+  const setCenter = (x: number, y: number) => {
+    setSharedValue(circleCenterX, x);
+    setSharedValue(circleCenterY, y);
+  };
+
+  const run = ({ type, centerX, centerY, screenWidth, screenHeight, duration, easing }: ThemeSwitchAnimationOptions) => {
+    switch (type) {
+      case AnimationType.Circular: {
+        const maxRadius = getMaxRadius(centerX, centerY, screenWidth, screenHeight);
+        animateSharedValue(circleRadius, maxRadius, duration, easing);
+        break;
+      }
+
+      case AnimationType.CircularInverted: {
+        const maxRadiusInverted = getMaxRadius(centerX, centerY, screenWidth, screenHeight);
+        setSharedValue(circleRadius, maxRadiusInverted);
+        animateSharedValue(circleRadius, 0, duration, easing);
+        break;
+      }
+
+      case AnimationType.Wipe:
+        animateSharedValue(wipePosition, screenWidth, duration, easing);
+        break;
+
+      case AnimationType.WipeRight:
+        setSharedValue(wipePosition, screenWidth);
+        animateSharedValue(wipePosition, 0, duration, easing);
+        break;
+
+      case AnimationType.WipeDown:
+        animateSharedValue(wipePosition, screenHeight, duration, easing);
+        break;
+
+      case AnimationType.WipeUp:
+        setSharedValue(wipePosition, screenHeight);
+        animateSharedValue(wipePosition, 0, duration, easing);
+        break;
+
+      default:
+        animateSharedValue(wipePosition, screenWidth, duration, easing);
+    }
+  };
+
+  const reset = () => {
+    setSharedValue(circleRadius, 0);
+    setSharedValue(wipePosition, 0);
+  };
+
+  return {
+    circleRadius,
+    circleCenterX,
+    circleCenterY,
+    wipePosition,
+    setCenter,
+    run,
+    reset,
+  };
+}
+
+type ThemeSwitchAnimationValues = ReturnType<typeof useThemeSwitchAnimationValues>;
+
+type ThemeSwitchMaskProps = {
+  animationType: AnimationType;
+  screenWidth: number;
+  screenHeight: number;
+  animationValues: ThemeSwitchAnimationValues;
+};
+
+function ThemeSwitchMask({ animationType, screenWidth, screenHeight, animationValues }: ThemeSwitchMaskProps) {
+  switch (animationType) {
+    case AnimationType.Circular:
+      return (
+        <Group>
+          <Rect height={screenHeight} width={screenWidth} color='white' />
+          <Circle cx={animationValues.circleCenterX} cy={animationValues.circleCenterY} r={animationValues.circleRadius} color='black' />
+        </Group>
+      );
+
+    case AnimationType.CircularInverted:
+      return (
+        <Group>
+          <Circle cx={animationValues.circleCenterX} cy={animationValues.circleCenterY} r={animationValues.circleRadius} color='white' />
+        </Group>
+      );
+
+    case AnimationType.Wipe:
+      return (
+        <Group>
+          <Rect height={screenHeight} width={screenWidth} color='white' />
+          <Rect height={screenHeight} width={animationValues.wipePosition} color='black' />
+        </Group>
+      );
+
+    case AnimationType.WipeRight:
+      return (
+        <Group>
+          <Rect height={screenHeight} width={screenWidth} color='white' />
+          <Rect x={animationValues.wipePosition} height={screenHeight} width={screenWidth} color='black' />
+        </Group>
+      );
+
+    case AnimationType.WipeDown:
+      return (
+        <Group>
+          <Rect height={screenHeight} width={screenWidth} color='white' />
+          <Rect height={animationValues.wipePosition} width={screenWidth} color='black' />
+        </Group>
+      );
+
+    case AnimationType.WipeUp:
+      return (
+        <Group>
+          <Rect height={screenHeight} width={screenWidth} color='white' />
+          <Rect y={animationValues.wipePosition} height={screenHeight} width={screenWidth} color='black' />
+        </Group>
+      );
+
+    default:
+      return (
+        <Group>
+          <Rect height={screenHeight} width={screenWidth} color='white' />
+          <Rect height={screenHeight} width={animationValues.wipePosition} color='black' />
+        </Group>
+      );
+  }
+}
 
 export const ThemeSwitcher = forwardRef<ThemeSwitcherRef, ThemeSwitcherProps>(
   (
@@ -22,15 +183,13 @@ export const ThemeSwitcher = forwardRef<ThemeSwitcherRef, ThemeSwitcherProps>(
     },
     ref,
   ) => {
+    'use no memo';
+
     const pd = PixelRatio.get();
     const viewRef = useRef<View>(null);
     const [overlay, setOverlay] = useState<SkImage | null>(null);
-    const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('screen');
-
-    const circleRadius = useSharedValue(0);
-    const circleCenterX = useSharedValue(SCREEN_WIDTH / 2);
-    const circleCenterY = useSharedValue(SCREEN_HEIGHT / 2);
-    const wipePosition = useSharedValue(0);
+    const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+    const animationValues = useThemeSwitchAnimationValues(screenWidth, screenHeight);
     const [isAnimating, setIsAnimating] = useState(false);
 
     const animateThemeChange = async <T extends number, U extends number>(touchX?: T, touchY?: U): Promise<void> => {
@@ -39,11 +198,10 @@ export const ThemeSwitcher = forwardRef<ThemeSwitcherRef, ThemeSwitcherProps>(
       setIsAnimating(true);
       onAnimationStart?.();
 
-      const centerX = touchX ?? SCREEN_WIDTH / 2;
-      const centerY = touchY ?? SCREEN_HEIGHT / 2;
+      const centerX = touchX ?? screenWidth / 2;
+      const centerY = touchY ?? screenHeight / 2;
 
-      circleCenterX.value = centerX;
-      circleCenterY.value = centerY;
+      animationValues.setCenter(centerX, centerY);
 
       if (viewRef.current) {
         const snapshot = await makeImageFromView<View>(viewRef as React.RefObject<View>);
@@ -56,70 +214,15 @@ export const ThemeSwitcher = forwardRef<ThemeSwitcherRef, ThemeSwitcherProps>(
       onThemeChange(newTheme);
 
       const easingFn = getEasingFunction(easing);
-      const animationTypeValue = typeof animationType === 'string' ? animationType : animationType;
-
-      switch (animationTypeValue) {
-        case AnimationType.Circular:
-        case 'circular': {
-          const maxRadius = getMaxRadius(centerX, centerY, SCREEN_WIDTH, SCREEN_HEIGHT);
-          circleRadius.value = withTiming(maxRadius, {
-            duration: animationDuration,
-            easing: easingFn,
-          });
-          break;
-        }
-
-        case AnimationType.CircularInverted:
-        case 'circularInverted': {
-          const maxRadiusInverted = getMaxRadius(centerX, centerY, SCREEN_WIDTH, SCREEN_HEIGHT);
-          circleRadius.value = maxRadiusInverted;
-          circleRadius.value = withTiming(0, {
-            duration: animationDuration,
-            easing: easingFn,
-          });
-          break;
-        }
-
-        case AnimationType.Wipe:
-        case 'wipe':
-          wipePosition.value = withTiming(SCREEN_WIDTH, {
-            duration: animationDuration,
-            easing: easingFn,
-          });
-          break;
-
-        case AnimationType.WipeRight:
-        case 'wipeRight':
-          wipePosition.value = SCREEN_WIDTH;
-          wipePosition.value = withTiming(0, {
-            duration: animationDuration,
-            easing: easingFn,
-          });
-          break;
-
-        case AnimationType.WipeDown:
-        case 'wipeDown':
-          wipePosition.value = withTiming(SCREEN_HEIGHT, {
-            duration: animationDuration,
-            easing: easingFn,
-          });
-          break;
-
-        case AnimationType.WipeUp:
-        case 'wipeUp':
-          wipePosition.value = SCREEN_HEIGHT;
-          wipePosition.value = withTiming(0, {
-            duration: animationDuration,
-            easing: easingFn,
-          });
-          break;
-
-        default:
-          wipePosition.value = withTiming(SCREEN_WIDTH, {
-            duration: animationDuration,
-            easing: easingFn,
-          });
-      }
+      animationValues.run({
+        type: animationType,
+        centerX,
+        centerY,
+        screenWidth,
+        screenHeight,
+        duration: animationDuration,
+        easing: easingFn,
+      });
 
       await wait(animationDuration);
 
@@ -128,80 +231,12 @@ export const ThemeSwitcher = forwardRef<ThemeSwitcherRef, ThemeSwitcherProps>(
       onAnimationComplete?.();
 
       await wait(200);
-      circleRadius.value = 0;
-      wipePosition.value = 0;
+      animationValues.reset();
     };
 
     useImperativeHandle(ref, () => ({
       animate: animateThemeChange,
     }));
-
-    const renderMask = () => {
-      const animationTypeValue = animationType as string;
-
-      switch (animationTypeValue) {
-        case AnimationType.Circular:
-        case 'circular':
-          return (
-            <Group>
-              <Rect height={SCREEN_HEIGHT} width={SCREEN_WIDTH} color='white' />
-              <Circle cx={circleCenterX} cy={circleCenterY} r={circleRadius} color='black' />
-            </Group>
-          );
-
-        case AnimationType.CircularInverted:
-        case 'circularInverted':
-          return (
-            <Group>
-              <Circle cx={circleCenterX} cy={circleCenterY} r={circleRadius} color='white' />
-            </Group>
-          );
-
-        case AnimationType.Wipe:
-        case 'wipe':
-          return (
-            <Group>
-              <Rect height={SCREEN_HEIGHT} width={SCREEN_WIDTH} color='white' />
-              <Rect height={SCREEN_HEIGHT} width={wipePosition} color='black' />
-            </Group>
-          );
-
-        case AnimationType.WipeRight:
-        case 'wipeRight':
-          return (
-            <Group>
-              <Rect height={SCREEN_HEIGHT} width={SCREEN_WIDTH} color='white' />
-              <Rect x={wipePosition} height={SCREEN_HEIGHT} width={SCREEN_WIDTH} color='black' />
-            </Group>
-          );
-
-        case AnimationType.WipeDown:
-        case 'wipeDown':
-          return (
-            <Group>
-              <Rect height={SCREEN_HEIGHT} width={SCREEN_WIDTH} color='white' />
-              <Rect height={wipePosition} width={SCREEN_WIDTH} color='black' />
-            </Group>
-          );
-
-        case AnimationType.WipeUp:
-        case 'wipeUp':
-          return (
-            <Group>
-              <Rect height={SCREEN_HEIGHT} width={SCREEN_WIDTH} color='white' />
-              <Rect y={wipePosition} height={SCREEN_HEIGHT} width={SCREEN_WIDTH} color='black' />
-            </Group>
-          );
-
-        default:
-          return (
-            <Group>
-              <Rect height={SCREEN_HEIGHT} width={SCREEN_WIDTH} color='white' />
-              <Rect height={SCREEN_HEIGHT} width={wipePosition} color='black' />
-            </Group>
-          );
-      }
-    };
 
     return (
       <View style={[styles.container, style]} ref={viewRef} collapsable={false}>
@@ -209,7 +244,16 @@ export const ThemeSwitcher = forwardRef<ThemeSwitcherRef, ThemeSwitcherProps>(
 
         {overlay && (
           <Canvas style={[StyleSheet.absoluteFillObject, styles.overlayCanvas]}>
-            <Mask mode='luminance' mask={renderMask()}>
+            <Mask
+              mode='luminance'
+              mask={
+                <ThemeSwitchMask
+                  animationType={animationType}
+                  screenWidth={screenWidth}
+                  screenHeight={screenHeight}
+                  animationValues={animationValues}
+                />
+              }>
               <Image image={overlay} x={0} y={0} width={overlay.width() / pd} height={overlay.height() / pd} />
             </Mask>
           </Canvas>
