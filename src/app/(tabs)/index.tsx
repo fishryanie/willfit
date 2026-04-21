@@ -1,13 +1,12 @@
 import { ThemedView } from 'components/base';
-import { DashboardHeader } from 'components/dashboard/dashboard-header';
-import { MetricChips } from 'components/dashboard/metric-chips';
-import { MetricGridCard } from 'components/dashboard/metric-grid-card';
-import { ScrollView, StyleSheet } from 'react-native';
+import SignUpV1 from 'components/ui/templates/sign-up-v1';
+import { StyleSheet } from 'react-native';
 
 export default function HomeScreen() {
   return (
     <ThemedView flex>
-      <DashboardHeader name='Sofia' />
+      <SignUpV1 />
+      {/* <DashboardHeader name='Sofia' />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <MetricChips />
 
@@ -22,7 +21,7 @@ export default function HomeScreen() {
         </ThemedView>
 
         <ThemedView height={120} backgroundColor='transparent' />
-      </ScrollView>
+      </ScrollView> */}
     </ThemedView>
   );
 }

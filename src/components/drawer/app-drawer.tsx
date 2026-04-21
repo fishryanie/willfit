@@ -116,8 +116,8 @@ export function AppDrawerProvider({ children }: PropsWithChildren) {
 
   return (
     <AppDrawerContext.Provider value={contextValue}>
-      <ThemedView flex backgroundColor={drawerBackgroundColor} safePaddingTop>
-        <ThemedView absoluteFillObject paddingTop={96} paddingHorizontal={30} maxWidth={210} backgroundColor={drawerBackgroundColor}>
+      <ThemedView flex backgroundColor={drawerBackgroundColor}>
+        <ThemedView absoluteFillObject safePaddingTop={96} paddingHorizontal={30} maxWidth={210} backgroundColor={drawerBackgroundColor}>
           <ThemedView
             gap={6}
             marginBottom={12}

@@ -8,17 +8,18 @@ import { ThemeProvider } from 'components/ui/organisms/theme-switch';
 import { ThemeMode } from 'constants/theme';
 import { Stack, useNavigationContainerRef } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { usePushNotifications } from 'hooks/use-push-notifications';
 import { useEffect } from 'react';
-import { Appearance, StyleSheet } from 'react-native';
+import { Appearance } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import 'react-native-reanimated';
 import { useAuthStore } from 'store/use-auth-store';
 import { useThemeMode, useThemeStore } from 'store/use-theme-store';
 import { api } from 'utils/api';
+import 'utils/location-task';
 import { Sentry, initSentry, navigationIntegration } from 'utils/sentry';
 import { STORAGE_KEY, storage } from 'utils/storage';
-import 'utils/location-task';
 
 initSentry();
 
@@ -46,7 +47,7 @@ const queryClient = new QueryClient({
 
 function RootLayout() {
   return (
-    <GestureHandlerRootView style={styles.root}>
+    <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
         <KeyboardProvider>
           <BottomSheetModalProvider>
@@ -67,6 +68,8 @@ function RootLayoutContent() {
   const themeMode = useThemeMode();
   const ref = useNavigationContainerRef();
   const isDarkTheme = themeMode === ThemeMode.Dark;
+
+  usePushNotifications();
 
   useEffect(() => {
     if (ref) {
@@ -89,14 +92,11 @@ function RootLayoutContent() {
 
       if (refreshToken && !useAuthStore.getState().accessToken) {
         try {
-          // Attempt to refresh the session on app start
           const response = await api.post('/auth/refresh', { refreshToken });
           const { accessToken, refreshToken: newRefreshToken } = response.data;
-
           await useAuthStore.getState().setTokens(accessToken, newRefreshToken);
         } catch (error) {
           console.error('Failed to initialize session:', error);
-          // If refresh fails on start, we ensure store stays unauthenticated
         }
       }
     };
@@ -107,21 +107,15 @@ function RootLayoutContent() {
   return (
     <NavigationThemeProvider value={isDarkTheme ? CustomDarkTheme : DefaultTheme}>
       <AppDrawerProvider>
-        <Stack>
-          <Stack.Screen name='(tabs)' options={{ headerShown: false }} />
-          <Stack.Screen name='chat/[id]' options={{ headerShown: false }} />
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name='(tabs)' />
+          <Stack.Screen name='chat/[id]' />
           <Stack.Screen name='modal' options={{ presentation: 'modal', title: 'Modal' }} />
         </Stack>
-        <StatusBar style={isDarkTheme ? 'light' : 'dark'} />
+        {/* <StatusBar style={isDarkTheme ? 'light' : 'dark'} /> */}
       </AppDrawerProvider>
     </NavigationThemeProvider>
   );
 }
 
 export default Sentry.wrap(RootLayout);
-
-const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-  },
-});

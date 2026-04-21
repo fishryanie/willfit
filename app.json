@@ -34,6 +34,7 @@
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
         "ACCESS_BACKGROUND_LOCATION",
+        "POST_NOTIFICATIONS",
         "FOREGROUND_SERVICE",
         "FOREGROUND_SERVICE_LOCATION",
         "ACTIVITY_RECOGNITION"
@@ -66,6 +67,7 @@
           "project": "your-project-slug"
         }
       ],
+      "expo-notifications",
       "expo-font"
     ],
     "experiments": {
