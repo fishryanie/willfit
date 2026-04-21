@@ -49,7 +49,7 @@ export default function AddScreen() {
           </ThemedText>
         </TouchableOpacity>
 
-        <ThemedView style={styles.planCard}>
+        <ThemedView minHeight={112} radius={8} backgroundColor='#1C1D25' padding={18} row justifyContent='space-between' alignItems='center' gap={16}>
           <ThemedView backgroundColor='transparent'>
             <ThemedText color='#FFFFFF' fontSize={24} fontWeight='900' letterSpacing={0}>
               Push Day
@@ -116,15 +116,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     flexDirection: 'row',
     gap: 8,
-  },
-  planCard: {
-    minHeight: 112,
-    borderRadius: 8,
-    backgroundColor: '#1C1D25',
-    padding: 18,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 16,
   },
 });

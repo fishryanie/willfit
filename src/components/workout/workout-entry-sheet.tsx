@@ -179,14 +179,25 @@ export function WorkoutEntrySheet({ visible, onClose }: WorkoutEntrySheetProps) 
 
   return (
     <Modal animationType='none' transparent visible={visible} statusBarTranslucent onRequestClose={onClose}>
-      <ThemedView backgroundColor='transparent' style={styles.portal}>
+      <ThemedView backgroundColor='transparent' flex justifyContent='flex-end' zIndex={50}>
         <Pressable style={styles.backdrop} onPress={onClose} />
         <Animated.View style={[styles.sheet, sheetStyle]}>
-          <ThemedView style={styles.handle} />
+          <ThemedView alignSelf='center' width={52} height={6} radius={3} backgroundColor='#6C6E78' marginTop={8} marginBottom={12} />
 
-          <ThemedView backgroundColor='transparent' style={styles.header}>
-            <ThemedView style={styles.progressRing}>
-              <ThemedView style={[styles.progressArc, { transform: [{ rotate: `${Math.min(completedSets * 36, 300)}deg` }] }]} />
+          <ThemedView backgroundColor='transparent' minHeight={68} paddingHorizontal={24} row alignItems='center' justifyContent='space-between'>
+            <ThemedView width={52} height={52} radius={26} borderWidth={8} borderColor='#2D303A' alignItems='center' justifyContent='center' overflow='hidden'>
+              <ThemedView
+                position='absolute'
+                width={52}
+                height={52}
+                radius={26}
+                borderWidth={8}
+                borderLeftColor='#536DFF'
+                borderTopColor='#536DFF'
+                borderRightColor='transparent'
+                borderBottomColor='transparent'
+                transform={[{ rotate: `${Math.min(completedSets * 36, 300)}deg` }]}
+              />
             </ThemedView>
             <ThemedText color='#F0F1F6' fontSize={25} lineHeight={30} fontWeight='900' letterSpacing={0}>
               {formatDuration(elapsedSeconds)}
@@ -199,7 +210,7 @@ export function WorkoutEntrySheet({ visible, onClose }: WorkoutEntrySheetProps) 
           </ThemedView>
 
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 28 }]}>
-            <ThemedView backgroundColor='transparent' style={styles.titleRow}>
+            <ThemedView backgroundColor='transparent' row alignItems='flex-start' justifyContent='space-between' gap={14} marginBottom={26}>
               <ThemedView backgroundColor='transparent'>
                 <ThemedText color='#ECEEF4' fontSize={25} lineHeight={31} fontWeight='900' letterSpacing={0}>
                   Push Day - Chest & Triceps
@@ -215,7 +226,7 @@ export function WorkoutEntrySheet({ visible, onClose }: WorkoutEntrySheetProps) 
 
             {exercises.map((exercise, index) => (
               <ThemedView key={exercise.id} backgroundColor='transparent' marginBottom={30}>
-                <ThemedView backgroundColor='transparent' style={styles.exerciseHeader}>
+                <ThemedView backgroundColor='transparent' row alignItems='center' gap={14} marginBottom={17}>
                   <ExerciseThumb variant={index} />
                   <ThemedView backgroundColor='transparent' flex>
                     <ThemedText color='#F1F3F8' fontSize={20} lineHeight={25} fontWeight='900' letterSpacing={0}>
@@ -223,7 +234,15 @@ export function WorkoutEntrySheet({ visible, onClose }: WorkoutEntrySheetProps) 
                     </ThemedText>
                     <ThemedView backgroundColor='transparent' row wrap gap={7} marginTop={11}>
                       {exercise.tags.map(tag => (
-                        <ThemedView key={tag.label} style={[styles.tag, tag.tone === 'blue' && styles.tagBlue]}>
+                        <ThemedView
+                          key={tag.label}
+                          minHeight={30}
+                          radius={8}
+                          paddingHorizontal={10}
+                          row
+                          alignItems='center'
+                          gap={5}
+                          backgroundColor={tag.tone === 'blue' ? 'rgba(92, 117, 255, 0.18)' : 'rgba(54, 211, 153, 0.18)'}>
                           {tag.tone === 'blue' ? <Sparkles size={12} color='#7AA2FF' /> : <TrendingUp size={12} color='#4BD783' />}
                           <ThemedText color={tag.tone === 'blue' ? '#7AA2FF' : '#53D58A'} fontSize={14} fontWeight='900' letterSpacing={0}>
                             {tag.label}
@@ -247,7 +266,7 @@ export function WorkoutEntrySheet({ visible, onClose }: WorkoutEntrySheetProps) 
                 </TouchableOpacity>
 
                 {index === 0 && (
-                  <ThemedView style={styles.estimateCard}>
+                  <ThemedView marginTop={19} radius={8} padding={18} minHeight={98} backgroundColor='#232631' row alignItems='center' gap={16}>
                     <TrendingUp size={22} color='#43D681' />
                     <ThemedText flex color='#F0F1F7' fontSize={21} lineHeight={27} fontWeight='800' letterSpacing={0}>
                       Estimated one rep max is 145 lbs which is a 7% increase from last time
@@ -281,7 +300,7 @@ function SetTable({
 }) {
   return (
     <ThemedView backgroundColor='transparent' gap={11}>
-      <ThemedView backgroundColor='transparent' style={styles.tableHeader}>
+      <ThemedView backgroundColor='transparent' row alignItems='center' gap={8}>
         <ThemedText width={46} textAlign='center' color='#E7E9F0' fontSize={22} lineHeight={28} fontWeight='900' letterSpacing={0}>
           Set
         </ThemedText>
@@ -300,7 +319,7 @@ function SetTable({
       </ThemedView>
 
       {exercise.sets.map((set, index) => (
-        <ThemedView key={set.id} backgroundColor='transparent' style={styles.setRow}>
+        <ThemedView key={set.id} backgroundColor='transparent' row alignItems='center' gap={8} minHeight={62}>
           <ThemedText width={46} textAlign='center' color='#EAECF2' fontSize={22} fontWeight='800' letterSpacing={0}>
             {index + 1}
           </ThemedText>
@@ -337,9 +356,18 @@ function SetTable({
 
 function ExerciseThumb({ variant }: { variant: number }) {
   return (
-    <ThemedView style={styles.thumb}>
-      <ThemedView style={styles.thumbBench} />
-      <ThemedView style={[styles.thumbBody, variant % 2 === 1 && styles.thumbBodyAlt]} />
+    <ThemedView width={86} height={76} radius={8} backgroundColor='#15161D' alignItems='center' justifyContent='center' overflow='hidden'>
+      <ThemedView position='absolute' width={54} height={7} left={16} bottom={17} radius={4} backgroundColor='#DEE2EB' />
+      <ThemedView
+        position='absolute'
+        width={variant % 2 === 1 ? 46 : 42}
+        height={variant % 2 === 1 ? 20 : 24}
+        left={variant % 2 === 1 ? 18 : 23}
+        bottom={24}
+        radius={8}
+        backgroundColor='#949AA8'
+        transform={[{ rotate: variant % 2 === 1 ? '15deg' : '-18deg' }]}
+      />
       <Dumbbell size={20} color='#D8DAE2' />
     </ThemedView>
   );
@@ -353,11 +381,6 @@ function formatDuration(totalSeconds: number) {
 }
 
 const styles = StyleSheet.create({
-  portal: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    zIndex: 50,
-  },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.44)',
@@ -374,43 +397,6 @@ const styles = StyleSheet.create({
     shadowRadius: 20,
     elevation: 18,
   },
-  handle: {
-    alignSelf: 'center',
-    width: 52,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#6C6E78',
-    marginTop: 8,
-    marginBottom: 12,
-  },
-  header: {
-    minHeight: 68,
-    paddingHorizontal: 24,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  progressRing: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    borderWidth: 8,
-    borderColor: '#2D303A',
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  progressArc: {
-    position: 'absolute',
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    borderWidth: 8,
-    borderLeftColor: '#536DFF',
-    borderTopColor: '#536DFF',
-    borderRightColor: 'transparent',
-    borderBottomColor: 'transparent',
-  },
   finishButton: {
     minWidth: 124,
     height: 62,
@@ -423,81 +409,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 22,
     paddingTop: 16,
   },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    gap: 14,
-    marginBottom: 26,
-  },
   moreButton: {
     width: 34,
     height: 34,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  exerciseHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    marginBottom: 17,
-  },
-  thumb: {
-    width: 86,
-    height: 76,
-    borderRadius: 8,
-    backgroundColor: '#15161D',
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  thumbBench: {
-    position: 'absolute',
-    width: 54,
-    height: 7,
-    left: 16,
-    bottom: 17,
-    borderRadius: 4,
-    backgroundColor: '#DEE2EB',
-  },
-  thumbBody: {
-    position: 'absolute',
-    width: 42,
-    height: 24,
-    left: 23,
-    bottom: 24,
-    borderRadius: 8,
-    backgroundColor: '#949AA8',
-    transform: [{ rotate: '-18deg' }],
-  },
-  thumbBodyAlt: {
-    width: 46,
-    height: 20,
-    left: 18,
-    transform: [{ rotate: '15deg' }],
-  },
-  tag: {
-    minHeight: 30,
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: 'rgba(54, 211, 153, 0.18)',
-  },
-  tagBlue: {
-    backgroundColor: 'rgba(92, 117, 255, 0.18)',
-  },
-  tableHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  setRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    minHeight: 62,
   },
   inputColumn: {
     width: 66,
@@ -533,16 +449,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     flexDirection: 'row',
     gap: 8,
-  },
-  estimateCard: {
-    marginTop: 19,
-    borderRadius: 8,
-    padding: 18,
-    minHeight: 98,
-    backgroundColor: '#232631',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
   },
   addExerciseButton: {
     minHeight: 58,

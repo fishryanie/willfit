@@ -43,7 +43,7 @@ export function RouteMap({
   const lastWaypoint = waypoints.length > 1 ? waypoints[waypoints.length - 1] : undefined;
 
   return (
-    <ThemedView backgroundColor='transparent' style={StyleSheet.absoluteFill}>
+    <ThemedView backgroundColor='transparent' absoluteFillObject>
       <MapView
         ref={mapRef}
         style={StyleSheet.absoluteFill}
@@ -91,93 +91,37 @@ export function RouteMap({
         <Circle center={center} radius={70} fillColor='rgba(30, 144, 255, 0.14)' strokeColor='rgba(30, 144, 255, 0.45)' strokeWidth={1} />
 
         <Marker coordinate={center} anchor={{ x: 0.5, y: 0.5 }}>
-          <ThemedView style={styles.currentLocationMarker}>
-            <ThemedView style={styles.currentLocationDot} />
+          <ThemedView width={26} height={26} radius={13} backgroundColor='rgba(30, 144, 255, 0.22)' alignItems='center' justifyContent='center'>
+            <ThemedView width={12} height={12} radius={6} backgroundColor='#1E90FF' borderWidth={2} borderColor='#FFFFFF' />
           </ThemedView>
         </Marker>
 
         {firstWaypoint && (
           <Marker coordinate={firstWaypoint} title='Start'>
-            <ThemedView style={[styles.pin, styles.startPin]} />
+            <ThemedView width={18} height={18} radius={9} borderWidth={3} borderColor='#FFFFFF' backgroundColor='#36D399' />
           </Marker>
         )}
 
         {lastWaypoint && (
           <Marker coordinate={lastWaypoint} title='Finish'>
-            <ThemedView style={[styles.pin, styles.finishPin]} />
+            <ThemedView width={18} height={18} radius={9} borderWidth={3} borderColor='#FFFFFF' backgroundColor='#FF5A1F' />
           </Marker>
         )}
 
         {waypoints.slice(1, -1).map(waypoint => (
           <Marker key={`${waypoint.latitude}-${waypoint.longitude}`} coordinate={waypoint}>
-            <ThemedView style={styles.waypoint}>
-              <ThemedView style={styles.waypointInner} />
+            <ThemedView width={18} height={18} radius={9} backgroundColor='#FFFFFF' alignItems='center' justifyContent='center' borderWidth={1} borderColor='#FF8A00'>
+              <ThemedView width={8} height={8} radius={4} backgroundColor='#FF8A00' />
             </ThemedView>
           </Marker>
         ))}
 
         {liveLastPoint && (
           <Marker coordinate={liveLastPoint} title='Live position'>
-            <ThemedView style={styles.liveMarker} />
+            <ThemedView width={18} height={18} radius={9} backgroundColor='#1E90FF' borderWidth={3} borderColor='#FFFFFF' />
           </Marker>
         )}
       </MapView>
     </ThemedView>
   );
 }
-
-const styles = StyleSheet.create({
-  currentLocationMarker: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: 'rgba(30, 144, 255, 0.22)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  currentLocationDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: '#1E90FF',
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
-  },
-  pin: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    borderWidth: 3,
-    borderColor: '#FFFFFF',
-  },
-  startPin: {
-    backgroundColor: '#36D399',
-  },
-  finishPin: {
-    backgroundColor: '#FF5A1F',
-  },
-  waypoint: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#FF8A00',
-  },
-  waypointInner: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#FF8A00',
-  },
-  liveMarker: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: '#1E90FF',
-    borderWidth: 3,
-    borderColor: '#FFFFFF',
-  },
-});

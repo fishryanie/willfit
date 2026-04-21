@@ -35,9 +35,13 @@ export function HealthTrackerCard() {
       marginVertical={12}
       borderWidth={StyleSheet.hairlineWidth}
       borderColor="rgba(150, 150, 150, 0.2)"
-      style={styles.card}
+      shadowColor='#000'
+      shadowOffset={{ width: 0, height: 4 }}
+      shadowOpacity={0.1}
+      shadowRadius={12}
+      elevation={4}
     >
-      <ThemedView backgroundColor='transparent' style={styles.header}>
+      <ThemedView backgroundColor='transparent' row justifyContent='space-between' alignItems='center' marginBottom={20}>
         <ThemedText type="subtitle">Hôm nay</ThemedText>
         <ChartColumnIncreasing size={20} color={colorScheme === 'dark' ? '#fff' : '#000'} />
       </ThemedView>
@@ -66,7 +70,15 @@ export function HealthTrackerCard() {
           />
         </ThemedView>
 
-        <ThemedView backgroundColor='transparent' style={styles.statsRow}>
+        <ThemedView
+          backgroundColor='transparent'
+          row
+          width='100%'
+          justifyContent='space-around'
+          marginTop={20}
+          paddingTop={20}
+          borderTopWidth={StyleSheet.hairlineWidth}
+          borderTopColor='rgba(150, 150, 150, 0.2)'>
           <ThemedView backgroundColor='transparent' alignItems='center' gap={4}>
             <Footprints size={24} color="#4CAF50" />
             <ThemedText type="defaultSemiBold">Bước chân</ThemedText>
@@ -85,28 +97,3 @@ export function HealthTrackerCard() {
     </ThemedView>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 4,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    width: '100%',
-    justifyContent: 'space-around',
-    marginTop: 20,
-    paddingTop: 20,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(150, 150, 150, 0.2)',
-  },
-});

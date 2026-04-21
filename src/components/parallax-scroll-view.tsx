@@ -56,15 +56,14 @@ export default function ParallaxScrollView({
         ]}>
         {headerImage}
       </Animated.View>
-      <ThemedView flex padding={32} gap={16} style={{ overflow: 'hidden' }}>{children}</ThemedView>
+      <ThemedView flex padding={32} gap={16} overflow='hidden'>
+        {children}
+      </ThemedView>
     </Animated.ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
   header: {
     height: HEADER_HEIGHT,
     overflow: 'hidden',

@@ -70,17 +70,17 @@ export function ChatDetailScreen() {
 
 function ChatHeader({ conversation }: { conversation: ChatConversation }) {
   return (
-    <ThemedView safePaddingTop minHeight={52} style={styles.header}>
+    <ThemedView safePaddingTop minHeight={52} row alignItems='center' gap={12} paddingHorizontal={8} backgroundColor={CHAT_COLORS.white}>
       <Pressable accessibilityRole='button' style={styles.backButton} onPress={() => router.back()}>
         <ArrowLeft size={20} strokeWidth={2} color={CHAT_COLORS.gray1000} />
       </Pressable>
       <ChatAvatar source={conversation.avatar} name={conversation.name} size={36} />
-      <ThemedView backgroundColor='transparent' style={styles.headerCopy}>
+      <ThemedView backgroundColor='transparent' flex={1} gap={2}>
         <ThemedText numberOfLines={1} fontSize={16} fontWeight='600' color={CHAT_COLORS.gray1000}>
           {conversation.name}
         </ThemedText>
-        <ThemedView backgroundColor='transparent' style={styles.statusRow}>
-          <ThemedView style={styles.activeDot} />
+        <ThemedView backgroundColor='transparent' row alignItems='center' gap={5}>
+          <ThemedView width={8} height={8} radius={4} backgroundColor={CHAT_COLORS.green500} />
           <ThemedText fontSize={12} fontWeight='400' color={CHAT_COLORS.gray600}>
             {conversation.status}
           </ThemedText>
@@ -94,9 +94,16 @@ function MessageBubble({ message, conversation }: { message: ChatMessage; conver
   const isMe = message.author === 'me';
 
   return (
-    <ThemedView backgroundColor='transparent' style={[styles.messageRow, isMe ? styles.myMessageRow : styles.coachMessageRow]}>
+    <ThemedView
+      backgroundColor='transparent'
+      maxWidth='86%'
+      row
+      gap={8}
+      alignSelf={isMe ? 'flex-end' : 'flex-start'}
+      alignItems={isMe ? undefined : 'flex-end'}
+      justifyContent={isMe ? 'flex-end' : undefined}>
       {!isMe ? <ChatAvatar source={conversation.avatar} name={conversation.name} size={36} /> : null}
-      <ThemedView style={[styles.bubble, isMe ? styles.myBubble : styles.coachBubble]}>
+      <ThemedView minHeight={38} radius={8} paddingHorizontal={12} paddingVertical={8} backgroundColor={isMe ? CHAT_COLORS.primary200 : CHAT_COLORS.white}>
         {message.image ? (
           <Image source={{ uri: message.image }} resizeMode='cover' style={styles.messageImage} />
         ) : (
@@ -127,7 +134,7 @@ function ChatAvatar({ source, name, size }: { source?: ImageSourcePropType; name
   const initials = getInitials(name);
 
   return (
-    <ThemedView style={[styles.avatarFallback, { width: size, height: size, borderRadius: size / 2 }]}>
+    <ThemedView width={size} height={size} radius={size / 2} alignItems='center' justifyContent='center' backgroundColor={CHAT_COLORS.primary}>
       {initials ? (
         <ThemedText color={CHAT_COLORS.white} fontSize={size / 3.5} fontWeight='600'>
           {initials}
@@ -141,7 +148,7 @@ function ChatAvatar({ source, name, size }: { source?: ImageSourcePropType; name
 
 function ScrollToBottomHint() {
   return (
-    <ThemedView style={styles.scrollHint}>
+    <ThemedView width={32} height={32} alignSelf='center' alignItems='center' justifyContent='center' radius={16} backgroundColor={CHAT_COLORS.white}>
       <ChevronDown size={20} color={CHAT_COLORS.gray700} />
     </ThemedView>
   );
@@ -168,30 +175,8 @@ const styles = StyleSheet.create({
   keyboardView: {
     flex: 1,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingHorizontal: 8,
-    backgroundColor: CHAT_COLORS.white,
-  },
   backButton: {
     padding: 8,
-  },
-  headerCopy: {
-    flex: 1,
-    gap: 2,
-  },
-  statusRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  activeDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: CHAT_COLORS.green500,
   },
   chatBackground: {
     flex: 1,
@@ -202,31 +187,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     gap: 12,
   },
-  messageRow: {
-    maxWidth: '86%',
-    flexDirection: 'row',
-    gap: 8,
-  },
-  coachMessageRow: {
-    alignSelf: 'flex-start',
-    alignItems: 'flex-end',
-  },
-  myMessageRow: {
-    alignSelf: 'flex-end',
-    justifyContent: 'flex-end',
-  },
-  bubble: {
-    minHeight: 38,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  coachBubble: {
-    backgroundColor: CHAT_COLORS.white,
-  },
-  myBubble: {
-    backgroundColor: CHAT_COLORS.primary200,
-  },
   messageImage: {
     width: 188,
     height: 250,
@@ -234,19 +194,5 @@ const styles = StyleSheet.create({
   },
   avatar: {
     backgroundColor: CHAT_COLORS.antiFlashWhite,
-  },
-  avatarFallback: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: CHAT_COLORS.primary,
-  },
-  scrollHint: {
-    width: 32,
-    height: 32,
-    alignSelf: 'center',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 16,
-    backgroundColor: CHAT_COLORS.white,
   },
 });

@@ -19,7 +19,7 @@ const BUTTON_HEIGHT = 64;
 
 function MaskedSwipeTitle({ label, color, isFinish }: { label: string; color: string; isFinish: boolean }) {
   return (
-    <ThemedView backgroundColor='transparent' style={styles.titleContainer} pointerEvents='none'>
+    <ThemedView backgroundColor='transparent' flex={1} alignItems='center' justifyContent='center' paddingLeft={30} pointerEvents='none'>
       <AnimatedMaskedText
         speed={1.35}
         baseTextColor={color}
@@ -44,7 +44,7 @@ export function ModernSwipeButton({ label, completeLabel = 'Release', disabled, 
   const titleColor = isFinish ? '#E5484D' : '#4B5563';
 
   const swipeButton = (
-    <ThemedView backgroundColor='transparent' style={styles.swipeLayer} pointerEvents='box-none'>
+    <ThemedView backgroundColor='transparent' width='100%' height={BUTTON_HEIGHT} pointerEvents='box-none'>
       <SwipeButton
         onSwipeSuccess={() => {
           // Grant 200ms for the library to finish its internal success animation
@@ -60,7 +60,7 @@ export function ModernSwipeButton({ label, completeLabel = 'Release', disabled, 
         thumbIconBackgroundColor='transparent'
         thumbIconBorderColor='transparent'
         thumbIconComponent={() => (
-          <ThemedView backgroundColor='transparent' style={styles.thumbWrapper} pointerEvents='none'>
+          <ThemedView backgroundColor='transparent' width={60} height={64} alignItems='center' justifyContent='center' pointerEvents='none'>
             <LinearGradient colors={gradientColors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.thumbGradient}>
               <ChevronRight size={24} color='#FFFFFF' strokeWidth={3.5} />
             </LinearGradient>
@@ -80,7 +80,8 @@ export function ModernSwipeButton({ label, completeLabel = 'Release', disabled, 
   return (
     <ThemedView
       backgroundColor='transparent'
-      style={styles.container}
+      width='100%'
+      marginVertical={6}
       onLayout={event => {
         const nextWidth = Math.round(event.nativeEvent.layout.width);
         if (nextWidth > 0 && nextWidth !== buttonWidth) {
@@ -102,26 +103,15 @@ export function ModernSwipeButton({ label, completeLabel = 'Release', disabled, 
           {swipeButton}
         </RippleRect>
       ) : (
-        <ThemedView style={[styles.fallbackRail, { backgroundColor: railBackgroundColor }]}>{swipeButton}</ThemedView>
+        <ThemedView height={BUTTON_HEIGHT} radius={32} overflow='hidden' backgroundColor={railBackgroundColor}>
+          {swipeButton}
+        </ThemedView>
       )}
     </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    width: '100%',
-    marginVertical: 6,
-  },
-  swipeLayer: {
-    width: '100%',
-    height: BUTTON_HEIGHT,
-  },
-  fallbackRail: {
-    height: BUTTON_HEIGHT,
-    borderRadius: 32,
-    overflow: 'hidden',
-  },
   swipeContainer: {
     borderRadius: 32,
     borderWidth: 0,
@@ -131,12 +121,6 @@ const styles = StyleSheet.create({
   rail: {
     borderRadius: 32,
     borderWidth: 0,
-  },
-  thumbWrapper: {
-    width: 60,
-    height: 64,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   thumbGradient: {
     width: 54,
@@ -155,11 +139,5 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 0,
     textTransform: 'uppercase',
-  },
-  titleContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingLeft: 30,
   },
 });

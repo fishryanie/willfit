@@ -26,12 +26,14 @@ export function MessageComposer({ onSend }: MessageComposerProps) {
   };
 
   return (
-    <ThemedView 
+    <ThemedView
       safePaddingBottom={12}
-      style={styles.container}
-    >
-      <ThemedView backgroundColor='transparent' style={styles.primary}>
-        <ThemedView backgroundColor='transparent' style={styles.actions}>
+      flexDirection='column-reverse'
+      alignItems='center'
+      backgroundColor={CHAT_COLORS.white}
+      borderTopWidth={0}>
+      <ThemedView backgroundColor='transparent' width='100%' row alignItems='flex-end' gap={12} paddingTop={12} paddingHorizontal={12}>
+        <ThemedView backgroundColor='transparent' minHeight={40} row alignItems='center' gap={12}>
           <Pressable accessibilityRole='button' style={styles.actionButton}>
             <ImagePlus absoluteStrokeWidth size={20} color={CHAT_COLORS.gray700} />
           </Pressable>
@@ -61,26 +63,6 @@ export function MessageComposer({ onSend }: MessageComposerProps) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'column-reverse',
-    alignItems: 'center',
-    backgroundColor: CHAT_COLORS.white,
-    borderTopWidth: 0,
-  },
-  primary: {
-    width: '100%',
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: 12,
-    paddingTop: 12,
-    paddingHorizontal: 12,
-  },
-  actions: {
-    minHeight: 40,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
   actionButton: {
     padding: 5,
   },

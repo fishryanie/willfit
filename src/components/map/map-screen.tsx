@@ -333,8 +333,21 @@ export function MapScreen() {
         onMapPress={handleMapPress}
       />
 
-      <ThemedView backgroundColor='transparent' safePaddingTop={10} style={styles.topBar}>
-        <ThemedView style={styles.searchPill}>
+      <ThemedView backgroundColor='transparent' safePaddingTop={10} position='absolute' top={0} left={0} right={0} row alignItems='center' gap={10} paddingHorizontal={14}>
+        <ThemedView
+          flex={1}
+          minHeight={46}
+          radius={8}
+          backgroundColor='#FFFFFF'
+          row
+          alignItems='center'
+          gap={9}
+          paddingHorizontal={14}
+          shadowColor='#000'
+          shadowOpacity={0.12}
+          shadowOffset={{ width: 0, height: 4 }}
+          shadowRadius={14}
+          elevation={5}>
           <Search size={18} color='#6B7280' />
           <ThemedText numberOfLines={1} color='#6B7280' fontSize={14} fontWeight='600' letterSpacing={0}>
             Tìm kiếm vị trí
@@ -348,7 +361,7 @@ export function MapScreen() {
         </TouchableOpacity>
       </ThemedView>
 
-      <ThemedView backgroundColor='transparent' safeTop top={74} style={styles.mapControls}>
+      <ThemedView backgroundColor='transparent' safeTop top={74} position='absolute' right={14} gap={10}>
         <TouchableOpacity
           activeOpacity={0.78}
           style={[styles.floatingButton, followUser && styles.floatingButtonActive]}
@@ -369,15 +382,47 @@ export function MapScreen() {
         </TouchableOpacity>
       </ThemedView>
 
-      <ThemedView safeTop top={78} style={styles.statusPill}>
-        <ThemedView style={[styles.statusDot, routeSource === 'osrm' ? styles.statusDotOnline : styles.statusDotLocal]} />
+      <ThemedView
+        safeTop
+        top={78}
+        position='absolute'
+        left={14}
+        minHeight={34}
+        paddingHorizontal={12}
+        radius={17}
+        backgroundColor='#FFFFFF'
+        row
+        alignItems='center'
+        gap={8}
+        shadowColor='#000'
+        shadowOpacity={0.08}
+        shadowOffset={{ width: 0, height: 3 }}
+        shadowRadius={8}
+        elevation={3}>
+        <ThemedView width={8} height={8} radius={4} backgroundColor={routeSource === 'osrm' ? '#34C759' : '#FFB800'} />
         <ThemedText numberOfLines={1} color='#111111' fontSize={12} fontWeight='700' letterSpacing={0}>
           {isRouting ? 'Đang dựng cung đường...' : routeSource === 'osrm' ? 'Route by OSRM' : locationStatus}
         </ThemedText>
       </ThemedView>
 
       {!isRecording && (
-        <ThemedView safeTop top={126} style={styles.searchHereButton}>
+        <ThemedView
+          safeTop
+          top={126}
+          position='absolute'
+          left='50%'
+          transform={[{ translateX: -70 }]}
+          minWidth={140}
+          height={38}
+          radius={19}
+          backgroundColor='#111111'
+          alignItems='center'
+          justifyContent='center'
+          shadowColor='#000'
+          shadowOpacity={0.2}
+          shadowOffset={{ width: 0, height: 4 }}
+          shadowRadius={10}
+          elevation={6}>
           <TouchableOpacity
             activeOpacity={0.86}
             style={StyleSheet.absoluteFill}
@@ -397,9 +442,9 @@ export function MapScreen() {
       )}
 
       {showRouteCarousel && (
-        <ThemedView backgroundColor='transparent' safeBottom={88} style={styles.routeCarouselOverlay}>
-          <ThemedView backgroundColor='transparent' style={styles.carouselFilterRow}>
-            <ThemedView style={styles.carouselFilterPill}>
+        <ThemedView backgroundColor='transparent' safeBottom={88} position='absolute' left={0} right={0}>
+          <ThemedView backgroundColor='transparent' row alignItems='center' gap={8} paddingHorizontal={14} marginBottom={12}>
+            <ThemedView height={32} paddingHorizontal={12} radius={16} backgroundColor='rgba(0,0,0,0.6)' row alignItems='center' gap={6}>
               <Flame size={15} color='#FF5A1F' />
               <ThemedText color='#FFFFFF' fontSize={12} fontWeight='900' letterSpacing={0}>
                 Lộ trình
@@ -440,10 +485,10 @@ export function MapScreen() {
                 />
               ) : (
                 <TouchableOpacity activeOpacity={0.9} style={[styles.recordCarouselCard, { width: carouselCardWidth }]} onPress={openFreeRecordSheet}>
-                  <ThemedView style={styles.recordCardIcon}>
+                  <ThemedView width={48} height={48} radius={8} backgroundColor='rgba(255,90,31,0.15)' alignItems='center' justifyContent='center'>
                     <Timer size={20} color='#FF5A1F' />
                   </ThemedView>
-                  <ThemedView backgroundColor='transparent' style={styles.recordCardBody}>
+                  <ThemedView backgroundColor='transparent' flex={1} gap={4}>
                     <ThemedText flex numberOfLines={1} color='#FFFFFF' fontSize={15} fontWeight='900' letterSpacing={0}>
                       Ghi lại cung đường mới
                     </ThemedText>
@@ -519,7 +564,16 @@ export function MapScreen() {
               <>
                 <ThemedView row justifyContent='center' backgroundColor='transparent'>
                   <TouchableOpacity activeOpacity={0.88} style={styles.pauseButtonNew} onPress={togglePause}>
-                    <ThemedView square={32} radius={16} backgroundColor='#FFFFFF' contentCenter style={styles.pauseIconShadow}>
+                    <ThemedView
+                      square={32}
+                      radius={16}
+                      backgroundColor='#FFFFFF'
+                      contentCenter
+                      shadowColor='#000'
+                      shadowOpacity={0.1}
+                      shadowOffset={{ width: 0, height: 4 }}
+                      shadowRadius={8}
+                      elevation={4}>
                       {isPaused ? <Play size={20} color='#111111' fill='#111111' /> : <Pause size={20} color='#111111' fill='#111111' />}
                     </ThemedView>
                     <ThemedText color='#111111' fontSize={14} fontWeight='800'>
@@ -594,20 +648,34 @@ function RecordDetailRow({ label, value }: { label: string; value: string }) {
 
 function RouteCarouselCard({ route, width, active, onPress }: { route: RouteChoice; width: number; active: boolean; onPress: () => void }) {
   return (
-    <ThemedView style={[styles.routeCarouselCard, { width }, active && styles.routeCarouselCardActive]}>
+    <ThemedView
+      height={160}
+      radius={8}
+      backgroundColor='#111111'
+      overflow='hidden'
+      borderWidth={active ? 2 : 1}
+      borderColor={active ? '#FF5A1F' : 'rgba(255,255,255,0.1)'}
+      width={width}>
       <TouchableOpacity activeOpacity={0.9} style={styles.routeCarouselTapArea} onPress={onPress}>
-        <ThemedView style={styles.routeThumbnail}>
-          <ThemedView style={styles.routeThumbnailSky} />
-          <ThemedView style={styles.routeThumbnailWater} />
-          <ThemedView style={styles.routeThumbnailRoad} />
-          <ThemedView style={styles.routeThumbnailLine} />
+        <ThemedView width={110} height='100%' backgroundColor='#1A1C1E' overflow='hidden'>
+          <ThemedView position='absolute' top={0} left={0} right={0} height='40%' backgroundColor='#24292E' />
+          <ThemedView position='absolute' bottom={0} left={0} right={0} height='30%' backgroundColor='#1D242B' />
+          <ThemedView position='absolute' top='35%' left='-10%' width='120%' height='40%' backgroundColor='#2D3339' transform={[{ rotate: '-15deg' }]} />
+          <ThemedView position='absolute' top='50%' left='10%' right='10%' height={4} backgroundColor='#FF5A1F' radius={2} transform={[{ rotate: '-5deg' }]} />
         </ThemedView>
-        <ThemedView backgroundColor='transparent' style={styles.routeCarouselBody}>
-          <ThemedView backgroundColor='transparent' style={styles.routeCarouselTitleRow}>
+        <ThemedView backgroundColor='transparent' flex={1} padding={14} gap={10}>
+          <ThemedView backgroundColor='transparent' row alignItems='center' justifyContent='space-between' gap={8}>
             <ThemedText flex numberOfLines={1} color='#FFFFFF' fontSize={15} fontWeight='900' letterSpacing={0}>
               {route.title}
             </ThemedText>
-            <ThemedView style={[styles.routeCarouselBadge, route.source === 'saved' && styles.routeCarouselSavedBadge]}>
+            <ThemedView
+              row
+              alignItems='center'
+              gap={4}
+              paddingHorizontal={8}
+              paddingVertical={4}
+              radius={4}
+              backgroundColor={route.source === 'saved' ? 'rgba(91,214,125,0.12)' : 'rgba(255,138,0,0.12)'}>
               {route.source === 'saved' ? <Download size={12} color='#5BD67D' /> : <Sparkles size={12} color='#FF8A00' />}
               <ThemedText color={route.source === 'saved' ? '#5BD67D' : '#FF8A00'} fontSize={11} fontWeight='900' letterSpacing={0}>
                 {route.source === 'saved' ? 'Đã lưu' : 'Đề xuất'}
@@ -615,28 +683,28 @@ function RouteCarouselCard({ route, width, active, onPress }: { route: RouteChoi
             </ThemedView>
           </ThemedView>
 
-          <ThemedView backgroundColor='transparent' style={styles.routeCarouselMetaRow}>
+          <ThemedView backgroundColor='transparent' row alignItems='center' gap={6}>
             <ThemedText color='#D8DCE2' fontSize={12} fontWeight='800' letterSpacing={0}>
               {route.distanceKm.toFixed(1)} km
             </ThemedText>
-            <ThemedView style={styles.routeMetaDot} />
+            <ThemedView width={3} height={3} radius={1.5} backgroundColor='#4B5563' />
             <ThemedText color='#D8DCE2' fontSize={12} fontWeight='800' letterSpacing={0}>
               {route.elevationM} m
             </ThemedText>
-            <ThemedView style={styles.routeMetaDot} />
+            <ThemedView width={3} height={3} radius={1.5} backgroundColor='#4B5563' />
             <ThemedText color='#D8DCE2' fontSize={12} fontWeight='800' letterSpacing={0}>
               0 giờ {route.estimatedMinutes} phút
             </ThemedText>
           </ThemedView>
 
-          <ThemedView backgroundColor='transparent' style={styles.routeLocationRow}>
+          <ThemedView backgroundColor='transparent' row alignItems='center' gap={6}>
             <LocateFixed size={14} color='#C8CCD2' />
             <ThemedText numberOfLines={1} color='#C8CCD2' fontSize={12} fontWeight='800' letterSpacing={0}>
               Vị trí hiện tại
             </ThemedText>
           </ThemedView>
 
-          <ThemedView backgroundColor='transparent' style={styles.routePrivacyRow}>
+          <ThemedView backgroundColor='transparent' row alignItems='center' gap={6} marginTop='auto'>
             <MapPinned size={14} color='#FF5A1F' />
             <ThemedText flex numberOfLines={1} color='#FF5A1F' fontSize={12} fontWeight='900' letterSpacing={0}>
               Được thiết kế riêng cho bạn

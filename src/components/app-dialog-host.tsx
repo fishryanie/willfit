@@ -75,8 +75,18 @@ export function AppDialogHost() {
   return (
     <Dialog key={dialog.id} defaultOpen>
       <Dialog.Content dismissible={dialog.dismissible} onClose={handleClose}>
-        <ThemedView style={styles.card}>
-          <ThemedView style={[styles.iconWrap, { backgroundColor: tone.backgroundColor }]}>
+        <ThemedView
+          radius={8}
+          backgroundColor='#17181D'
+          borderWidth={1}
+          borderColor='rgba(255, 255, 255, 0.08)'
+          padding={18}
+          shadowColor='#000'
+          shadowOpacity={0.28}
+          shadowOffset={{ width: 0, height: 18 }}
+          shadowRadius={30}
+          elevation={12}>
+          <ThemedView width={48} height={48} radius={8} alignItems='center' justifyContent='center' backgroundColor={tone.backgroundColor}>
             <Icon size={24} color={tone.color} strokeWidth={2.6} />
           </ThemedView>
 
@@ -91,7 +101,7 @@ export function AppDialogHost() {
             ) : null}
           </ThemedView>
 
-          <ThemedView backgroundColor='transparent' style={styles.actions}>
+          <ThemedView backgroundColor='transparent' marginTop={20} row justifyContent='flex-end' gap={10}>
             {dialog.cancelLabel ? (
               <Dialog.Close asChild>
                 <Pressable
@@ -127,31 +137,6 @@ export function AppDialogHost() {
 }
 
 const styles = StyleSheet.create({
-  card: {
-    borderRadius: 8,
-    backgroundColor: '#17181D',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-    padding: 18,
-    shadowColor: '#000',
-    shadowOpacity: 0.28,
-    shadowOffset: { width: 0, height: 18 },
-    shadowRadius: 30,
-    elevation: 12,
-  },
-  iconWrap: {
-    width: 48,
-    height: 48,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  actions: {
-    marginTop: 20,
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 10,
-  },
   button: {
     minHeight: 46,
     minWidth: 112,

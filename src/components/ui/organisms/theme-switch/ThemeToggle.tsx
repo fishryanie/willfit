@@ -41,12 +41,12 @@ export const ThemeToggle = ({ showLabel = true, style }: ThemeToggleProps) => {
       style={[styles.themePill, { backgroundColor: colors.background }, style]} 
       onPress={handlePress}
     >
-      <ThemedView style={[styles.themeSwitchIcon, { backgroundColor: colors.iconBg }]}>
+      <ThemedView width={38} height={38} radius={8} alignItems='center' justifyContent='center' backgroundColor={colors.iconBg}>
         {isDark ? <Moon size={18} color='#FF8A00' /> : <Sun size={18} color='#FF8A00' />}
       </ThemedView>
       
       {showLabel && (
-        <ThemedView backgroundColor='transparent' style={styles.themeSwitchCopy}>
+        <ThemedView backgroundColor='transparent' flex={1} minWidth={0}>
           <ThemedText color={colors.text} fontSize={13} fontWeight='800' letterSpacing={0}>
             {isDark ? 'Dark mode' : 'Light mode'}
           </ThemedText>
@@ -56,8 +56,8 @@ export const ThemeToggle = ({ showLabel = true, style }: ThemeToggleProps) => {
         </ThemedView>
       )}
 
-      <ThemedView backgroundColor='transparent' style={[styles.themeSwitchTrack, { backgroundColor: colors.track }]}>
-        <ThemedView style={[styles.themeSwitchThumb, isDark && styles.themeSwitchThumbActive, { backgroundColor: colors.thumb }]} />
+      <ThemedView width={34} height={20} radius={8} padding={3} justifyContent='center' backgroundColor={colors.track}>
+        <ThemedView width={14} height={14} radius={7} alignSelf={isDark ? 'flex-end' : undefined} backgroundColor={colors.thumb} />
       </ThemedView>
     </TouchableOpacity>
   );
@@ -71,31 +71,5 @@ const styles = StyleSheet.create({
     padding: 8,
     width: 180,
     gap: 10,
-  },
-  themeSwitchIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  themeSwitchCopy: {
-    flex: 1,
-    minWidth: 0,
-  },
-  themeSwitchTrack: {
-    width: 34,
-    height: 20,
-    borderRadius: 8,
-    padding: 3,
-    justifyContent: 'center',
-  },
-  themeSwitchThumb: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-  },
-  themeSwitchThumbActive: {
-    alignSelf: 'flex-end',
   },
 });

@@ -36,7 +36,7 @@ function ChatListContent() {
   return (
     <>
       <ScrollableSearch.ScrollContent contentContainerStyle={{ paddingTop: insets.top + 138, paddingBottom: insets.bottom + 86 }} pullThreshold={72}>
-        <ThemedView style={styles.content}>
+        <ThemedView backgroundColor={CHAT_COLORS.white}>
           {chatConversations.map((item, index) => (
             <ThemedView key={item.id} backgroundColor='transparent'>
               <ConversationRow item={item} />
@@ -67,9 +67,17 @@ function ChatSearchTrigger({ activeCount, totalCount }: { activeCount: number; t
   const { isFocused, setIsFocused } = useScrollableSearch();
 
   return (
-    <ThemedView style={styles.header}>
-      <ThemedView backgroundColor='transparent' style={styles.headerTitleRow}>
-        <ThemedView backgroundColor='transparent' style={styles.headerCopy}>
+    <ThemedView
+      marginHorizontal={12}
+      paddingHorizontal={12}
+      paddingTop={10}
+      paddingBottom={12}
+      radius={8}
+      borderWidth={StyleSheet.hairlineWidth}
+      borderColor={CHAT_COLORS.antiFlashWhite}
+      backgroundColor={CHAT_COLORS.white}>
+      <ThemedView backgroundColor='transparent' row alignItems='flex-start' gap={12}>
+        <ThemedView backgroundColor='transparent' flex={1} minWidth={0}>
           <ThemedText color={CHAT_COLORS.gray1000} fontSize={28} fontWeight='700' lineHeight={34}>
             Messages
           </ThemedText>
@@ -77,7 +85,7 @@ function ChatSearchTrigger({ activeCount, totalCount }: { activeCount: number; t
             Coach, AI chat, and workout support
           </ThemedText>
         </ThemedView>
-        <ThemedView style={styles.headerBadge}>
+        <ThemedView radius={8} backgroundColor='#FFF1E8' paddingHorizontal={10} paddingVertical={7}>
           <ThemedText color={CHAT_COLORS.primary} fontSize={12} fontWeight='700'>
             {activeCount}/{totalCount} online
           </ThemedText>
@@ -107,8 +115,8 @@ function FocusedSearchPanel({
 }) {
   return (
     <SafeAreaView edges={['top']} style={styles.focusedContainer}>
-      <ThemedView backgroundColor='transparent' style={styles.focusedSearchRow}>
-        <ThemedView backgroundColor='transparent' style={styles.focusedSearch}>
+      <ThemedView backgroundColor='transparent' row alignItems='center' gap={8} paddingHorizontal={16}>
+        <ThemedView backgroundColor='transparent' flex={1}>
           <ReacticxSearchBar
             autoFocusOnMount
             placeholder='Search messages'
@@ -126,8 +134,8 @@ function FocusedSearchPanel({
       </ThemedView>
 
       <ScrollView style={styles.focusedScroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps='handled'>
-        <ThemedView backgroundColor='transparent' style={styles.focusedSection}>
-          <ThemedView backgroundColor='transparent' style={styles.focusedHeader}>
+        <ThemedView backgroundColor='transparent' paddingHorizontal={16} paddingBottom={30}>
+          <ThemedView backgroundColor='transparent' row alignItems='center' gap={8} marginBottom={12}>
             <Search size={16} color={CHAT_COLORS.gray600} />
             <ThemedText color={CHAT_COLORS.gray600} fontSize={15} fontWeight='700'>
               {query.trim() ? 'Search results' : 'Recent conversations'}
@@ -155,7 +163,7 @@ function FocusedConversation({ conversation, onPress }: { conversation: ChatConv
         router.push(`/chat/${conversation.id}`);
       }}>
       <ChatAvatar source={conversation.avatar} name={conversation.name} size={44} />
-      <ThemedView backgroundColor='transparent' style={styles.focusedItemBody}>
+      <ThemedView backgroundColor='transparent' flex={1} minWidth={0} gap={4}>
         <ThemedText numberOfLines={1} color={CHAT_COLORS.gray1000} fontSize={16} fontWeight='700'>
           {conversation.name}
         </ThemedText>
@@ -177,8 +185,8 @@ function ConversationRow({ item }: ConversationRowProps) {
       <ThemedView backgroundColor='transparent'>
         <Pressable accessibilityRole='button' style={styles.row} onPress={() => router.push(`/chat/${item.id}`)}>
           <ChatAvatar source={item.avatar} name={item.name} size={56} />
-          <ThemedView backgroundColor='transparent' style={styles.body}>
-            <ThemedView backgroundColor='transparent' style={styles.titleRow}>
+          <ThemedView backgroundColor='transparent' flex={1} gap={5} justifyContent='center'>
+            <ThemedView backgroundColor='transparent' row alignItems='center' gap={8}>
               <ThemedText flex={1} numberOfLines={1} color={CHAT_COLORS.gray1000} fontSize={16} fontWeight='600' lineHeight={20}>
                 {item.name}
               </ThemedText>
@@ -197,12 +205,12 @@ function ConversationRow({ item }: ConversationRowProps) {
 }
 
 function ConversationSeparator() {
-  return <ThemedView style={styles.separator} />;
+  return <ThemedView height={1} marginLeft={74} backgroundColor={CHAT_COLORS.antiFlashWhite} />;
 }
 
 function EmptySearchState({ query }: { query: string }) {
   return (
-    <ThemedView backgroundColor='transparent' style={styles.emptyState}>
+    <ThemedView backgroundColor='transparent' minHeight={180} alignItems='center' justifyContent='center' gap={8} paddingHorizontal={24}>
       <ThemedText color={CHAT_COLORS.gray1000} fontSize={16} fontWeight='700'>
         No conversations found
       </ThemedText>
@@ -215,7 +223,7 @@ function EmptySearchState({ query }: { query: string }) {
 
 function renderDeleteAction() {
   return (
-    <ThemedView style={styles.deleteAction}>
+    <ThemedView width={86} alignItems='center' justifyContent='center' backgroundColor={CHAT_COLORS.textError}>
       <ThemedText color={CHAT_COLORS.white} fontSize={13} fontWeight='700'>
         Delete
       </ThemedText>
@@ -229,7 +237,7 @@ function ChatAvatar({ source, name, size }: { source?: ImageSourcePropType; name
   }
 
   return (
-    <ThemedView style={[styles.avatarFallback, { width: size, height: size, borderRadius: size / 2 }]}>
+    <ThemedView width={size} height={size} radius={size / 2} alignItems='center' justifyContent='center' backgroundColor={CHAT_COLORS.primary}>
       <ThemedText color={CHAT_COLORS.white} fontSize={size / 3.5} fontWeight='600'>
         {getInitials(name)}
       </ThemedText>
@@ -265,11 +273,11 @@ function ChatShimmerList() {
     <ThemedView backgroundColor='transparent'>
       {Array.from({ length: 10 }).map((_, index) => (
         <ThemedView key={index} backgroundColor='transparent'>
-          <ThemedView backgroundColor='transparent' style={styles.shimmerRow}>
-            <ThemedView style={styles.shimmerAvatar} />
-            <ThemedView backgroundColor='transparent' style={styles.shimmerBody}>
-              <ThemedView style={styles.shimmerTitle} />
-              <ThemedView style={styles.shimmerLine} />
+          <ThemedView backgroundColor='transparent' minHeight={72} row gap={15} padding={12}>
+            <ThemedView width={30} height={30} radius={15} backgroundColor={CHAT_COLORS.antiFlashWhite} />
+            <ThemedView backgroundColor='transparent' flex={1} gap={10}>
+              <ThemedView height={20} radius={5} backgroundColor={CHAT_COLORS.antiFlashWhite} />
+              <ThemedView width='72%' height={10} radius={8} backgroundColor={CHAT_COLORS.antiFlashWhite} />
             </ThemedView>
           </ThemedView>
           {index !== 9 ? <ConversationSeparator /> : null}
@@ -345,11 +353,6 @@ const styles = StyleSheet.create({
   },
   avatar: {
     backgroundColor: CHAT_COLORS.antiFlashWhite,
-  },
-  avatarFallback: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: CHAT_COLORS.primary,
   },
   separator: {
     height: 1,

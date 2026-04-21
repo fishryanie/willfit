@@ -46,7 +46,7 @@ export function DashboardHeader({
           round={50}
           contentCenter
           backgroundColor={avatarBackground}
-          style={styles.avatar}
+          overflow='hidden'
         >
           {avatarUrl ? (
             <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
@@ -56,7 +56,7 @@ export function DashboardHeader({
             </ThemedText>
           )}
         </ThemedView>
-        <ThemedView gap={5} backgroundColor="transparent" style={styles.profileText}>
+        <ThemedView gap={5} backgroundColor="transparent" flexShrink={1}>
           <ThemedText color={mutedColor} fontSize={14} lineHeight={18} letterSpacing={0}>
             Welcome
           </ThemedText>
@@ -130,15 +130,9 @@ const styles = StyleSheet.create({
     gap: 12,
     flexShrink: 1,
   },
-  avatar: {
-    overflow: 'hidden',
-  },
   avatarImage: {
     width: '100%',
     height: '100%',
-  },
-  profileText: {
-    flexShrink: 1,
   },
   iconButton: {
     width: 28,

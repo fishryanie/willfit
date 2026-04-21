@@ -1,5 +1,4 @@
 import React from 'react';
-import { StyleSheet } from 'react-native';
 import { ThemedText, ThemedView } from 'components/base';
 import { CircularProgress } from '../ui/organisms/circular-progress';
 import { useSharedValue } from 'react-native-reanimated';
@@ -13,7 +12,17 @@ export function DailyBalanceCard() {
   const secondaryColor = useThemeColor({}, 'secondary');
 
   return (
-    <ThemedView style={[styles.container, { backgroundColor: cardBg }]}>
+    <ThemedView
+      radius={24}
+      padding={20}
+      marginHorizontal={20}
+      marginBottom={16}
+      shadowColor='#000'
+      shadowOffset={{ width: 0, height: 2 }}
+      shadowOpacity={0.05}
+      shadowRadius={10}
+      elevation={2}
+      backgroundColor={cardBg}>
       <ThemedView backgroundColor='transparent' marginBottom={20}>
         <ThemedText fontSize={18} fontWeight='600'>
           Your daily balance
@@ -76,17 +85,3 @@ export function DailyBalanceCard() {
     </ThemedView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    borderRadius: 24,
-    padding: 20,
-    marginHorizontal: 20,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 2,
-  },
-});
