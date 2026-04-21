@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet } from 'react-native';
 import { Droplets, Dumbbell, Flame, Moon, Weight, type LucideIcon } from 'lucide-react-native';
 import { ThemedText, ThemedView } from 'components/base';
-import { useThemeColor } from 'hooks/use-theme-color';
+import { useThemeColor } from 'store/use-theme-store';
 
 interface MetricGridCardProps {
   title: string;

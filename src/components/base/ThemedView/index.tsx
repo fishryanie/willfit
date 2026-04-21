@@ -1,4 +1,4 @@
-import { useThemeColor } from 'hooks/use-theme-color';
+import { useThemeColor } from 'store/use-theme-store';
 import { forwardRef } from 'react';
 import { StyleSheet, View, ViewProps, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';

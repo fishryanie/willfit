@@ -10,6 +10,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { appToast } from 'utils/app-toast';
 import { storage } from 'utils/storage';
 import { RouteMap } from 'components/map/route-map';
+import { useWorkoutStore } from 'store/use-workout-store';
+import { startBackgroundTracking, stopBackgroundTracking } from 'utils/location-task';
 import {
   DEFAULT_COORDINATE,
   calculateTrackDistance,
@@ -38,14 +40,8 @@ const ACTIVITY_MODE_LABELS: Record<ActivityMode, string> = {
 };
 
 const getNextActivityMode = (mode: ActivityMode): ActivityMode => {
-  if (mode === 'run') {
-    return 'walk';
-  }
-
-  if (mode === 'walk') {
-    return 'ride';
-  }
-
+  if (mode === 'run') return 'walk';
+  if (mode === 'walk') return 'ride';
   return 'run';
 };
 
@@ -60,7 +56,6 @@ export function StravaMapScreen() {
   const [followUser, setFollowUser] = useState(true);
   const [beaconEnabled, setBeaconEnabled] = useState(false);
   const [savedRoutes, setSavedRoutes] = useState<RouteChoice[]>([]);
-  const [recordingTitle, setRecordingTitle] = useState('Free run');
   const [recordStartMode, setRecordStartMode] = useState<'route' | 'free'>('free');
   const [routeCoordinates, setRouteCoordinates] = useState<Coordinate[]>([]);
   const [waypoints, setWaypoints] = useState<Coordinate[]>([]);
@@ -69,27 +64,38 @@ export function StravaMapScreen() {
   const [routeSource, setRouteSource] = useState<'osrm' | 'local'>('local');
   const [locationStatus, setLocationStatus] = useState('Finding location...');
   const [isLocationReady, setIsLocationReady] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const [liveCoordinates, setLiveCoordinates] = useState<Coordinate[]>([]);
-  const watchSubscription = useRef<Location.LocationSubscription | null>(null);
+
+  // Global Workout Store
+  const {
+    isRecording,
+    isPaused,
+    elapsedSeconds,
+    liveCoordinates,
+    recordingTitle,
+    startWorkout,
+    pauseWorkout,
+    resumeWorkout,
+    stopWorkout,
+    tick,
+  } = useWorkoutStore();
+
   const recordSheetRef = useRef<BottomSheetModal>(null);
-  const isPausedRef = useRef(false);
   const initialRouteBuilt = useRef(false);
   const liveCoordinatesRef = useRef<Coordinate[]>([]);
+
+  useEffect(() => {
+    liveCoordinatesRef.current = liveCoordinates;
+  }, [liveCoordinates]);
 
   const routeSuggestions = useMemo(() => createRouteSummaries(center, activityMode), [activityMode, center]);
   const routeChoices = useMemo<RouteChoice[]>(
     () => [
       ...(activityMode === 'walk' ? savedRoutes.filter(route => route.distanceKm <= 10) : savedRoutes),
-      ...routeSuggestions.map(route => ({
-        ...route,
-        source: 'generated' as const,
-      })),
+      ...routeSuggestions.map(route => ({ ...route, source: 'generated' as const })),
     ],
     [activityMode, routeSuggestions, savedRoutes],
   );
+  
   const heatRoutes = useMemo(() => createHeatRoutes(center), [center]);
   const carouselCardWidth = width - 24;
   const carouselItems = useMemo<RouteCarouselItem[]>(
@@ -99,41 +105,27 @@ export function StravaMapScreen() {
   const recordSheetSnapPoints = useMemo(() => ['46%', '78%'], []);
   const routeDistanceMeters = useMemo(() => calculateTrackDistance(routeCoordinates), [routeCoordinates]);
   const liveDistanceMeters = useMemo(() => calculateTrackDistance(liveCoordinates), [liveCoordinates]);
+
   const selectedRoute = useMemo(
-    () =>
-      routeChoices.find(route => route.id === selectedRouteId) ??
-      routeChoices[0] ?? {
-        ...routeSuggestions[0],
-        source: 'generated' as const,
-      },
+    () => routeChoices.find(route => route.id === selectedRouteId) ?? routeChoices[0] ?? { ...routeSuggestions[0], source: 'generated' as const },
     [routeChoices, routeSuggestions, selectedRouteId],
   );
 
   const requestLocation = useCallback(async () => {
     try {
       const permission = await Location.requestForegroundPermissionsAsync();
-
       if (permission.status !== 'granted') {
         setLocationStatus('Location permission is off. Showing Ho Chi Minh City.');
         setIsLocationReady(true);
         return;
       }
-
-      const position = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      });
-
-      const nextCenter = {
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude,
-      };
-
+      const position = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+      const nextCenter = { latitude: position.coords.latitude, longitude: position.coords.longitude };
       setCenter(nextCenter);
       setLocationStatus('Using your current location');
     } catch {
       setLocationStatus('Could not read GPS. Showing Ho Chi Minh City.');
     }
-
     setIsLocationReady(true);
   }, []);
 
@@ -151,7 +143,6 @@ export function StravaMapScreen() {
       setSelectedRouteId(route.id);
       setWaypoints(nextWaypoints);
       setIsRouting(true);
-
       try {
         const osrmRoute = await fetchOsrmRoute(nextWaypoints, overrideMode);
         setRouteCoordinates(osrmRoute);
@@ -160,7 +151,6 @@ export function StravaMapScreen() {
         setRouteCoordinates(createFallbackRoute(nextWaypoints));
         setRouteSource('local');
       }
-
       setIsRouting(false);
     },
     [activityMode, center],
@@ -173,11 +163,7 @@ export function StravaMapScreen() {
   const handleRouteCarouselIndexChange = useCallback(
     (index: number) => {
       const item = carouselItems[index];
-
-      if (!item || item.type !== 'route' || item.route.id === selectedRouteId) {
-        return;
-      }
-
+      if (!item || item.type !== 'route' || item.route.id === selectedRouteId) return;
       void buildRoute(item.route);
     },
     [buildRoute, carouselItems, selectedRouteId],
@@ -190,7 +176,6 @@ export function StravaMapScreen() {
   const openRouteRecordSheet = useCallback(
     (route: RouteChoice) => {
       setRecordStartMode('route');
-      setRecordingTitle(route.title);
       setRecordPanelVisible(true);
       void buildRoute(route);
     },
@@ -199,20 +184,17 @@ export function StravaMapScreen() {
 
   const openFreeRecordSheet = useCallback(() => {
     setRecordStartMode('free');
-    setRecordingTitle('Free run');
     setRouteCoordinates([]);
     setWaypoints([]);
     setRecordPanelVisible(true);
   }, []);
 
   const closeRecordSheet = useCallback(() => {
-    setRecordPanelVisible(false);
-  }, []);
+    if (!isRecording) setRecordPanelVisible(false);
+  }, [isRecording]);
 
   const handleRecordSheetDismiss = useCallback(() => {
-    if (!isRecording) {
-      setRecordPanelVisible(false);
-    }
+    if (!isRecording) setRecordPanelVisible(false);
   }, [isRecording]);
 
   const renderRecordBackdrop = useCallback(
@@ -225,71 +207,31 @@ export function StravaMapScreen() {
   const startRecording = useCallback(
     async (mode: 'route' | 'free' = 'route') => {
       const permission = await Location.requestForegroundPermissionsAsync();
-
       if (permission.status !== 'granted') {
         appToast.error('Chưa bật vị trí', 'Cho phép GPS để bắt đầu record hoạt động.');
         return;
       }
 
-      if (mode === 'free') {
-        setRouteCoordinates([]);
-        setWaypoints([]);
-        setRecordingTitle('Free run');
-      } else {
-        if (routeCoordinates.length < 2) {
-          await buildRoute(selectedRoute);
-        }
-        setRecordingTitle(selectedRoute?.title ?? 'Suggested route');
-      }
+      await Location.requestBackgroundPermissionsAsync(); // Request background optional
 
-      setIsRecording(true);
-      setIsPaused(false);
-      setElapsedSeconds(0);
-      setLiveCoordinates([]);
-      liveCoordinatesRef.current = [];
+      const title = mode === 'free' ? 'Free run' : (selectedRoute?.title ?? 'Suggested route');
+      startWorkout(title);
       setRecordStartMode(mode);
       setRecordPanelVisible(true);
 
-      watchSubscription.current?.remove();
-      watchSubscription.current = await Location.watchPositionAsync(
-        {
-          accuracy: Location.Accuracy.High,
-          timeInterval: 2000,
-          distanceInterval: 5,
-        },
-        position => {
-          if (isPausedRef.current) {
-            return;
-          }
-
-          const coordinate = {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-          };
-
-          setCenter(coordinate);
-          setLiveCoordinates(previous => {
-            const nextCoordinates = [...previous, coordinate];
-            liveCoordinatesRef.current = nextCoordinates;
-            return nextCoordinates;
-          });
-        },
-      );
+      await startBackgroundTracking();
     },
-    [buildRoute, routeCoordinates.length, selectedRoute],
+    [selectedRoute, startWorkout],
   );
 
-  const finishRecording = useCallback(() => {
-    watchSubscription.current?.remove();
-    watchSubscription.current = null;
-    setIsRecording(false);
-    setIsPaused(false);
-    setRecordPanelVisible(false);
-
+  const finishRecording = useCallback(async () => {
+    await stopBackgroundTracking();
+    
     const recordedTrack = liveCoordinatesRef.current;
-
     if (recordedTrack.length < 2) {
       appToast.warning('Chưa lưu được cung đường', 'GPS chưa có đủ điểm để tạo cung đường mới.');
+      stopWorkout();
+      setRecordPanelVisible(false);
       return;
     }
 
@@ -313,102 +255,64 @@ export function StravaMapScreen() {
       return nextRoutes;
     });
 
+    stopWorkout();
+    setRecordPanelVisible(false);
     setSelectedRouteId(savedRoute.id);
     setRouteCoordinates(recordedTrack);
     setWaypoints([recordedTrack[0], recordedTrack[recordedTrack.length - 1]]);
     setRouteSource('local');
     appToast.success('Đã lưu cung đường', `${savedRoute.distanceKm.toFixed(2)} km đã được thêm vào danh sách.`);
-  }, [elapsedSeconds, persistSavedRoutes, recordingTitle, savedRoutes.length]);
+  }, [elapsedSeconds, persistSavedRoutes, recordingTitle, savedRoutes.length, stopWorkout]);
 
-  const pauseRecording = useCallback(() => {
-    setIsPaused(value => !value);
-  }, []);
+  const togglePause = useCallback(() => {
+    if (isPaused) resumeWorkout();
+    else pauseWorkout();
+  }, [isPaused, pauseWorkout, resumeWorkout]);
 
-  useEffect(() => {
-    isPausedRef.current = isPaused;
-  }, [isPaused]);
-
-  useEffect(() => {
-    liveCoordinatesRef.current = liveCoordinates;
-  }, [liveCoordinates]);
-
+  // Sync saved routes from storage
   useEffect(() => {
     let isMounted = true;
-
-    void storage.getItem('willfit:saved-routes').then(value => {
-      if (!isMounted || !value) {
-        return;
-      }
-
+    storage.getItem('willfit:saved-routes').then(value => {
+      if (!isMounted || !value) return;
       try {
         const parsedRoutes = JSON.parse(value) as RouteChoice[];
-        setSavedRoutes(parsedRoutes.filter(route => route.coordinates && route.coordinates.length > 1));
-      } catch (error) {
-        console.error('Failed to parse saved routes:', error);
+        setSavedRoutes(parsedRoutes.filter(r => r.coordinates && r.coordinates.length > 1));
+      } catch (err) {
+        console.error('Failed to parse saved routes:', err);
       }
     });
-
-    return () => {
-      isMounted = false;
-    };
+    return () => { isMounted = false; };
   }, []);
 
+  // Initial location request
   useEffect(() => {
-    let isMounted = true;
-
-    queueMicrotask(() => {
-      if (isMounted) {
-        void requestLocation();
-      }
-    });
-
-    return () => {
-      isMounted = false;
-    };
+    requestLocation();
   }, [requestLocation]);
 
+  // Initial route building
   useEffect(() => {
-    if (!isLocationReady || initialRouteBuilt.current) {
-      return;
-    }
-
+    if (!isLocationReady || initialRouteBuilt.current) return;
     const initialRoute = routeChoices[0];
-    if (!initialRoute) {
-      return;
-    }
-
+    if (!initialRoute) return;
     initialRouteBuilt.current = true;
-    queueMicrotask(() => {
-      void buildRoute(initialRoute);
-    });
+    void buildRoute(initialRoute);
   }, [buildRoute, isLocationReady, routeChoices]);
 
+  // Timer tick
   useEffect(() => {
-    if (!isRecording || isPaused) {
-      return;
-    }
-
-    const interval = setInterval(() => {
-      setElapsedSeconds(value => value + 1);
-    }, 1000);
-
+    if (!isRecording || isPaused) return;
+    const interval = setInterval(tick, 1000);
     return () => clearInterval(interval);
-  }, [isPaused, isRecording]);
+  }, [isPaused, isRecording, tick]);
 
+  // Bottom sheet management
   useEffect(() => {
     if (recordPanelVisible || isRecording) {
       recordSheetRef.current?.present();
-      return;
+    } else {
+      recordSheetRef.current?.dismiss();
     }
-
-    recordSheetRef.current?.dismiss();
   }, [isRecording, recordPanelVisible]);
-
-  useEffect(() => {
-    return () => {
-      watchSubscription.current?.remove();
-    };
-  }, []);
 
   const showRouteCarousel = !recordPanelVisible && !isRecording;
 
@@ -478,15 +382,8 @@ export function StravaMapScreen() {
           style={[styles.searchHereButton, { top: insets.top + 126 }]}
           onPress={() => {
             const nearestRoute = routeSuggestions[0];
-
-            if (!nearestRoute) {
-              return;
-            }
-
-            buildRoute({
-              ...nearestRoute,
-              source: 'generated',
-            });
+            if (!nearestRoute) return;
+            buildRoute({ ...nearestRoute, source: 'generated' });
             setRecordPanelVisible(false);
           }}>
           <ThemedText color='#FFFFFF' fontSize={14} fontWeight='900' letterSpacing={0}>
@@ -510,12 +407,8 @@ export function StravaMapScreen() {
               onPress={() => {
                 const nextMode = getNextActivityMode(activityMode);
                 const nextRoute = createRouteSummaries(center, nextMode)[0];
-
                 setActivityMode(nextMode);
-
-                if (nextRoute) {
-                  buildRoute({ ...nextRoute, source: 'generated' }, nextMode);
-                }
+                if (nextRoute) buildRoute({ ...nextRoute, source: 'generated' }, nextMode);
               }}>
               <MapPinned size={15} color='#FFFFFF' />
               <ThemedText color='#FFFFFF' fontSize={12} fontWeight='900' letterSpacing={0}>
@@ -621,7 +514,7 @@ export function StravaMapScreen() {
             ) : (
               <>
                 <ThemedView row justifyContent='center' backgroundColor='transparent'>
-                  <TouchableOpacity activeOpacity={0.88} style={styles.pauseButtonNew} onPress={pauseRecording}>
+                  <TouchableOpacity activeOpacity={0.88} style={styles.pauseButtonNew} onPress={togglePause}>
                     <ThemedView square={32} radius={16} backgroundColor='#FFFFFF' contentCenter style={styles.pauseIconShadow}>
                       {isPaused ? <Play size={20} color='#111111' fill='#111111' /> : <Pause size={20} color='#111111' fill='#111111' />}
                     </ThemedView>
@@ -752,305 +645,47 @@ function RouteCarouselCard({ route, width, active, onPress }: { route: RouteChoi
 }
 
 const styles = StyleSheet.create({
-  topBar: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingHorizontal: 14,
-  },
-  searchPill: {
-    flex: 1,
-    minHeight: 46,
-    borderRadius: 8,
-    backgroundColor: '#FFFFFF',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 9,
-    paddingHorizontal: 14,
-    shadowColor: '#000',
-    shadowOpacity: 0.12,
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 14,
-    elevation: 5,
-  },
-  iconButton: {
-    width: 46,
-    height: 46,
-    borderRadius: 8,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  mapControls: {
-    position: 'absolute',
-    right: 14,
-    gap: 10,
-  },
-  floatingButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
-  },
-  floatingButtonActive: {
-    backgroundColor: '#111111',
-  },
-  beaconActive: {
-    backgroundColor: '#FF5A1F',
-  },
-  statusPill: {
-    position: 'absolute',
-    left: 14,
-    maxWidth: 245,
-    minHeight: 34,
-    borderRadius: 8,
-    backgroundColor: 'rgba(255,255,255,0.92)',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 10,
-  },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  statusDotOnline: {
-    backgroundColor: '#36D399',
-  },
-  statusDotLocal: {
-    backgroundColor: '#FF8A00',
-  },
-  searchHereButton: {
-    position: 'absolute',
-    alignSelf: 'center',
-    minHeight: 42,
-    borderRadius: 8,
-    backgroundColor: '#FF5A1F',
-    justifyContent: 'center',
-    paddingHorizontal: 20,
-  },
-  routeCarouselOverlay: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-  },
-  carouselFilterRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 16,
-    marginBottom: 8,
-  },
-  carouselFilterPill: {
-    minHeight: 34,
-    borderRadius: 8,
-    backgroundColor: '#111111',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
-    paddingHorizontal: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 7,
-  },
-  routeCarouselContent: {
-    marginTop: 0,
-    marginBottom: 0,
-    bottom: 0,
-  },
-  routeCarouselCard: {
-    minHeight: 118,
-    borderRadius: 8,
-    backgroundColor: '#101114',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-    padding: 10,
-    shadowColor: '#000',
-    shadowOpacity: 0.3,
-    shadowOffset: { width: 0, height: 8 },
-    shadowRadius: 16,
-    elevation: 10,
-  },
-  routeCarouselCardActive: {
-    borderColor: '#FF5A1F',
-  },
-  routeCarouselTapArea: {
-    flexDirection: 'row',
-    gap: 12,
-    minHeight: 98,
-  },
-  routeThumbnail: {
-    width: 92,
-    alignSelf: 'stretch',
-    borderRadius: 8,
-    overflow: 'hidden',
-    backgroundColor: '#22262B',
-  },
-  routeThumbnailSky: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: '42%',
-    backgroundColor: '#6B7B73',
-  },
-  routeThumbnailWater: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: '42%',
-    backgroundColor: '#222F3A',
-  },
-  routeThumbnailRoad: {
-    position: 'absolute',
-    left: -10,
-    right: -12,
-    bottom: 26,
-    height: 34,
-    backgroundColor: '#52625F',
-    transform: [{ rotate: '-9deg' }],
-  },
-  routeThumbnailLine: {
-    position: 'absolute',
-    width: 86,
-    height: 6,
-    left: 9,
-    top: 66,
-    borderRadius: 6,
-    backgroundColor: '#FF5A1F',
-    transform: [{ rotate: '-18deg' }],
-  },
-  routeCarouselBody: {
-    flex: 1,
-    minWidth: 0,
-  },
-  routeCarouselTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
-  },
-  routeCarouselBadge: {
-    minHeight: 24,
-    borderRadius: 8,
-    backgroundColor: 'rgba(255, 90, 31, 0.14)',
-    paddingHorizontal: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  routeCarouselSavedBadge: {
-    backgroundColor: 'rgba(54, 211, 153, 0.14)',
-  },
-  routeCarouselMetaRow: {
-    marginTop: 7,
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: 7,
-  },
-  routeMetaDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#FF5A1F',
-  },
-  routeLocationRow: {
-    marginTop: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  routePrivacyRow: {
-    marginTop: 5,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  recordCarouselCard: {
-    minHeight: 118,
-    borderRadius: 8,
-    backgroundColor: '#101114',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-    flexDirection: 'row',
-    gap: 12,
-    padding: 10,
-  },
-  recordCardIcon: {
-    width: 54,
-    height: 54,
-    borderRadius: 8,
-    backgroundColor: 'rgba(255, 90, 31, 0.14)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  recordCardBody: {
-    flex: 1,
-    minWidth: 0,
-  },
-  recordSheetBackground: {
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 8,
-    borderTopRightRadius: 8,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowOffset: { width: 0, height: -8 },
-    shadowRadius: 20,
-    elevation: 14,
-  },
-  recordSheetHandle: {
-    width: 42,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#FF5A1F',
-  },
-  recordSheetContent: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-  },
-  changeRoutePill: {
-    minHeight: 34,
-    paddingHorizontal: 11,
-    borderRadius: 8,
-    backgroundColor: '#F1F2F4',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  beaconPill: {
-    minHeight: 34,
-    paddingHorizontal: 11,
-    borderRadius: 8,
-    backgroundColor: '#F1F2F4',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  beaconPillActive: {
-    backgroundColor: '#FF5A1F',
-  },
-  pauseButtonNew: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: '#F1F2F4',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 100,
-  },
-  pauseIconShadow: {
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 2,
-  },
+  topBar: { position: 'absolute', top: 0, left: 0, right: 0, flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14 },
+  searchPill: { flex: 1, minHeight: 46, borderRadius: 8, backgroundColor: '#FFFFFF', flexDirection: 'row', alignItems: 'center', gap: 9, paddingHorizontal: 14, shadowColor: '#000', shadowOpacity: 0.12, shadowOffset: { width: 0, height: 4 }, shadowRadius: 14, elevation: 5 },
+  iconButton: { width: 46, height: 46, borderRadius: 8, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
+  mapControls: { position: 'absolute', right: 14, gap: 10 },
+  floatingButton: { width: 44, height: 44, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' },
+  floatingButtonActive: { backgroundColor: '#FF8A00' },
+  beaconActive: { backgroundColor: '#FF3B30' },
+  statusPill: { position: 'absolute', left: 14, minHeight: 34, paddingHorizontal: 12, borderRadius: 17, backgroundColor: '#FFFFFF', flexDirection: 'row', alignItems: 'center', gap: 8, shadowColor: '#000', shadowOpacity: 0.08, shadowOffset: { width: 0, height: 3 }, shadowRadius: 8, elevation: 3 },
+  statusDot: { width: 8, height: 8, borderRadius: 4 },
+  statusDotLocal: { backgroundColor: '#FFB800' },
+  statusDotOnline: { backgroundColor: '#34C759' },
+  searchHereButton: { position: 'absolute', left: '50%', transform: [{ translateX: -70 }], minWidth: 140, height: 38, borderRadius: 19, backgroundColor: '#111111', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOpacity: 0.2, shadowOffset: { width: 0, height: 4 }, shadowRadius: 10, elevation: 6 },
+  routeCarouselOverlay: { position: 'absolute', left: 0, right: 0 },
+  carouselFilterRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 14, marginBottom: 12 },
+  carouselFilterPill: { height: 32, paddingHorizontal: 12, borderRadius: 16, backgroundColor: 'rgba(0,0,0,0.6)', flexDirection: 'row', alignItems: 'center', gap: 6 },
+  routeCarouselContent: { paddingHorizontal: 12 },
+  recordCarouselCard: { height: 110, borderRadius: 8, backgroundColor: '#111111', flexDirection: 'row', alignItems: 'center', padding: 16, gap: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
+  recordCardIcon: { width: 48, height: 48, borderRadius: 8, backgroundColor: 'rgba(255,90,31,0.15)', alignItems: 'center', justifyContent: 'center' },
+  recordCardBody: { flex: 1, gap: 4 },
+  recordSheetBackground: { backgroundColor: '#FFFFFF', borderTopLeftRadius: 24, borderTopRightRadius: 24 },
+  recordSheetHandle: { backgroundColor: '#E5E7EB', width: 40 },
+  recordSheetContent: { paddingHorizontal: 20, paddingTop: 6 },
+  changeRoutePill: { height: 32, paddingHorizontal: 12, borderRadius: 16, backgroundColor: '#F3F4F6', flexDirection: 'row', alignItems: 'center', gap: 6 },
+  beaconPill: { height: 32, paddingHorizontal: 12, borderRadius: 16, backgroundColor: '#F3F4F6', flexDirection: 'row', alignItems: 'center', gap: 6 },
+  beaconPillActive: { backgroundColor: '#FF3B30' },
+  pauseButtonNew: { alignItems: 'center', gap: 8 },
+  pauseIconShadow: { shadowColor: '#000', shadowOpacity: 0.1, shadowOffset: { width: 0, height: 4 }, shadowRadius: 8, elevation: 4 },
+  routeCarouselCard: { height: 160, borderRadius: 8, backgroundColor: '#111111', overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
+  routeCarouselCardActive: { borderColor: '#FF5A1F', borderWidth: 2 },
+  routeCarouselTapArea: { flex: 1, flexDirection: 'row' },
+  routeThumbnail: { width: 110, height: '100%', backgroundColor: '#1A1C1E', overflow: 'hidden' },
+  routeThumbnailSky: { position: 'absolute', top: 0, left: 0, right: 0, height: '40%', backgroundColor: '#24292E' },
+  routeThumbnailWater: { position: 'absolute', bottom: 0, left: 0, right: 0, height: '30%', backgroundColor: '#1D242B' },
+  routeThumbnailRoad: { position: 'absolute', top: '35%', left: '-10%', width: '120%', height: '40%', backgroundColor: '#2D3339', transform: [{ rotate: '-15deg' }] },
+  routeThumbnailLine: { position: 'absolute', top: '50%', left: '10%', right: '10%', height: 4, backgroundColor: '#FF5A1F', borderRadius: 2, transform: [{ rotate: '-5deg' }] },
+  routeCarouselBody: { flex: 1, padding: 14, gap: 10 },
+  routeCarouselTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+  routeCarouselBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4, backgroundColor: 'rgba(255,138,0,0.12)' },
+  routeCarouselSavedBadge: { backgroundColor: 'rgba(91,214,125,0.12)' },
+  routeCarouselMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  routeMetaDot: { width: 3, height: 3, borderRadius: 1.5, backgroundColor: '#4B5563' },
+  routeLocationRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  routePrivacyRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 'auto' },
 });

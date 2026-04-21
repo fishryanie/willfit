@@ -4,8 +4,7 @@ import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { BookOpen, House, Map, MessageCircle, Plus, type LucideIcon } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemedText, ThemedView } from 'components/base';
-import { useColorScheme } from 'hooks/use-color-scheme';
-import { useThemeColor } from 'hooks/use-theme-color';
+import { useThemeMode, useThemeColor } from 'store/use-theme-store';
 
 const TAB_ICONS: Record<string, LucideIcon> = {
   index: House,
@@ -17,7 +16,7 @@ const TAB_ICONS: Record<string, LucideIcon> = {
 
 export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
-  const colorScheme = useColorScheme();
+  const colorScheme = useThemeMode();
   const cardBg = useThemeColor({}, 'card');
   const accentColor = useThemeColor({}, 'accent');
 

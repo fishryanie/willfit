@@ -13,8 +13,13 @@
       "bundleIdentifier": "com.willfit.dev.app",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Cho phép ứng dụng truy cập vị trí để theo dõi quãng đường tập luyện của bạn.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Cho phép ứng dụng theo dõi vị trí của bạn ngay cả khi app đang chạy ngầm để ghi lại quãng đường.",
         "NSMotionUsageDescription": "Cho phép ứng dụng đếm số bước chân của bạn để theo dõi sức khỏe.",
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIBackgroundModes": [
+          "location",
+          "fetch"
+        ]
       }
     },
     "android": {
@@ -28,6 +33,9 @@
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_LOCATION",
         "ACTIVITY_RECOGNITION"
       ],
       "edgeToEdgeEnabled": true,

@@ -5,14 +5,14 @@ import { CircularProgress } from 'components/ui/organisms/circular-progress';
 import { RollingCounter } from 'components/ui/organisms/rolling-counter';
 import { ThemedText, ThemedView } from 'components/base';
 import { useHealthTracker } from 'hooks/use-health-tracker';
-import { useColorScheme } from 'hooks/use-color-scheme';
+import { useThemeMode } from 'store/use-theme-store';
 import { ChartColumnIncreasing, Footprints, Map } from 'lucide-react-native';
 
 const STEP_GOAL = 10000;
 
 export function HealthTrackerCard() {
   const { stepsAnimated, steps, distance, isPermissionsGranted } = useHealthTracker();
-  const colorScheme = useColorScheme();
+  const colorScheme = useThemeMode();
   
   const progress = useDerivedValue(() => {
     return (stepsAnimated.value / STEP_GOAL) * 100;

@@ -1,7 +1,7 @@
 import { forwardRef } from 'react';
 import { StyleSheet, Text, type ColorValue, type TextProps, type TextStyle } from 'react-native';
 
-import { useThemeColor } from 'hooks/use-theme-color';
+import { useThemeColor } from 'store/use-theme-store';
 
 type LayoutValue = TextStyle['width'];
 type SpacingValue = TextStyle['padding'];

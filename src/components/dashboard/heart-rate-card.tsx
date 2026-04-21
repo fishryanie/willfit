@@ -1,6 +1,6 @@
 import { Heart } from 'lucide-react-native';
 import { ThemedText, ThemedView } from 'components/base';
-import { useThemeColor } from 'hooks/use-theme-color';
+import { useThemeColor } from 'store/use-theme-store';
 import { StyleSheet } from 'react-native';
 
 export function HeartRateCard() {

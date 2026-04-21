@@ -2,7 +2,7 @@ import React from 'react';
 import { ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { ThemedText, ThemedView } from 'components/base';
 
-import { useThemeColor } from 'hooks/use-theme-color';
+import { useThemeColor } from 'store/use-theme-store';
 
 const CHIPS = [
   { id: 'steps', label: 'Your Steps' },

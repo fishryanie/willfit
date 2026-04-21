@@ -4,11 +4,11 @@ import { StyleSheet, TouchableOpacity } from 'react-native';
 import { ThemedText, ThemedView } from 'components/base';
 import { ChevronRight } from 'lucide-react-native';
 import { Colors } from 'constants/theme';
-import { useColorScheme } from 'hooks/use-color-scheme';
+import { useThemeMode } from 'store/use-theme-store';
 
 export function Collapsible({ children, title }: PropsWithChildren & { title: string }) {
   const [isOpen, setIsOpen] = useState(false);
-  const theme = useColorScheme() ?? 'light';
+  const theme = useThemeMode() ?? 'light';
 
   return (
     <ThemedView>

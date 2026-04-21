@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet } from 'react-native';
 import { ThemedText, ThemedView } from 'components/base';
 
-import { useThemeColor } from 'hooks/use-theme-color';
+import { useThemeColor } from 'store/use-theme-store';
 
 export function WeightJourneyCard() {
   const cardBg = useThemeColor({}, 'card');

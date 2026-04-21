@@ -4,7 +4,7 @@ import { ThemedText, ThemedView } from 'components/base';
 import { CircularProgress } from '../ui/organisms/circular-progress';
 import { useSharedValue } from 'react-native-reanimated';
 import { Flame, Utensils, Zap } from 'lucide-react-native';
-import { useThemeColor } from 'hooks/use-theme-color';
+import { useThemeColor } from 'store/use-theme-store';
 
 export function DailyBalanceCard() {
   const progress = useSharedValue(65);

@@ -2,7 +2,7 @@ import { StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { Bell, ScanQrCode, Search } from 'lucide-react-native';
 import { ThemedText, ThemedView } from 'components/base';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useThemeColor } from 'hooks/use-theme-color';
+import { useThemeColor } from 'store/use-theme-store';
 import { useAppDrawer } from 'components/drawer/app-drawer';
 
 interface DashboardHeaderProps {

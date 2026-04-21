@@ -52,3 +52,4 @@ export const ThemeProvider = memo(function ThemeProvider({
 });
 
 export { ThemeSwitcher } from './theme';
+export { ThemeToggle } from './ThemeToggle';
