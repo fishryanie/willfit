@@ -1,7 +1,6 @@
 import { StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { Bell, ScanQrCode, Search } from 'lucide-react-native';
 import { ThemedText, ThemedView } from 'components/base';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeColor } from 'store/use-theme-store';
 import { useAppDrawer } from 'components/drawer/app-drawer';
 
@@ -22,7 +21,6 @@ export function DashboardHeader({
   onNotificationsPress,
   onScanPress,
 }: DashboardHeaderProps) {
-  const insets = useSafeAreaInsets();
   const { openDrawer } = useAppDrawer();
   const iconColor = useThemeColor({}, 'text');
   const mutedColor = useThemeColor({ light: '#808080', dark: '#A1A1AA' }, 'secondary');
@@ -32,7 +30,7 @@ export function DashboardHeader({
   return (
     <ThemedView
       rowCenter
-      paddingTop={insets.top + 12}
+      safePaddingTop={12}
       paddingHorizontal={12}
       gap={20}
       marginBottom={20}

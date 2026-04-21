@@ -7,10 +7,9 @@ import { CHAT_COLORS } from './data';
 
 type MessageComposerProps = {
   onSend: (message: string) => void;
-  bottomInset: number;
 };
 
-export function MessageComposer({ onSend, bottomInset }: MessageComposerProps) {
+export function MessageComposer({ onSend }: MessageComposerProps) {
   const [value, setValue] = useState('');
   const [heightInput, setHeightInput] = useState(40);
 
@@ -27,7 +26,10 @@ export function MessageComposer({ onSend, bottomInset }: MessageComposerProps) {
   };
 
   return (
-    <ThemedView style={[styles.container, { paddingBottom: bottomInset || 12 }]}>
+    <ThemedView 
+      safePaddingBottom={12}
+      style={styles.container}
+    >
       <ThemedView backgroundColor='transparent' style={styles.primary}>
         <ThemedView backgroundColor='transparent' style={styles.actions}>
           <Pressable accessibilityRole='button' style={styles.actionButton}>

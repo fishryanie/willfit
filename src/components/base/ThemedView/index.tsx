@@ -17,10 +17,12 @@ export type ThemedViewProps = ViewProps &
   round?: number;
   square?: number;
   absoluteFillObject?: boolean;
-  safePaddingTop?: boolean;
-  safePaddingBottom?: boolean;
-  safeMarginTop?: boolean;
-  safeMarginBottom?: boolean;
+  safePaddingTop?: boolean | number;
+  safePaddingBottom?: boolean | number;
+  safeMarginTop?: boolean | number;
+  safeMarginBottom?: boolean | number;
+  safeTop?: boolean | number;
+  safeBottom?: boolean | number;
 };
 
 const flexStyle = (flex: number | boolean): ViewStyle => ({
@@ -58,6 +60,8 @@ export const ThemedView = forwardRef<View, ThemedViewProps>(function ThemedView(
     safePaddingBottom,
     safeMarginTop,
     safeMarginBottom,
+    safeTop,
+    safeBottom,
     radius,
     round,
     square,
@@ -86,16 +90,22 @@ export const ThemedView = forwardRef<View, ThemedViewProps>(function ThemedView(
         square !== undefined ? squareStyle(square) : undefined,
         radius !== undefined ? { borderRadius: radius } : undefined,
         safePaddingTop && {
-          paddingTop: withSafeInset(safeInsets.top, rest.paddingTop ?? rest.padding),
+          paddingTop: withSafeInset(safeInsets.top, typeof safePaddingTop === 'number' ? safePaddingTop : (rest.paddingTop ?? rest.padding)),
         },
         safePaddingBottom && {
-          paddingBottom: withSafeInset(safeInsets.bottom, rest.paddingBottom ?? rest.padding),
+          paddingBottom: withSafeInset(safeInsets.bottom, typeof safePaddingBottom === 'number' ? safePaddingBottom : (rest.paddingBottom ?? rest.padding)),
         },
         safeMarginTop && {
-          marginTop: withSafeInset(safeInsets.top, rest.marginTop ?? rest.margin),
+          marginTop: withSafeInset(safeInsets.top, typeof safeMarginTop === 'number' ? safeMarginTop : (rest.marginTop ?? rest.margin)),
         },
         safeMarginBottom && {
-          marginBottom: withSafeInset(safeInsets.bottom, rest.marginBottom ?? rest.margin),
+          marginBottom: withSafeInset(safeInsets.bottom, typeof safeMarginBottom === 'number' ? safeMarginBottom : (rest.marginBottom ?? rest.margin)),
+        },
+        safeTop && {
+          top: withSafeInset(safeInsets.top, typeof safeTop === 'number' ? safeTop : rest.top),
+        },
+        safeBottom && {
+          bottom: withSafeInset(safeInsets.bottom, typeof safeBottom === 'number' ? safeBottom : rest.bottom),
         },
         rest as ViewStyle,
         style,

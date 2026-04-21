@@ -1,46 +1,40 @@
 import { useToast } from './context/ToastContext';
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ThemedView } from 'components/base';
 import { Toast } from './Toast';
 
 export const ToastViewport: React.FC = () => {
   const { toasts } = useToast();
-  const insets = useSafeAreaInsets();
 
   const topToasts = toasts.filter(toast => toast.options.position === 'top');
   const bottomToasts = toasts.filter(toast => toast.options.position === 'bottom');
 
   return (
     <>
-      <View
+      <ThemedView
+        safePaddingTop={10}
+        height={200}
         style={[
           styles.viewport,
           styles.topViewport,
-          {
-            paddingTop: insets.top + 10,
-            height: 200,
-          },
         ]}>
         {topToasts.map((toast, arrayIndex) => {
           const displayIndex = topToasts.length - 1 - arrayIndex;
           return <Toast key={toast.id} toast={toast} index={displayIndex} />;
         })}
-      </View>
-      <View
+        </ThemedView>
+      <ThemedView
+        safeBottom
+        height={200}
         style={[
           styles.viewport,
           styles.bottomViewport,
-          {
-            marginBottom: insets.bottom,
-            height: 200,
-          },
         ]}>
         {bottomToasts.map((toast, arrayIndex) => {
           const displayIndex = bottomToasts.length - 1 - arrayIndex;
           return <Toast key={toast.id} toast={toast} index={displayIndex} />;
         })}
-      </View>
+        </ThemedView>
     </>
   );
 };

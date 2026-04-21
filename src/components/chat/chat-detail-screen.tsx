@@ -12,7 +12,6 @@ import {
   Pressable,
   StyleSheet,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText, ThemedView } from 'components/base';
 import { CHAT_BACKGROUND, CHAT_COLORS, getConversationById, type ChatConversation, type ChatMessage } from './data';
@@ -21,7 +20,6 @@ import { MessageComposer } from './message-composer';
 export function ChatDetailScreen() {
   const params = useLocalSearchParams<{ id: string }>();
   const conversation = getConversationById(params.id);
-  const insets = useSafeAreaInsets();
   const listRef = useRef<FlatList<ChatMessage>>(null);
   const [messages, setMessages] = useState<ChatMessage[]>(conversation.messages);
 
@@ -51,7 +49,7 @@ export function ChatDetailScreen() {
   return (
     <ThemedView flex={1} backgroundColor={CHAT_COLORS.white}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.keyboardView}>
-        <ChatHeader conversation={conversation} topInset={insets.top} />
+        <ChatHeader conversation={conversation} />
         <ImageBackground source={CHAT_BACKGROUND} style={styles.chatBackground} resizeMode='cover'>
           <FlatList
             ref={listRef}
@@ -63,16 +61,16 @@ export function ChatDetailScreen() {
             contentContainerStyle={styles.messagesContainer}
             ListFooterComponent={<ScrollToBottomHint />}
           />
-          <MessageComposer bottomInset={insets.bottom} onSend={handleSend} />
+          <MessageComposer onSend={handleSend} />
         </ImageBackground>
       </KeyboardAvoidingView>
     </ThemedView>
   );
 }
 
-function ChatHeader({ conversation, topInset }: { conversation: ChatConversation; topInset: number }) {
+function ChatHeader({ conversation }: { conversation: ChatConversation }) {
   return (
-    <ThemedView style={[styles.header, { height: 52 + topInset, paddingTop: topInset }]}>
+    <ThemedView safePaddingTop minHeight={52} style={styles.header}>
       <Pressable accessibilityRole='button' style={styles.backButton} onPress={() => router.back()}>
         <ArrowLeft size={20} strokeWidth={2} color={CHAT_COLORS.gray1000} />
       </Pressable>

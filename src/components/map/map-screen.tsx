@@ -45,7 +45,7 @@ const getNextActivityMode = (mode: ActivityMode): ActivityMode => {
   return 'run';
 };
 
-export function StravaMapScreen() {
+export function MapScreen() {
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const [center, setCenter] = useState<Coordinate>(DEFAULT_COORDINATE);
@@ -333,7 +333,7 @@ export function StravaMapScreen() {
         onMapPress={handleMapPress}
       />
 
-      <ThemedView backgroundColor='transparent' style={[styles.topBar, { paddingTop: insets.top + 10 }]}>
+      <ThemedView backgroundColor='transparent' safePaddingTop={10} style={styles.topBar}>
         <ThemedView style={styles.searchPill}>
           <Search size={18} color='#6B7280' />
           <ThemedText numberOfLines={1} color='#6B7280' fontSize={14} fontWeight='600' letterSpacing={0}>
@@ -348,7 +348,7 @@ export function StravaMapScreen() {
         </TouchableOpacity>
       </ThemedView>
 
-      <ThemedView backgroundColor='transparent' style={[styles.mapControls, { top: insets.top + 74 }]}>
+      <ThemedView backgroundColor='transparent' safeTop top={74} style={styles.mapControls}>
         <TouchableOpacity
           activeOpacity={0.78}
           style={[styles.floatingButton, followUser && styles.floatingButtonActive]}
@@ -369,7 +369,7 @@ export function StravaMapScreen() {
         </TouchableOpacity>
       </ThemedView>
 
-      <ThemedView style={[styles.statusPill, { top: insets.top + 78 }]}>
+      <ThemedView safeTop top={78} style={styles.statusPill}>
         <ThemedView style={[styles.statusDot, routeSource === 'osrm' ? styles.statusDotOnline : styles.statusDotLocal]} />
         <ThemedText numberOfLines={1} color='#111111' fontSize={12} fontWeight='700' letterSpacing={0}>
           {isRouting ? 'Đang dựng cung đường...' : routeSource === 'osrm' ? 'Route by OSRM' : locationStatus}
@@ -377,23 +377,27 @@ export function StravaMapScreen() {
       </ThemedView>
 
       {!isRecording && (
-        <TouchableOpacity
-          activeOpacity={0.86}
-          style={[styles.searchHereButton, { top: insets.top + 126 }]}
-          onPress={() => {
-            const nearestRoute = routeSuggestions[0];
-            if (!nearestRoute) return;
-            buildRoute({ ...nearestRoute, source: 'generated' });
-            setRecordPanelVisible(false);
-          }}>
-          <ThemedText color='#FFFFFF' fontSize={14} fontWeight='900' letterSpacing={0}>
-            Tìm kiếm tại đây
-          </ThemedText>
-        </TouchableOpacity>
+        <ThemedView safeTop top={126} style={styles.searchHereButton}>
+          <TouchableOpacity
+            activeOpacity={0.86}
+            style={StyleSheet.absoluteFill}
+            onPress={() => {
+              const nearestRoute = routeSuggestions[0];
+              if (!nearestRoute) return;
+              buildRoute({ ...nearestRoute, source: 'generated' });
+              setRecordPanelVisible(false);
+            }}>
+            <ThemedView flex contentCenter backgroundColor="transparent">
+              <ThemedText color='#FFFFFF' fontSize={14} fontWeight='900' letterSpacing={0}>
+                Tìm kiếm tại đây
+              </ThemedText>
+            </ThemedView>
+          </TouchableOpacity>
+        </ThemedView>
       )}
 
       {showRouteCarousel && (
-        <ThemedView backgroundColor='transparent' style={[styles.routeCarouselOverlay, { bottom: insets.bottom + 88 }]}>
+        <ThemedView backgroundColor='transparent' safeBottom={88} style={styles.routeCarouselOverlay}>
           <ThemedView backgroundColor='transparent' style={styles.carouselFilterRow}>
             <ThemedView style={styles.carouselFilterPill}>
               <Flame size={15} color='#FF5A1F' />

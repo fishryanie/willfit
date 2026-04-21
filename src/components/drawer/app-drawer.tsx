@@ -3,7 +3,6 @@ import { Bell, CircleUserRound, LogOut, Settings, type LucideIcon } from 'lucide
 import { createContext, Fragment, PropsWithChildren, useCallback, useContext, useMemo, useState } from 'react';
 import { type GestureResponderEvent, Pressable, StyleSheet, TouchableOpacity, useWindowDimensions } from 'react-native';
 import Animated, { Extrapolation, interpolate, useAnimatedStyle, useDerivedValue, withTiming } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText, ThemedView } from 'components/base';
 import { useTheme } from 'store/use-theme-store';
@@ -57,7 +56,6 @@ export function AppDrawerProvider({ children }: PropsWithChildren) {
   const router = useRouter();
   const pathname = usePathname();
   const { isDark, toggleTheme } = useTheme();
-  const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const [isOpen, setIsOpen] = useState(false);
 
@@ -118,8 +116,8 @@ export function AppDrawerProvider({ children }: PropsWithChildren) {
 
   return (
     <AppDrawerContext.Provider value={contextValue}>
-      <ThemedView flex backgroundColor={drawerBackgroundColor}>
-        <ThemedView absoluteFillObject paddingTop={insets.top + 96} paddingHorizontal={30} maxWidth={210} backgroundColor={drawerBackgroundColor}>
+      <ThemedView flex backgroundColor={drawerBackgroundColor} safePaddingTop>
+        <ThemedView absoluteFillObject paddingTop={96} paddingHorizontal={30} maxWidth={210} backgroundColor={drawerBackgroundColor}>
           <ThemedView
             gap={6}
             marginBottom={12}
@@ -152,7 +150,7 @@ export function AppDrawerProvider({ children }: PropsWithChildren) {
 
           <ThemeToggle style={{ marginTop: 20 }} />
 
-          <ThemedView position='absolute' right={30} bottom={insets.bottom + 12} rowCenter gap={6} backgroundColor='transparent'>
+          <ThemedView position='absolute' right={30} safeBottom={12} rowCenter gap={6} backgroundColor='transparent'>
             <Bell size={13} color={drawerMutedColor} />
             <ThemedText color={drawerMutedColor} fontSize={12} lineHeight={16} letterSpacing={0}>
               v1.0.0

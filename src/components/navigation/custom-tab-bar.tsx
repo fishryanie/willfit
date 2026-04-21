@@ -15,13 +15,12 @@ const TAB_ICONS: Record<string, LucideIcon> = {
 };
 
 export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
-  const insets = useSafeAreaInsets();
   const colorScheme = useThemeMode();
   const cardBg = useThemeColor({}, 'card');
   const accentColor = useThemeColor({}, 'accent');
 
   return (
-    <ThemedView backgroundColor='transparent' style={[styles.outerContainer, { paddingBottom: insets.bottom + 10 }]}>
+    <ThemedView backgroundColor='transparent' safePaddingBottom={10} style={styles.outerContainer}>
       <ThemedView style={[styles.container, { backgroundColor: cardBg }]}>
         {state.routes.map((route, index) => {
           const { options } = descriptors[route.key];

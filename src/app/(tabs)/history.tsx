@@ -1,11 +1,11 @@
-import { FlatList, StyleSheet, TouchableOpacity, useWindowDimensions } from 'react-native';
+import { Activity, Calendar, ChevronRight, History, MapPin } from 'lucide-react-native';
 import { useCallback, useEffect, useState } from 'react';
+import { FlatList, StyleSheet, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { History, MapPin, ChevronRight, Calendar, Timer, Activity } from 'lucide-react-native';
 
 import { ThemedText, ThemedView } from 'components/base';
-import { storage } from 'utils/storage';
 import { formatDistance, formatDuration } from 'components/map/route-utils';
+import { storage } from 'utils/storage';
 
 type RouteChoice = {
   id: string;
@@ -30,9 +30,7 @@ export default function HistoryScreen() {
       const value = await storage.getItem('willfit:saved-routes');
       if (value) {
         const parsed = JSON.parse(value) as RouteChoice[];
-        setHistory(parsed.filter(r => r.source === 'saved').sort((a, b) => 
-          new Date(b.savedAt || 0).getTime() - new Date(a.savedAt || 0).getTime()
-        ));
+        setHistory(parsed.filter(r => r.source === 'saved').sort((a, b) => new Date(b.savedAt || 0).getTime() - new Date(a.savedAt || 0).getTime()));
       }
     } catch (error) {
       console.error('Failed to fetch history:', error);
@@ -46,57 +44,65 @@ export default function HistoryScreen() {
   }, [fetchHistory]);
 
   const renderItem = ({ item }: { item: RouteChoice }) => {
-    const date = item.savedAt ? new Date(item.savedAt).toLocaleDateString('vi-VN', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    }) : 'N/A';
+    const date = item.savedAt
+      ? new Date(item.savedAt).toLocaleDateString('vi-VN', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        })
+      : 'N/A';
 
     return (
       <TouchableOpacity activeOpacity={0.8} style={styles.card}>
-        <ThemedView row gap={16} backgroundColor="transparent">
-          <ThemedView square={54} radius={12} backgroundColor="#F3F4F6" contentCenter>
-            <Activity size={24} color="#FF8A00" />
+        <ThemedView row gap={16} backgroundColor='transparent'>
+          <ThemedView square={54} radius={12} backgroundColor='#F3F4F6' contentCenter>
+            <Activity size={24} color='#FF8A00' />
           </ThemedView>
-          
-          <ThemedView flex backgroundColor="transparent" gap={4}>
-            <ThemedText fontSize={17} fontWeight="900" color="#111111" numberOfLines={1}>
+
+          <ThemedView flex backgroundColor='transparent' gap={4}>
+            <ThemedText fontSize={17} fontWeight='900' color='#111111' numberOfLines={1}>
               {item.title}
             </ThemedText>
-            
-            <ThemedView row itemsCenter gap={4} backgroundColor="transparent">
-              <Calendar size={12} color="#737780" />
-              <ThemedText fontSize={12} color="#737780">
+
+            <ThemedView rowCenter gap={4} backgroundColor='transparent'>
+              <Calendar size={12} color='#737780' />
+              <ThemedText fontSize={12} color='#737780'>
                 {date}
               </ThemedText>
             </ThemedView>
           </ThemedView>
-          
-          <ChevronRight size={20} color="#C8CCD2" />
+
+          <ChevronRight size={20} color='#C8CCD2' />
         </ThemedView>
 
-        <ThemedView row style={styles.statsRow} backgroundColor="transparent">
-          <ThemedView flex backgroundColor="transparent">
-            <ThemedText fontSize={18} fontWeight="900" color="#111111">
+        <ThemedView row marginTop={16} paddingTop={16} borderTopWidth={1} borderTopColor='#F3F4F6' backgroundColor='transparent'>
+          <ThemedView flex backgroundColor='transparent'>
+            <ThemedText fontSize={18} fontWeight='900' color='#111111'>
               {formatDistance(item.distanceKm * 1000)}
             </ThemedText>
-            <ThemedText fontSize={11} color="#737780" fontWeight="700">Distance</ThemedText>
-          </ThemedView>
-          
-          <ThemedView flex backgroundColor="transparent">
-            <ThemedText fontSize={18} fontWeight="900" color="#111111">
-              {formatDuration(item.estimatedMinutes * 60)}
+            <ThemedText fontSize={11} color='#737780' fontWeight='700'>
+              Distance
             </ThemedText>
-            <ThemedText fontSize={11} color="#737780" fontWeight="700">Duration</ThemedText>
           </ThemedView>
 
-          <ThemedView flex backgroundColor="transparent">
-            <ThemedText fontSize={18} fontWeight="900" color="#111111">
+          <ThemedView flex backgroundColor='transparent'>
+            <ThemedText fontSize={18} fontWeight='900' color='#111111'>
+              {formatDuration(item.estimatedMinutes * 60)}
+            </ThemedText>
+            <ThemedText fontSize={11} color='#737780' fontWeight='700'>
+              Duration
+            </ThemedText>
+          </ThemedView>
+
+          <ThemedView flex backgroundColor='transparent'>
+            <ThemedText fontSize={18} fontWeight='900' color='#111111'>
               {item.elevationM}m
             </ThemedText>
-            <ThemedText fontSize={11} color="#737780" fontWeight="700">Elevation</ThemedText>
+            <ThemedText fontSize={11} color='#737780' fontWeight='700'>
+              Elevation
+            </ThemedText>
           </ThemedView>
         </ThemedView>
       </TouchableOpacity>
@@ -104,20 +110,17 @@ export default function HistoryScreen() {
   };
 
   return (
-    <ThemedView flex backgroundColor="#F7F7F8">
-      <ThemedView 
-        style={[styles.header, { paddingTop: insets.top + 20 }]} 
-        backgroundColor="#FFFFFF"
-      >
-        <ThemedView row itemsCenter gap={12} backgroundColor="transparent">
-          <ThemedView square={40} radius={20} backgroundColor="#FFF4E6" contentCenter>
-            <History size={20} color="#FF8A00" />
+    <ThemedView flex backgroundColor='#F7F7F8'>
+      <ThemedView backgroundColor='#FFFFFF' paddingHorizontal={20} paddingBottom={20} borderBottomWidth={1} borderBottomColor='#F3F4F6' safePaddingTop={20}>
+        <ThemedView rowCenter gap={12} backgroundColor='transparent'>
+          <ThemedView square={40} radius={20} backgroundColor='#FFF4E6' contentCenter>
+            <History size={20} color='#FF8A00' />
           </ThemedView>
-          <ThemedText fontSize={28} fontWeight="900" color="#111111">
+          <ThemedText fontSize={28} fontWeight='900' color='#111111'>
             History
           </ThemedText>
         </ThemedView>
-        <ThemedText fontSize={14} color="#737780" marginTop={4}>
+        <ThemedText fontSize={14} color='#737780' marginTop={4}>
           Lịch sử các hoạt động thể thao của bạn.
         </ThemedText>
       </ThemedView>
@@ -126,17 +129,20 @@ export default function HistoryScreen() {
         data={history}
         renderItem={renderItem}
         keyExtractor={item => item.id}
-        contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + 100 }]}
+        contentContainerStyle={{
+          padding: 16,
+          paddingBottom: insets.bottom + 100,
+        }}
         showsVerticalScrollIndicator={false}
         refreshing={isLoading}
         onRefresh={fetchHistory}
         ListEmptyComponent={
-          <ThemedView flex contentCenter style={styles.emptyContainer}>
-            <MapPin size={48} color="#D1D5DB" />
-            <ThemedText fontSize={16} fontWeight="700" color="#9CA3AF" marginTop={16}>
+          <ThemedView flex contentCenter marginTop={100} paddingHorizontal={40}>
+            <MapPin size={48} color='#D1D5DB' />
+            <ThemedText fontSize={16} fontWeight='700' color='#9CA3AF' marginTop={16}>
               Chưa có hoạt động nào được lưu.
             </ThemedText>
-            <ThemedText fontSize={14} color="#9CA3AF" marginTop={4} textAlign="center">
+            <ThemedText fontSize={14} color='#9CA3AF' marginTop={4} textAlign='center'>
               Hãy bắt đầu một buổi tập để thấy lịch sử tại đây.
             </ThemedText>
           </ThemedView>
@@ -147,15 +153,6 @@ export default function HistoryScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
-  },
-  list: {
-    padding: 16,
-  },
   card: {
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
@@ -167,14 +164,4 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 2,
   },
-  statsRow: {
-    marginTop: 16,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
-  },
-  emptyContainer: {
-    marginTop: 100,
-    paddingHorizontal: 40,
-  }
 });
