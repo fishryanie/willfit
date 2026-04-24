@@ -1,13 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const STORAGE_KEY = {
-  SAVED_ROUTES: 'willfit:saved-routes',
   REFRESH_TOKEN: 'willfit:rfk_v1_z9x_auth',
   PUSH_TOKEN: 'willfit:expo-push-token',
   PUSH_TOKEN_SYNC_SIGNATURE: 'willfit:expo-push-sync-signature'
 } as const;
 
-type StorageKey = (typeof STORAGE_KEY)[keyof typeof STORAGE_KEY];
+type KnownStorageKey = (typeof STORAGE_KEY)[keyof typeof STORAGE_KEY];
+type StorageKey = KnownStorageKey | (string & {});
 
 export const storage = {
   setItem: async (key: StorageKey, value: string) => {

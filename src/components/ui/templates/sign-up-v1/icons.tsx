@@ -1,5 +1,5 @@
 import * as React from "react";
-import Svg, { G, Defs, Path, Rect } from "react-native-svg";
+import Svg, { G, Defs, Path } from "react-native-svg";
 import { IGithubIcon, IGoogleIcon } from "./types";
 
 const INITIAL_SIZE = 55;

@@ -7,6 +7,6 @@ interface IGoogleIcon {
   size?: number;
 }
 
-interface IGithubIcon extends IGoogleIcon {}
+type IGithubIcon = IGoogleIcon;
 
 export type { IBackgroundGradient, IGoogleIcon, IGithubIcon };

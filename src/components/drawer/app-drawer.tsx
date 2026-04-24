@@ -1,7 +1,7 @@
 import { usePathname, useRouter, type Href } from 'expo-router';
 import { Bell, CircleUserRound, LogOut, Settings, type LucideIcon } from 'lucide-react-native';
 import { createContext, Fragment, PropsWithChildren, useCallback, useContext, useMemo, useState } from 'react';
-import { type GestureResponderEvent, Pressable, StyleSheet, TouchableOpacity, useWindowDimensions } from 'react-native';
+import { Pressable, StyleSheet, TouchableOpacity, useWindowDimensions } from 'react-native';
 import Animated, { Extrapolation, interpolate, useAnimatedStyle, useDerivedValue, withTiming } from 'react-native-reanimated';
 
 import { ThemedText, ThemedView } from 'components/base';
@@ -55,7 +55,7 @@ export function useAppDrawer() {
 export function AppDrawerProvider({ children }: PropsWithChildren) {
   const router = useRouter();
   const pathname = usePathname();
-  const { isDark, toggleTheme } = useTheme();
+  const { isDark, colors } = useTheme();
   const { width } = useWindowDimensions();
   const [isOpen, setIsOpen] = useState(false);
 
@@ -63,6 +63,7 @@ export function AppDrawerProvider({ children }: PropsWithChildren) {
   const drawerBackgroundColor = isDarkDrawer ? '#24294A' : '#FFFFFF';
   const drawerTextColor = isDarkDrawer ? '#FFFFFF' : '#24294A';
   const drawerMutedColor = isDarkDrawer ? 'rgba(255,255,255,0.6)' : '#808080';
+  const drawerActiveColor = colors.accent;
 
   const progress = useDerivedValue(() => withTiming(isOpen ? 1 : 0), [isOpen]);
 
@@ -140,8 +141,8 @@ export function AppDrawerProvider({ children }: PropsWithChildren) {
 
             return (
               <TouchableOpacity key={item.name} activeOpacity={0.78} style={styles.drawerItem} onPress={() => onPressItem(item)}>
-                <Icon size={22} color={isActive ? '#FF8A00' : drawerTextColor} strokeWidth={2.2} />
-                <ThemedText color={isActive ? '#FF8A00' : drawerTextColor} fontSize={16} fontWeight='700' letterSpacing={0}>
+                <Icon size={22} color={isActive ? drawerActiveColor : drawerTextColor} strokeWidth={2.2} />
+                <ThemedText color={isActive ? drawerActiveColor : drawerTextColor} fontSize={16} fontWeight='700' letterSpacing={0}>
                   {item.name}
                 </ThemedText>
               </TouchableOpacity>

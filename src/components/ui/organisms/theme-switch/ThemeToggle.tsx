@@ -11,19 +11,20 @@ interface ThemeToggleProps {
 }
 
 export const ThemeToggle = ({ showLabel = true, style }: ThemeToggleProps) => {
-  const { isDark, toggleTheme } = useTheme();
+  const { isDark, toggleTheme, colors: themeColors } = useTheme();
 
   const colors = useMemo(() => {
     const isDarkTheme = isDark;
     return {
       background: isDarkTheme ? 'rgba(0,0,0,0.22)' : '#F0F0F0',
       iconBg: isDarkTheme ? '#22272B' : '#FFFFFF',
+      icon: themeColors.accent,
       text: isDarkTheme ? '#FFFFFF' : '#24294A',
       muted: isDarkTheme ? 'rgba(255,255,255,0.6)' : '#808080',
-      track: isDarkTheme ? '#FF8A00' : '#D7D9DF',
+      track: isDarkTheme ? themeColors.accent : '#D7D9DF',
       thumb: isDarkTheme ? '#24294A' : '#FFFFFF',
     };
-  }, [isDark]);
+  }, [isDark, themeColors.accent]);
 
   const handlePress = (event: GestureResponderEvent) => {
     void toggleTheme({
@@ -42,7 +43,7 @@ export const ThemeToggle = ({ showLabel = true, style }: ThemeToggleProps) => {
       onPress={handlePress}
     >
       <ThemedView width={38} height={38} radius={8} alignItems='center' justifyContent='center' backgroundColor={colors.iconBg}>
-        {isDark ? <Moon size={18} color='#FF8A00' /> : <Sun size={18} color='#FF8A00' />}
+        {isDark ? <Moon size={18} color={colors.icon} /> : <Sun size={18} color={colors.icon} />}
       </ThemedView>
       
       {showLabel && (

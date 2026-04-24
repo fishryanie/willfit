@@ -1,4 +1,4 @@
-import { LogIn, Trash2, TriangleAlert } from 'lucide-react-native';
+import { Flag, LogIn, Trash2, TriangleAlert } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 
@@ -25,8 +25,8 @@ const toneConfig: Record<AppDialogTone, { color: string; backgroundColor: string
     icon: TriangleAlert,
   },
   session: {
-    color: '#FF8A00',
-    backgroundColor: 'rgba(255, 138, 0, 0.15)',
+    color: '#1E6BD6',
+    backgroundColor: 'rgba(30, 107, 214, 0.15)',
     icon: LogIn,
   },
 };
@@ -71,6 +71,81 @@ export function AppDialogHost() {
 
     closedDialog.onCancel?.();
   };
+
+  if (dialog.layout === 'finish-record') {
+    return (
+      <Dialog key={dialog.id} defaultOpen>
+        <Dialog.Content dismissible={dialog.dismissible} onClose={handleClose}>
+          <ThemedView
+            width='100%'
+            radius={24}
+            backgroundColor='#1C1C1E'
+            borderWidth={1}
+            borderColor='rgba(255,255,255,0.06)'
+            paddingVertical={28}
+            paddingHorizontal={24}
+            alignItems='center'
+            shadowColor='#000'
+            shadowOpacity={0.32}
+            shadowOffset={{ width: 0, height: 24 }}
+            shadowRadius={34}
+            elevation={14}>
+            <ThemedView
+              width={64}
+              height={64}
+              radius={32}
+              backgroundColor='rgba(255,90,104,0.15)'
+              alignItems='center'
+              justifyContent='center'
+              marginBottom={20}>
+              <Flag size={28} color='#FF5A68' strokeWidth={2.4} />
+            </ThemedView>
+
+            <ThemedText color='#FFFFFF' fontSize={22} lineHeight={28} fontWeight='800' letterSpacing={0}>
+              {dialog.title}
+            </ThemedText>
+
+            {dialog.message ? (
+              <ThemedText color='#8E8E93' fontSize={15} lineHeight={21} fontWeight='500' textAlign='center' marginTop={8}>
+                {dialog.message}
+              </ThemedText>
+            ) : null}
+
+            <ThemedView width='100%' row gap={12} marginTop={28} backgroundColor='transparent'>
+              {dialog.cancelLabel ? (
+                <Dialog.Close asChild>
+                  <Pressable
+                    accessibilityRole='button'
+                    style={[styles.finishButton, styles.finishCancelButton]}
+                    onPress={() => {
+                      actionRef.current = 'cancel';
+                    }}>
+                    <ThemedText color='#FFFFFF' fontSize={16} fontWeight='700' letterSpacing={0}>
+                      {dialog.cancelLabel}
+                    </ThemedText>
+                  </Pressable>
+                </Dialog.Close>
+              ) : null}
+
+              <Dialog.Close asChild>
+                <Pressable
+                  accessibilityRole='button'
+                  style={[styles.finishButton, styles.finishConfirmButton]}
+                  onPress={() => {
+                    actionRef.current = 'confirm';
+                  }}>
+                  <Flag size={18} color='#FFFFFF' strokeWidth={2.4} />
+                  <ThemedText color='#FFFFFF' fontSize={16} fontWeight='700' letterSpacing={0}>
+                    {dialog.confirmLabel}
+                  </ThemedText>
+                </Pressable>
+              </Dialog.Close>
+            </ThemedView>
+          </ThemedView>
+        </Dialog.Content>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog key={dialog.id} defaultOpen>
@@ -154,5 +229,26 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 8 },
     shadowRadius: 18,
     elevation: 8,
+  },
+  finishButton: {
+    flex: 1,
+    minHeight: 54,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+  },
+  finishCancelButton: {
+    backgroundColor: '#2C2C2E',
+  },
+  finishConfirmButton: {
+    flexDirection: 'row',
+    gap: 8,
+    backgroundColor: '#FD5252',
+    shadowColor: '#FD5252',
+    shadowOpacity: 0.26,
+    shadowOffset: { width: 0, height: 10 },
+    shadowRadius: 18,
+    elevation: 10,
   },
 });

@@ -206,6 +206,8 @@ export const ThemedView = forwardRef<View, ThemedViewProps>(function ThemedView(
   );
 });
 
+export const ViewTheme = ThemedView;
+
 const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',

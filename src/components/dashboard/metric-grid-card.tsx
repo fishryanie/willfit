@@ -1,6 +1,6 @@
 import React from 'react';
 import { Droplets, Dumbbell, Flame, Moon, Weight, type LucideIcon } from 'lucide-react-native';
-import { ThemedText, ThemedView } from 'components/base';
+import { Card, ThemedText, ThemedView } from 'components/base';
 import { useThemeColor } from 'store/use-theme-store';
 
 interface MetricGridCardProps {
@@ -34,12 +34,11 @@ export function MetricGridCard({
   icon,
   iconColor,
 }: MetricGridCardProps) {
-  const cardBg = useThemeColor({}, 'card');
   const iconTintColor = useThemeColor({}, 'icon');
   const Icon = METRIC_ICONS[icon];
 
   return (
-    <ThemedView radius={24} padding={16} flex={1} minHeight={120} justifyContent='center' backgroundColor={cardBg}>
+    <Card style={{ borderRadius: 24, flex: 1, minHeight: 120, justifyContent: 'center' }}>
       <ThemedView backgroundColor='transparent' row alignItems='center' justifyContent='space-between'>
         <ThemedView backgroundColor='transparent' row alignItems='center' gap={16}>
           <ThemedView square={48} radius={24} backgroundColor='rgba(150, 150, 150, 0.1)' contentCenter>
@@ -60,6 +59,6 @@ export function MetricGridCard({
           </ThemedView>
         </ThemedView>
       </ThemedView>
-    </ThemedView>
+    </Card>
   );
 }

@@ -22,57 +22,96 @@ export enum EasingType {
   EaseInOut = 'easeInOut',
 }
 
+export const Gradients = {
+  // Brand pill: blue -> cyan, matching the original gradient buttons
+  primary: ['#1E6BD6', '#18A7C9'],
+  primaryOverlay: ['transparent', 'transparent'],
+  accent: ['#FF77C8', '#8B2CF5'],
+  subtle: ['#F8F2FF', '#FFFFFF'],
+} as const;
+
 export const Colors = {
   light: {
-    background: '#FFFFFF',
-    foreground: '#000000',
-    card: '#F5F5F5',
-    text: '#1A1A1A',
-    textSecondary: '#6B7280',
-    border: '#E5E7EB',
-    primary: '#3B82F6',
+    background: '#F5F7FA',
+    foreground: '#0F172A',
+    card: '#FFFFFF',
+
+    text: '#0F172A',
+    textSecondary: '#64748B',
+
+    border: '#E6EAF0',
+
+    // 🎯 Brand primary (blue-cyan)
+    primary: '#1E6BD6',
     primaryForeground: '#FFFFFF',
-    secondary: '#6B7280',
+
+    // 🟣 secondary trung tính hơn
+    secondary: '#64748B',
     secondaryForeground: '#FFFFFF',
-    accent: '#8B5CF6',
+
+    // 🎨 accent (magenta từ logo)
+    accent: '#E6007A',
     accentForeground: '#FFFFFF',
+
     destructive: '#EF4444',
     destructiveForeground: '#FFFFFF',
-    muted: '#F3F4F6',
-    mutedForeground: '#6B7280',
+
+    muted: '#EEF2F7',
+    mutedForeground: '#64748B',
+
     success: '#10B981',
     warning: '#F59E0B',
-    info: '#3B82F6',
-    tint: '#000000',
-    icon: '#000000',
-    tabIconDefault: '#8E8E93',
-    tabIconSelected: '#000000',
+
+    // dùng lại tone primary cho info cho đồng bộ
+    info: '#1E6BD6',
+
+    tint: '#0F172A',
+    icon: '#0F172A',
+
+    tabIconDefault: '#94A3B8',
+    tabIconSelected: '#1E6BD6',
+
     error: '#EF4444',
   },
+
   dark: {
-    background: '#0A0A0A',
-    foreground: '#FAFAFA',
-    card: '#1A1A1A',
-    text: '#FAFAFA',
-    textSecondary: '#A1A1AA',
-    border: '#27272A',
-    primary: '#60A5FA',
-    primaryForeground: '#0A0A0A',
-    secondary: '#A1A1AA',
-    secondaryForeground: '#0A0A0A',
-    accent: '#A78BFA',
-    accentForeground: '#0A0A0A',
+    background: '#0B0F1A',
+    foreground: '#F8FAFC',
+    card: '#111827',
+
+    text: '#F8FAFC',
+    textSecondary: '#94A3B8',
+
+    border: '#1F2937',
+
+    // 🎯 primary sáng hơn cho dark
+    primary: '#3B82F6',
+    primaryForeground: '#0B0F1A',
+
+    secondary: '#94A3B8',
+    secondaryForeground: '#0B0F1A',
+
+    // 🎨 accent vẫn giữ magenta nhưng sáng hơn
+    accent: '#FF2D9A',
+    accentForeground: '#0B0F1A',
+
     destructive: '#F87171',
-    destructiveForeground: '#0A0A0A',
-    muted: '#1F1F23',
-    mutedForeground: '#A1A1AA',
+    destructiveForeground: '#0B0F1A',
+
+    muted: '#1F2937',
+    mutedForeground: '#94A3B8',
+
     success: '#34D399',
     warning: '#FBBF24',
-    info: '#60A5FA',
+
+    info: '#3B82F6',
+
     tint: '#FFFFFF',
     icon: '#FFFFFF',
-    tabIconDefault: '#8E8E93',
-    tabIconSelected: '#FFFFFF',
+
+    tabIconDefault: '#6B7280',
+    tabIconSelected: '#3B82F6',
+
     error: '#F87171',
   },
 } as const;

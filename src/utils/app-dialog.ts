@@ -1,4 +1,5 @@
 export type AppDialogTone = 'default' | 'danger' | 'warning' | 'session';
+export type AppDialogLayout = 'default' | 'finish-record';
 
 export type AppDialogOptions = {
   title: string;
@@ -6,13 +7,14 @@ export type AppDialogOptions = {
   confirmLabel?: string;
   cancelLabel?: string;
   tone?: AppDialogTone;
+  layout?: AppDialogLayout;
   dismissible?: boolean;
   onConfirm?: () => void;
   onCancel?: () => void;
 };
 
-export type AppDialogState = Required<Pick<AppDialogOptions, 'title' | 'confirmLabel' | 'tone' | 'dismissible'>> &
-  Omit<AppDialogOptions, 'title' | 'confirmLabel' | 'tone' | 'dismissible'> & {
+export type AppDialogState = Required<Pick<AppDialogOptions, 'title' | 'confirmLabel' | 'tone' | 'layout' | 'dismissible'>> &
+  Omit<AppDialogOptions, 'title' | 'confirmLabel' | 'tone' | 'layout' | 'dismissible'> & {
     id: string;
   };
 
@@ -29,6 +31,7 @@ const normalizeDialog = (options: AppDialogOptions): AppDialogState => ({
   id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
   confirmLabel: 'Xác nhận',
   tone: 'default',
+  layout: 'default',
   dismissible: true,
   ...options,
 });

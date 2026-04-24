@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "willfit",
+    "name": "WillFit",
     "slug": "willfit",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -24,9 +24,8 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#0F172A",
         "foregroundImage": "./src/assets/images/android-icon-foreground.png",
-        "backgroundImage": "./src/assets/images/android-icon-background.png",
         "monochromeImage": "./src/assets/images/android-icon-monochrome.png"
       },
       "package": "com.willfit.dev.app",
@@ -51,12 +50,13 @@
       [
         "expo-splash-screen",
         {
-          "image": "./src/assets/images/splash-icon.png",
-          "imageWidth": 200,
+          "image": "./src/assets/images/logo/logo-name.png",
+          "imageWidth": 220,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
+          "backgroundColor": "#0F172A",
           "dark": {
-            "backgroundColor": "#000000"
+            "image": "./src/assets/images/logo/logo-name.png",
+            "backgroundColor": "#0F172A"
           }
         }
       ],

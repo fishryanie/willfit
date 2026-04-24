@@ -7,7 +7,6 @@ import { ToastProviderWithViewport } from 'components/ui/molecules/Toast';
 import { ThemeProvider } from 'components/ui/organisms/theme-switch';
 import { ThemeMode } from 'constants/theme';
 import { Stack, useNavigationContainerRef } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
 import { usePushNotifications } from 'hooks/use-push-notifications';
 import { useEffect } from 'react';
 import { Appearance } from 'react-native';
@@ -17,8 +16,8 @@ import 'react-native-reanimated';
 import { useAuthStore } from 'store/use-auth-store';
 import { useThemeMode, useThemeStore } from 'store/use-theme-store';
 import { api } from 'utils/api';
-import 'utils/location-task';
-import { Sentry, initSentry, navigationIntegration } from 'utils/sentry';
+import 'modules/routes/services/route-location-task';
+import { Sentry, initSentry, isSentryEnabled, navigationIntegration } from 'utils/sentry';
 import { STORAGE_KEY, storage } from 'utils/storage';
 
 initSentry();
@@ -72,7 +71,7 @@ function RootLayoutContent() {
   usePushNotifications();
 
   useEffect(() => {
-    if (ref) {
+    if (isSentryEnabled && ref) {
       navigationIntegration.registerNavigationContainer(ref);
     }
   }, [ref]);
@@ -118,4 +117,4 @@ function RootLayoutContent() {
   );
 }
 
-export default Sentry.wrap(RootLayout);
+export default isSentryEnabled ? Sentry.wrap(RootLayout) : RootLayout;

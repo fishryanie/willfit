@@ -20,6 +20,18 @@
       "app/*": [
         "app/*"
       ],
+      "features/*": [
+        "features/*"
+      ],
+      "navigation/*": [
+        "navigation/*"
+      ],
+      "theme": [
+        "theme/index"
+      ],
+      "theme/*": [
+        "theme/*"
+      ],
       "utils/*": [
         "utils/*"
       ]

@@ -109,46 +109,6 @@ type RuntimeThemeMode = import('constants/theme').ThemeMode;
     longitude: number;
   };
 
-  type ActivityMode = 'run' | 'ride' | 'walk' | 'hike';
-
-  type MapLayer = 'standard' | 'satellite';
-
-  type RouteSummary = {
-    id: string;
-    title: string;
-    distanceKm: number;
-    elevationM: number;
-    estimatedMinutes: number;
-    surface: string;
-    popularity: number;
-  };
-
-  type SegmentSummary = {
-    id: string;
-    title: string;
-    distanceKm: number;
-    grade: string;
-    bestTime: string;
-    starred: boolean;
-    coordinates: Coordinate[];
-  };
-
-  type RouteMapProps = {
-    center: Coordinate;
-    routeCoordinates: Coordinate[];
-    liveCoordinates: Coordinate[];
-    waypoints: Coordinate[];
-    heatRoutes: Coordinate[][];
-    segments: SegmentSummary[];
-    selectedSegmentId?: string;
-    showHeatmap: boolean;
-    showSegments: boolean;
-    mapLayer: MapLayer;
-    activityMode: ActivityMode;
-    followUser: boolean;
-    onMapPress: (coordinate: Coordinate) => void;
-  };
-
   interface ScrollableSearchContextValue {
     isFocused: boolean;
     setIsFocused: (focused: boolean) => void;
@@ -259,6 +219,11 @@ type RuntimeThemeMode = import('constants/theme').ThemeMode;
     backgroundColor?: string;
     style?: StyleProp<ViewStyle>;
   }
+
+declare module '@gorhom/sticky-item' {
+  export { default } from '@gorhom/sticky-item/lib/typescript/index';
+  export * from '@gorhom/sticky-item/lib/typescript/index';
+}
 
   interface ToastItem {
     id: string;
@@ -418,6 +383,3 @@ type RuntimeThemeMode = import('constants/theme').ThemeMode;
     fontSize?: number;
     color?: string;
   }
-declare module 'components/map/route-map' {
-  export function RouteMap(props: RouteMapProps): ReactElement;
-}

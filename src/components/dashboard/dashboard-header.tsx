@@ -24,7 +24,7 @@ export function DashboardHeader({
   const { openDrawer } = useAppDrawer();
   const iconColor = useThemeColor({}, 'text');
   const mutedColor = useThemeColor({ light: '#808080', dark: '#A1A1AA' }, 'secondary');
-  const avatarBackground = useThemeColor({ light: '#24294A', dark: '#FF8A00' }, 'accent');
+  const avatarBackground = useThemeColor({ light: '#24294A' }, 'accent');
   const avatarTextColor = useThemeColor({ light: '#FFFFFF', dark: '#000000' }, 'background');
 
   return (

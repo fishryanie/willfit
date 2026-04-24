@@ -1,22 +1,9 @@
 import { Heart } from 'lucide-react-native';
-import { ThemedText, ThemedView } from 'components/base';
-import { useThemeColor } from 'store/use-theme-store';
+import { Card, ThemedText, ThemedView } from 'components/base';
 
 export function HeartRateCard() {
-  const cardBg = useThemeColor({}, 'card');
-
   return (
-    <ThemedView
-      radius={24}
-      padding={20}
-      marginHorizontal={20}
-      marginBottom={16}
-      shadowColor='#000'
-      shadowOffset={{ width: 0, height: 2 }}
-      shadowOpacity={0.05}
-      shadowRadius={10}
-      elevation={2}
-      backgroundColor={cardBg}>
+    <Card style={{ marginHorizontal: 20, marginBottom: 16, padding: 20, borderRadius: 24, shadowOffset: { width: 0, height: 2 }, elevation: 2 }}>
       <ThemedView backgroundColor='transparent' row justifyContent='space-between' alignItems='center' marginBottom={16}>
         <ThemedView backgroundColor='transparent' row alignItems='center' gap={8}>
           <ThemedText fontSize={18} fontWeight='600'>Heart rate</ThemedText>
@@ -46,6 +33,6 @@ export function HeartRateCard() {
           <ThemedText fontSize={14} opacity={0.6}>bpm</ThemedText>
         </ThemedView>
       </ThemedView>
-    </ThemedView>
+    </Card>
   );
 }

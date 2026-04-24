@@ -1,5 +1,3 @@
-import type { StyleProp, ViewStyle } from "react-native";
-
 interface IGridBackground {
   cellSize?: number;
   lineColor?: string;
