@@ -3,29 +3,14 @@ import { RotateCarousel } from 'components/ui/molecules/rotate-carousel';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowUp, Clock3, Play } from 'lucide-react-native';
 import { useEffect, useMemo, type ReactNode } from 'react';
-import { Pressable, Text, View } from 'react-native';
-import type { LatLng } from 'react-native-maps';
+import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import Svg, { Polyline } from 'react-native-svg';
 import { theme } from 'theme';
 import { useRouteRecordStore } from '../../store/use-route-record-store';
 import type { SuggestedWalkingRoute } from '../../types/suggested-route';
-import { calculateRouteDistanceKm } from '../../utils/geo';
 import { ITEM_HEIGHT, ITEM_WIDTH, LIST_BOTTOM_OFFSET } from './constants';
 
 const ROUTE_SUGGESTION_COUNT = 10;
-
-const ROUTE_NAMES = [
-  'Vòng sông buổi sáng',
-  'Đi bộ ven công viên',
-  'Tuyến thư giãn đầu ngày',
-  'Vòng nhẹ quanh khu dân cư',
-  'Lối đi bộ ven kênh',
-  'Đường cây xanh mát',
-  'Nhịp đi bộ buổi chiều',
-  'Tuyến dọc bờ sông',
-  'Vòng đi bộ cuối ngày',
-  'Đường yên tĩnh gần nhà',
-] as const;
 
 const formatPace = (minutesPerKm: number) => {
   const minutes = Math.floor(minutesPerKm);
@@ -33,113 +18,14 @@ const formatPace = (minutesPerKm: number) => {
   return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}/km`;
 };
 
-const toRadians = (value: number) => (value * Math.PI) / 180;
-const toDegrees = (value: number) => (value * 180) / Math.PI;
-
-const createSeed = (origin: LatLng): number => {
-  const latitudeSeed = Math.floor((origin.latitude + 90) * 10000);
-  const longitudeSeed = Math.floor((origin.longitude + 180) * 10000);
-  return (latitudeSeed * 73856093) ^ (longitudeSeed * 19349663);
-};
-
-const createSeededRandom = (seedValue: number) => {
-  let seed = seedValue >>> 0;
-  return () => {
-    seed = (1664525 * seed + 1013904223) % 4294967296;
-    return seed / 4294967296;
-  };
-};
-
-const destinationPoint = (origin: LatLng, distanceMeters: number, bearingDegrees: number): LatLng => {
-  const earthRadius = 6371000;
-  const angularDistance = distanceMeters / earthRadius;
-  const bearing = toRadians(bearingDegrees);
-  const lat1 = toRadians(origin.latitude);
-  const lon1 = toRadians(origin.longitude);
-
-  const lat2 = Math.asin(Math.sin(lat1) * Math.cos(angularDistance) + Math.cos(lat1) * Math.sin(angularDistance) * Math.cos(bearing));
-  const lon2 =
-    lon1 +
-    Math.atan2(
-      Math.sin(bearing) * Math.sin(angularDistance) * Math.cos(lat1),
-      Math.cos(angularDistance) - Math.sin(lat1) * Math.sin(lat2),
-    );
-
-  return {
-    latitude: toDegrees(lat2),
-    longitude: toDegrees(lon2),
-  };
-};
-
-const scaleAroundCenter = (center: LatLng, point: LatLng, scale: number): LatLng => ({
-  latitude: center.latitude + (point.latitude - center.latitude) * scale,
-  longitude: center.longitude + (point.longitude - center.longitude) * scale,
-});
-
-const buildLoopRoute = (origin: LatLng, targetDistanceKm: number, random: () => number): LatLng[] => {
-  const vertexCount = 6;
-  const circumferenceMeters = targetDistanceKm * 1000;
-  const baseRadius = circumferenceMeters / (2 * Math.PI);
-  const startBearing = random() * 360;
-
-  const points: LatLng[] = [];
-  for (let index = 0; index < vertexCount; index += 1) {
-    const radiusFactor = 0.82 + random() * 0.36;
-    const bearingNoise = (random() - 0.5) * 22;
-    const bearing = startBearing + index * (360 / vertexCount) + bearingNoise;
-    points.push(destinationPoint(origin, baseRadius * radiusFactor, bearing));
-  }
-
-  points.push(points[0]);
-
-  const distanceKm = calculateRouteDistanceKm(points);
-  if (distanceKm <= 5) {
-    return points;
-  }
-
-  const scale = 4.95 / distanceKm;
-  return points.map(point => scaleAroundCenter(origin, point, scale));
-};
-
-const generateSuggestedWalkingRoutes = (origin: LatLng, count = ROUTE_SUGGESTION_COUNT): SuggestedWalkingRoute[] => {
-  const random = createSeededRandom(createSeed(origin));
-
-  const suggestions: SuggestedWalkingRoute[] = [];
-  for (let index = 0; index < count; index += 1) {
-    const distanceTarget = 2 + random() * 2.9;
-    const coordinates = buildLoopRoute(origin, distanceTarget, random);
-    const distanceKm = Number(Math.min(5, calculateRouteDistanceKm(coordinates)).toFixed(2));
-
-    const paceMinPerKm = 10.2 + random() * 2.1;
-    const estimatedDurationMin = Math.max(18, Math.round(distanceKm * paceMinPerKm));
-
-    const elevationRaw = distanceKm * 8 + random() * 22;
-    const estimatedElevationGain = Math.max(8, Math.round(elevationRaw));
-
-    const score = Number((0.7 + random() * 0.3).toFixed(2));
-
-    suggestions.push({
-      id: `walk-suggest-${index + 1}`,
-      name: ROUTE_NAMES[index % ROUTE_NAMES.length],
-      distanceKm,
-      estimatedElevationGain,
-      estimatedDurationMin,
-      difficulty: distanceKm <= 3.6 ? 'Dễ' : 'Vừa',
-      coordinates,
-      score,
-      source: 'generated',
-    });
-  }
-
-  return suggestions.sort((a, b) => b.score - a.score);
-};
-
 export function RouteSuggestionsCarousel() {
   const origin = useRouteRecordStore(state => state.origin);
   const phase = useRouteRecordStore(state => state.phase);
   const suggestions = useRouteRecordStore(state => state.suggestions);
+  const isLoadingSuggestions = useRouteRecordStore(state => state.isLoadingSuggestions);
+  const suggestionError = useRouteRecordStore(state => state.suggestionError);
   const selectedRoute = useRouteRecordStore(state => state.selectedRoute);
-  const setSuggestions = useRouteRecordStore(state => state.setSuggestions);
+  const loadSuggestedRoutes = useRouteRecordStore(state => state.loadSuggestedRoutes);
   const setSelectedRoute = useRouteRecordStore(state => state.setSelectedRoute);
   const startRoute = useRouteRecordStore(state => state.startRoute);
   const { latitude: originLatitude, longitude: originLongitude } = origin;
@@ -149,8 +35,21 @@ export function RouteSuggestionsCarousel() {
       return;
     }
 
-    setSuggestions(generateSuggestedWalkingRoutes({ latitude: originLatitude, longitude: originLongitude }, ROUTE_SUGGESTION_COUNT));
-  }, [originLatitude, originLongitude, phase, setSuggestions]);
+    const controller = new AbortController();
+    const nextOrigin = { latitude: originLatitude, longitude: originLongitude };
+
+    void loadSuggestedRoutes(nextOrigin, { count: ROUTE_SUGGESTION_COUNT, signal: controller.signal });
+
+    return () => controller.abort();
+  }, [loadSuggestedRoutes, originLatitude, originLongitude, phase]);
+
+  if (suggestions.length === 0) {
+    return (
+      <ViewTheme position='absolute' left={0} right={0} bottom={LIST_BOTTOM_OFFSET} height={ITEM_HEIGHT} backgroundColor='transparent'>
+        <SuggestionStatusCard loading={isLoadingSuggestions} message={suggestionError} />
+      </ViewTheme>
+    );
+  }
 
   return (
     <ViewTheme position='absolute' left={0} right={0} bottom={LIST_BOTTOM_OFFSET} height={ITEM_HEIGHT} backgroundColor='transparent'>
@@ -171,6 +70,8 @@ export function RouteSuggestionsCarousel() {
           const isActive = item.id === selectedRoute?.id;
           const estimatedPace = formatPace(item.estimatedDurationMin / Math.max(0.1, item.distanceKm));
           const chipLabel = item.source === 'recorded' ? 'Đã lưu' : item.difficulty;
+          const hintLabel =
+            item.source === 'recorded' ? 'Lộ trình đã lưu' : item.provider === 'goong' ? 'Theo đường thật từ Goong' : 'Theo đường thật từ OpenStreetMap';
 
           return (
             <Pressable style={routeCardPressable} onPress={() => setSelectedRoute(item)}>
@@ -203,7 +104,7 @@ export function RouteSuggestionsCarousel() {
                       </View>
 
                       <Text style={routeHint} numberOfLines={1}>
-                        {item.source === 'recorded' ? 'Lộ trình đã lưu' : 'Gợi ý gần vị trí hiện tại'}
+                        {hintLabel}
                       </Text>
                     </View>
 
@@ -226,6 +127,24 @@ export function RouteSuggestionsCarousel() {
         }}
       />
     </ViewTheme>
+  );
+}
+
+function SuggestionStatusCard({ loading, message }: { loading: boolean; message: string | null }) {
+  return (
+    <View style={statusCardWrap}>
+      <LinearGradient colors={['rgba(86,204,242,0.2)', 'rgba(47,128,237,0.08)']} style={statusCardFrame}>
+        <View style={statusCardSurface}>
+          {loading ? <ActivityIndicator color={theme.colors.primary2} /> : null}
+          <Text style={statusTitle} numberOfLines={1}>
+            {loading ? 'Đang tìm tuyến đi bộ' : 'Chưa có tuyến phù hợp'}
+          </Text>
+          <Text style={statusMessage} numberOfLines={2}>
+            {message ?? 'WillFit sẽ chỉ hiện lộ trình khi tìm được đường thật gần vị trí của bạn.'}
+          </Text>
+        </View>
+      </LinearGradient>
+    </View>
   );
 }
 
@@ -292,6 +211,46 @@ function MiniRoutePreview({ coordinates, active }: { coordinates: SuggestedWalki
 const routeCardPressable = {
   width: ITEM_WIDTH,
   height: ITEM_HEIGHT,
+} as const;
+
+const statusCardWrap = {
+  width: ITEM_WIDTH,
+  height: ITEM_HEIGHT,
+  alignSelf: 'center',
+} as const;
+
+const statusCardFrame = {
+  flex: 1,
+  borderRadius: theme.radius.lg,
+  padding: 1,
+} as const;
+
+const statusCardSurface = {
+  flex: 1,
+  borderRadius: theme.radius.lg - 1,
+  borderWidth: 1,
+  borderColor: 'rgba(255,255,255,0.08)',
+  backgroundColor: 'rgba(8,14,28,0.94)',
+  alignItems: 'center',
+  justifyContent: 'center',
+  paddingHorizontal: 20,
+  gap: 8,
+  ...theme.shadows.softShadow,
+} as const;
+
+const statusTitle = {
+  color: theme.colors.textPrimary,
+  fontSize: 15,
+  lineHeight: 19,
+  fontWeight: '800',
+} as const;
+
+const statusMessage = {
+  color: theme.colors.textSecondary,
+  fontSize: 12,
+  lineHeight: 17,
+  fontWeight: '600',
+  textAlign: 'center',
 } as const;
 
 const routeCardFrame = {

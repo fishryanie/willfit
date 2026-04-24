@@ -18,12 +18,12 @@ export function RouteMapControls() {
 
   return (
     <>
-      <ViewTheme position='absolute' right={12} bottom={332} alignItems='center' gap={theme.spacing.sm} zIndex={60} backgroundColor='transparent'>
+      <ViewTheme position='absolute' right={12} bottom={420} alignItems='center' gap={theme.spacing.sm} zIndex={60} backgroundColor='transparent'>
         <Pressable style={[mapToolButton, isMapLayerSheetOpen ? mapToolButtonActive : undefined]} onPress={openMapLayerSheet}>
           <Layers3 size={20} color={theme.colors.textPrimary} />
-          <View style={mapToolBadge}>
+          {/* <View style={mapToolBadge}>
             <Text style={mapToolBadgeText}>{mapTypeLabel}</Text>
-          </View>
+          </View> */}
         </Pressable>
 
         <Pressable style={[mapToolButton, isThreeD ? mapToolButtonActive : undefined]} onPress={handleToggle3D}>
@@ -48,9 +48,9 @@ export function RouteMapControls() {
 }
 
 const mapToolButton = {
-  width: 54,
-  height: 54,
-  borderRadius: 27,
+  width: 40,
+  height: 40,
+  borderRadius: 20,
   borderWidth: 1,
   borderColor: 'rgba(255,255,255,0.08)',
   backgroundColor: 'rgba(6,10,20,0.96)',
@@ -81,14 +81,14 @@ const mapToolBadge = {
 
 const mapToolBadgeText = {
   color: '#101828',
-  fontSize: 10,
+  fontSize: 8,
   fontWeight: '700',
   lineHeight: 12,
 } as const;
 
 const mapTool3dText = {
   color: theme.colors.textPrimary,
-  fontSize: 22,
+  fontSize: 18,
   fontWeight: '600',
   lineHeight: 24,
 } as const;
@@ -100,7 +100,7 @@ const mapTool3dTextActive = {
 const gpsButton = {
   position: 'absolute',
   right: 12,
-  bottom: 278,
+  bottom: 370,
   minWidth: 72,
   height: 34,
   borderRadius: theme.radius.pill,

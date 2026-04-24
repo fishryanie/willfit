@@ -45,7 +45,7 @@ export function RouteBottomActions() {
           <View style={rightActionCircle}>
             <Route size={21} color={theme.colors.textPrimary} />
           </View>
-          <Text style={sideActionLabel} numberOfLines={2}>
+          <Text style={sideActionLabel} numberOfLines={1}>
             Thêm Lộ trình
           </Text>
         </Pressable>
@@ -64,7 +64,7 @@ const actionsBottomFade = {
 } as const;
 
 const sideAction = {
-  width: 82,
+  width: 100,
   alignItems: 'center',
   gap: 5,
 } as const;
@@ -136,15 +136,8 @@ const centerActionLabel = {
 
 const sideActionLabel = {
   color: theme.colors.textPrimary,
-  fontSize: 11,
-  lineHeight: 14,
-  fontWeight: '700',
+  fontSize: 12,
+  lineHeight: 16,
+  fontWeight: '800',
   textAlign: 'center',
-  width: '100%',
-  paddingHorizontal: 7,
-  paddingVertical: 3,
-  borderRadius: 9,
-  borderWidth: 1,
-  borderColor: 'rgba(255,255,255,0.1)',
-  backgroundColor: 'rgba(8,14,28,0.62)',
 } as const;

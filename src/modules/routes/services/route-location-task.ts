@@ -13,16 +13,22 @@ TaskManager.defineTask(ROUTE_LOCATION_TRACKING_TASK, async ({ data, error }: any
     return;
   }
 
-  const location = locations[0];
-  const coordinate = {
-    latitude: location.coords.latitude,
-    longitude: location.coords.longitude,
-  };
-  const sampleTimestamp = typeof location.timestamp === 'number' ? location.timestamp : Date.now();
   const routeRecordState = useRouteRecordStore.getState();
+  const normalizedLocations = locations
+    .map((location: any) => ({
+      latitude: location.coords.latitude,
+      longitude: location.coords.longitude,
+      accuracy: typeof location.coords.accuracy === 'number' ? location.coords.accuracy : undefined,
+      timestamp: typeof location.timestamp === 'number' ? location.timestamp : Date.now(),
+    }))
+    .sort((a: Coordinate & { timestamp: number }, b: Coordinate & { timestamp: number }) => a.timestamp - b.timestamp);
 
-  routeRecordState.syncElapsedTime(sampleTimestamp);
-  routeRecordState.addLiveCoordinate(coordinate, sampleTimestamp);
+  normalizedLocations.forEach((coordinate: Coordinate & { accuracy?: number; timestamp: number }) => {
+    routeRecordState.syncElapsedTime(coordinate.timestamp);
+    routeRecordState.addLiveCoordinate(coordinate, coordinate.timestamp);
+  });
+
+  const sampleTimestamp = normalizedLocations[normalizedLocations.length - 1]?.timestamp ?? Date.now();
 
   if (useRouteRecordStore.getState().shouldAutoDiscard(sampleTimestamp)) {
     await useRouteRecordStore.getState().discardRecording();

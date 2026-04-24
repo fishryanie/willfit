@@ -1,30 +1,30 @@
-import { useThemeColor } from 'store/use-theme-store';
+import { useResponsive } from 'hooks/use-responsive';
 import { forwardRef } from 'react';
 import { StyleSheet, View, ViewProps, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useResponsive } from 'hooks/use-responsive';
+import { useThemeColor } from 'store/use-theme-store';
 
 export type ThemedViewProps = ViewProps &
   Omit<ViewStyle, 'flex' | 'flexGrow'> & {
-  lightColor?: string;
-  darkColor?: string;
-  flex?: number | boolean;
-  flexGrow?: number | true;
-  row?: boolean;
-  rowCenter?: boolean;
-  contentCenter?: boolean;
-  wrap?: boolean;
-  radius?: number;
-  round?: number;
-  square?: number;
-  absoluteFillObject?: boolean;
-  safePaddingTop?: boolean | number;
-  safePaddingBottom?: boolean | number;
-  safeMarginTop?: boolean | number;
-  safeMarginBottom?: boolean | number;
-  safeTop?: boolean | number;
-  safeBottom?: boolean | number;
-};
+    lightColor?: string;
+    darkColor?: string;
+    flex?: number | boolean;
+    flexGrow?: number | true;
+    row?: boolean;
+    rowCenter?: boolean;
+    contentCenter?: boolean;
+    wrap?: boolean;
+    radius?: number;
+    round?: number;
+    square?: number;
+    absoluteFillObject?: boolean;
+    safePaddingTop?: boolean | number;
+    safePaddingBottom?: boolean | number;
+    safeMarginTop?: boolean | number;
+    safeMarginBottom?: boolean | number;
+    safeTop?: boolean | number;
+    safeBottom?: boolean | number;
+  };
 
 const flexStyle = (flex: number | boolean): ViewStyle => ({
   flex: typeof flex === 'number' ? flex : flex ? 1 : 0,
@@ -104,8 +104,7 @@ const scaleViewStyle = (style: ViewStyle, rf: (size: number) => number): ViewSty
   return scaledStyle as ViewStyle;
 };
 
-const scaleNumericValue = (value: unknown, rf: (size: number) => number): number | undefined =>
-  typeof value === 'number' ? rf(value) : undefined;
+const scaleNumericValue = (value: unknown, rf: (size: number) => number): number | undefined => (typeof value === 'number' ? rf(value) : undefined);
 
 const withSafeInset = (inset: number, value?: number): number => (typeof value === 'number' ? inset + value : inset);
 
@@ -156,48 +155,48 @@ export const ThemedView = forwardRef<View, ThemedViewProps>(function ThemedView(
         round !== undefined ? roundStyle(screen.rf(round)) : undefined,
         square !== undefined ? squareStyle(screen.rf(square)) : undefined,
         radius !== undefined ? { borderRadius: screen.rf(radius) } : undefined,
-        hasSafeInsetValue(safePaddingTop) ? {
-          paddingTop: withSafeInset(
-            safeInsets.top,
-            typeof safePaddingTop === 'number'
-              ? screen.rf(safePaddingTop)
-              : scaleNumericValue(rest.paddingTop ?? rest.padding, screen.rf),
-          ),
-        } : undefined,
-        hasSafeInsetValue(safePaddingBottom) ? {
-          paddingBottom: withSafeInset(
-            safeInsets.bottom,
-            typeof safePaddingBottom === 'number'
-              ? screen.rf(safePaddingBottom)
-              : scaleNumericValue(rest.paddingBottom ?? rest.padding, screen.rf),
-          ),
-        } : undefined,
-        hasSafeInsetValue(safeMarginTop) ? {
-          marginTop: withSafeInset(
-            safeInsets.top,
-            typeof safeMarginTop === 'number' ? screen.rf(safeMarginTop) : scaleNumericValue(rest.marginTop ?? rest.margin, screen.rf),
-          ),
-        } : undefined,
-        hasSafeInsetValue(safeMarginBottom) ? {
-          marginBottom: withSafeInset(
-            safeInsets.bottom,
-            typeof safeMarginBottom === 'number'
-              ? screen.rf(safeMarginBottom)
-              : scaleNumericValue(rest.marginBottom ?? rest.margin, screen.rf),
-          ),
-        } : undefined,
-        hasSafeInsetValue(safeTop) ? {
-          top: withSafeInset(
-            safeInsets.top,
-            typeof safeTop === 'number' ? screen.rf(safeTop) : scaleNumericValue(rest.top, screen.rf),
-          ),
-        } : undefined,
-        hasSafeInsetValue(safeBottom) ? {
-          bottom: withSafeInset(
-            safeInsets.bottom,
-            typeof safeBottom === 'number' ? screen.rf(safeBottom) : scaleNumericValue(rest.bottom, screen.rf),
-          ),
-        } : undefined,
+        hasSafeInsetValue(safePaddingTop)
+          ? {
+              paddingTop: withSafeInset(
+                safeInsets.top,
+                typeof safePaddingTop === 'number' ? screen.rf(safePaddingTop) : scaleNumericValue(rest.paddingTop ?? rest.padding, screen.rf),
+              ),
+            }
+          : undefined,
+        hasSafeInsetValue(safePaddingBottom)
+          ? {
+              paddingBottom: withSafeInset(
+                safeInsets.bottom,
+                typeof safePaddingBottom === 'number' ? screen.rf(safePaddingBottom) : scaleNumericValue(rest.paddingBottom ?? rest.padding, screen.rf),
+              ),
+            }
+          : undefined,
+        hasSafeInsetValue(safeMarginTop)
+          ? {
+              marginTop: withSafeInset(
+                safeInsets.top,
+                typeof safeMarginTop === 'number' ? screen.rf(safeMarginTop) : scaleNumericValue(rest.marginTop ?? rest.margin, screen.rf),
+              ),
+            }
+          : undefined,
+        hasSafeInsetValue(safeMarginBottom)
+          ? {
+              marginBottom: withSafeInset(
+                safeInsets.bottom,
+                typeof safeMarginBottom === 'number' ? screen.rf(safeMarginBottom) : scaleNumericValue(rest.marginBottom ?? rest.margin, screen.rf),
+              ),
+            }
+          : undefined,
+        hasSafeInsetValue(safeTop)
+          ? {
+              top: withSafeInset(safeInsets.top, typeof safeTop === 'number' ? screen.rf(safeTop) : scaleNumericValue(rest.top, screen.rf)),
+            }
+          : undefined,
+        hasSafeInsetValue(safeBottom)
+          ? {
+              bottom: withSafeInset(safeInsets.bottom, typeof safeBottom === 'number' ? screen.rf(safeBottom) : scaleNumericValue(rest.bottom, screen.rf)),
+            }
+          : undefined,
         scaledRest,
         style,
       ]}

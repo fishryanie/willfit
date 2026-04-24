@@ -4,7 +4,7 @@
     "slug": "willfit",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./src/assets/images/icon.png",
+    "icon": "./src/assets/images/images/logo/logo-without-bg.png",
     "scheme": "willfit",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -50,12 +50,12 @@
       [
         "expo-splash-screen",
         {
-          "image": "./src/assets/images/logo/logo-name.png",
+          "image": "./src/assets/images/logo/logo-without-bg.png",
           "imageWidth": 220,
           "resizeMode": "contain",
           "backgroundColor": "#0F172A",
           "dark": {
-            "image": "./src/assets/images/logo/logo-name.png",
+            "image": "./src/assets/images/logo/logo-without-bg.png",
             "backgroundColor": "#0F172A"
           }
         }

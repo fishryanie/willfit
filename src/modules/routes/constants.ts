@@ -1,5 +1,8 @@
 export const MIN_DISTANCE = 0.005; // 5 mét
 export const AUTO_DISCARD_AFTER_MS = 5 * 60 * 1000;
+export const MAX_RECORDING_ACCURACY_METERS = 50;
+export const MAX_RECORDING_SPEED_METERS_PER_SECOND = 8.5;
+export const LIVE_ROAD_MATCH_MIN_NEW_POINTS = 4;
 
 export const ROUTE_STORAGE_KEY = {
   SAVED_ROUTE_SUGGESTIONS: 'willfit:saved-route-suggestions',

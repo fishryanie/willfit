@@ -23,6 +23,6 @@ export const colors = {
 
   primaryGlow: 'rgba(47,128,237,0.35)',
   accentGlow: 'rgba(255,60,172,0.30)',
-} as const;
+};
 
 export type AppColorName = keyof typeof colors;

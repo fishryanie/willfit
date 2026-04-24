@@ -36,6 +36,15 @@ const buildSyncSignature = (token: string, accessToken: string | null) =>
   `${token}|${decodeJwtUserId(accessToken)}|${Platform.OS}|${getAppVersion()}|${getDeviceName()}`;
 const pendingSyncSignatures = new Set<string>();
 
+const hasMissingPushEntitlementError = (error: unknown) => {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  const message = error.message.toLowerCase();
+  return message.includes('aps-environment') || message.includes('entitlement');
+};
+
 const hasInternetConnection = async () => {
   const networkState = await Network.getNetworkStateAsync();
   return Boolean(networkState.isConnected && networkState.isInternetReachable !== false);
@@ -155,6 +164,13 @@ export function usePushNotifications() {
           console.log('[notifications] Expo push token:', token);
         }
       } catch (error) {
+        if (hasMissingPushEntitlementError(error)) {
+          if (__DEV__) {
+            console.log('[notifications] Skip push registration: missing iOS push entitlement');
+          }
+          return;
+        }
+
         console.error('[notifications] Failed to register push notifications:', error);
       }
     };

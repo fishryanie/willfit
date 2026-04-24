@@ -220,10 +220,7 @@ type RuntimeThemeMode = import('constants/theme').ThemeMode;
     style?: StyleProp<ViewStyle>;
   }
 
-declare module '@gorhom/sticky-item' {
-  export { default } from '@gorhom/sticky-item/lib/typescript/index';
-  export * from '@gorhom/sticky-item/lib/typescript/index';
-}
+
 
   interface ToastItem {
     id: string;

@@ -9,9 +9,10 @@ export const startRouteLocationTracking = async () => {
   }
 
   await Location.startLocationUpdatesAsync(ROUTE_LOCATION_TRACKING_TASK, {
-    accuracy: Location.Accuracy.High,
-    timeInterval: 5000,
-    distanceInterval: 5,
+    accuracy: Location.Accuracy.BestForNavigation,
+    activityType: Location.ActivityType.Fitness,
+    timeInterval: 2500,
+    distanceInterval: 3,
     foregroundService: {
       notificationTitle: 'WillFit đang record',
       notificationBody: 'Đang theo dõi vị trí của bạn ngầm.',

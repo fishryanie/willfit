@@ -10,4 +10,5 @@ export type SuggestedWalkingRoute = {
   coordinates: LatLng[];
   score: number;
   source?: 'generated' | 'recorded';
+  provider?: 'osm' | 'goong';
 };

@@ -1,6 +1,6 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { View } from 'react-native';
-import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, { Marker, Polyline } from 'react-native-maps';
 import { theme } from 'theme';
 import { DEFAULT_MAP_DELTA, ROUTE_COLORS } from '../../constants';
 import { useRouteRecordStore } from '../../store/use-route-record-store';
@@ -33,6 +33,7 @@ export function AppMapContainer({ children }: AppMapContainerProps) {
   const isThreeD = useRouteRecordStore(state => state.isThreeD);
   const focusSignal = useRouteRecordStore(state => state.focusSignal);
   const liveCoordinates = useRouteRecordStore(state => state.liveCoordinates);
+  const liveRoadCoordinates = useRouteRecordStore(state => state.liveRoadCoordinates);
   const mapRef = useRef<MapView>(null);
   const finishCoordinates = finishedRecord?.coordinates ?? [];
   const liveLastCoordinate = liveCoordinates[liveCoordinates.length - 1];
@@ -43,9 +44,11 @@ export function AppMapContainer({ children }: AppMapContainerProps) {
     phase === 'finish'
       ? finishCoordinates
       : phase === 'intra'
-        ? liveCoordinates.length > 1
-          ? liveCoordinates
-          : selectedRoute?.coordinates ?? []
+        ? liveRoadCoordinates.length > 1
+          ? liveRoadCoordinates
+          : liveCoordinates.length > 1
+            ? liveCoordinates
+            : selectedRoute?.coordinates ?? []
         : selectedRoute?.coordinates ?? [];
   const cameraPitch = isThreeD ? 62 : 0;
   const cameraHeading = isThreeD ? 32 : 0;
@@ -71,7 +74,6 @@ export function AppMapContainer({ children }: AppMapContainerProps) {
       <MapView
         ref={mapRef}
         style={absoluteFill}
-        provider={PROVIDER_GOOGLE}
         customMapStyle={darkMapStyle as never}
         mapType={mapType}
         initialRegion={{

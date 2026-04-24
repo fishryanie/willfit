@@ -4,9 +4,18 @@ import type { MapType } from 'react-native-maps';
 import { create } from 'zustand';
 import { appToast } from 'utils/app-toast';
 import { storage } from 'utils/storage';
-import { AUTO_DISCARD_AFTER_MS, MIN_DISTANCE, ROUTE_STORAGE_KEY } from '../constants';
+import {
+  AUTO_DISCARD_AFTER_MS,
+  LIVE_ROAD_MATCH_MIN_NEW_POINTS,
+  MAX_RECORDING_ACCURACY_METERS,
+  MAX_RECORDING_SPEED_METERS_PER_SECOND,
+  MIN_DISTANCE,
+  ROUTE_STORAGE_KEY,
+} from '../constants';
 import { mapCenter, currentLocation } from '../mocks/map-coordinates';
+import { matchRecordedRouteToRoads, type RecordedRoutePoint } from '../services/recorded-route-matching';
 import { startRouteLocationTracking, stopRouteLocationTracking } from '../services/route-location-tracking';
+import { fetchSuggestedWalkingRoutes } from '../services/route-suggestions';
 import type { SuggestedWalkingRoute } from '../types/suggested-route';
 import { estimateCalories, formatLivePace } from '../utils';
 import { calculateRouteDistanceKm } from '../utils/geo';
@@ -14,13 +23,16 @@ import { calculateRouteDistanceKm } from '../utils/geo';
 export type RouteRecordPhase = 'pre' | 'intra' | 'finish';
 
 export type FinishedRecordSummary = {
-  coordinates: Coordinate[];
+  coordinates: RecordedRoutePoint[];
+  rawCoordinates: RecordedRoutePoint[];
   distanceMeters: number;
   durationSeconds: number;
   averagePace: string;
   estimatedCalories: number;
   elevationGain: number;
   routeName: string;
+  isRoadMatched: boolean;
+  provider?: 'osm';
 };
 
 type GpsVariant = 'good' | 'warning';
@@ -38,13 +50,18 @@ type RouteRecordState = {
   focusSignal: number;
   savedRoutes: SuggestedWalkingRoute[];
   suggestions: SuggestedWalkingRoute[];
+  isLoadingSuggestions: boolean;
+  suggestionError: string | null;
   selectedRoute: SuggestedWalkingRoute | undefined;
   finishedRecord: FinishedRecordSummary | null;
 
   isRecording: boolean;
   isPaused: boolean;
   elapsedSeconds: number;
-  liveCoordinates: Coordinate[];
+  liveCoordinates: RecordedRoutePoint[];
+  liveRoadCoordinates: RecordedRoutePoint[];
+  isMatchingLiveRoute: boolean;
+  lastRoadMatchCoordinateCount: number;
   recordingTitle: string;
   startedAt: number | null;
   pausedAt: number | null;
@@ -55,6 +72,7 @@ type RouteRecordState = {
   setGpsVariant: (variant: GpsVariant) => void;
   setIsLocating: (value: boolean) => void;
   setSuggestions: (routes: SuggestedWalkingRoute[]) => void;
+  loadSuggestedRoutes: (origin: { latitude: number; longitude: number }, options?: { count?: number; signal?: AbortSignal }) => Promise<void>;
   hydrateSavedRoutes: (routes: SuggestedWalkingRoute[]) => void;
   hydrateSavedRoutesFromStorage: () => Promise<void>;
   setSelectedRoute: (route: SuggestedWalkingRoute | undefined) => void;
@@ -79,8 +97,9 @@ type RouteRecordState = {
   startRecording: (title: string, startedAt?: number) => void;
   stopRecording: () => void;
   resetRecording: () => void;
+  refreshRoadMatchedLiveRoute: () => Promise<void>;
   syncElapsedTime: (referenceTime?: number) => void;
-  addLiveCoordinate: (coord: Coordinate, sampleTimestamp?: number) => boolean;
+  addLiveCoordinate: (coord: RecordedRoutePoint, sampleTimestamp?: number) => boolean;
   shouldAutoDiscard: (referenceTime?: number) => boolean;
 };
 
@@ -123,6 +142,9 @@ const resetRecordingState = {
   isPaused: false,
   elapsedSeconds: 0,
   liveCoordinates: [],
+  liveRoadCoordinates: [],
+  isMatchingLiveRoute: false,
+  lastRoadMatchCoordinateCount: 0,
   recordingTitle: 'Free run',
   startedAt: null,
   pausedAt: null,
@@ -130,7 +152,18 @@ const resetRecordingState = {
   lastDistanceChangeAt: null,
 } satisfies Pick<
   RouteRecordState,
-  'isRecording' | 'isPaused' | 'elapsedSeconds' | 'liveCoordinates' | 'recordingTitle' | 'startedAt' | 'pausedAt' | 'pausedDurationMs' | 'lastDistanceChangeAt'
+  | 'isRecording'
+  | 'isPaused'
+  | 'elapsedSeconds'
+  | 'liveCoordinates'
+  | 'liveRoadCoordinates'
+  | 'isMatchingLiveRoute'
+  | 'lastRoadMatchCoordinateCount'
+  | 'recordingTitle'
+  | 'startedAt'
+  | 'pausedAt'
+  | 'pausedDurationMs'
+  | 'lastDistanceChangeAt'
 >;
 
 export const useRouteRecordStore = create<RouteRecordState>((set, get) => ({
@@ -146,6 +179,8 @@ export const useRouteRecordStore = create<RouteRecordState>((set, get) => ({
   focusSignal: 0,
   savedRoutes: [],
   suggestions: [],
+  isLoadingSuggestions: false,
+  suggestionError: null,
   selectedRoute: undefined,
   finishedRecord: null,
   ...resetRecordingState,
@@ -163,6 +198,35 @@ export const useRouteRecordStore = create<RouteRecordState>((set, get) => ({
       suggestions,
       selectedRoute: preservedSelectedRoute ?? suggestions[0],
     });
+  },
+  loadSuggestedRoutes: async (origin, options) => {
+    set({ isLoadingSuggestions: true, suggestionError: null });
+    get().setSuggestions([]);
+
+    try {
+      const routes = await fetchSuggestedWalkingRoutes(origin, options);
+
+      if (options?.signal?.aborted) {
+        return;
+      }
+
+      get().setSuggestions(routes);
+      set({
+        isLoadingSuggestions: false,
+        suggestionError: routes.length > 0 ? null : 'Chưa tìm được tuyến đi bộ phù hợp gần vị trí này.',
+      });
+    } catch (error) {
+      if (options?.signal?.aborted) {
+        return;
+      }
+
+      console.error('Failed to fetch route suggestions', error);
+      get().setSuggestions([]);
+      set({
+        isLoadingSuggestions: false,
+        suggestionError: 'Không tải được gợi ý đường thật. Vui lòng thử lại sau.',
+      });
+    }
   },
   hydrateSavedRoutes: savedRoutes => {
     const normalizedSavedRoutes = savedRoutes
@@ -266,6 +330,9 @@ export const useRouteRecordStore = create<RouteRecordState>((set, get) => ({
       isPaused: false,
       elapsedSeconds: 0,
       liveCoordinates: [],
+      liveRoadCoordinates: [],
+      isMatchingLiveRoute: false,
+      lastRoadMatchCoordinateCount: 0,
       recordingTitle: route.name,
       startedAt,
       pausedAt: null,
@@ -286,22 +353,35 @@ export const useRouteRecordStore = create<RouteRecordState>((set, get) => ({
     get().syncElapsedTime();
 
     const state = get();
-    const coordinates = state.liveCoordinates.length > 1 ? state.liveCoordinates : state.selectedRoute?.coordinates ?? [];
-    const distanceMeters = Math.round(calculateRouteDistanceKm(coordinates) * 1000);
+    const rawCoordinates = state.liveCoordinates;
+    const fallbackCoordinates = rawCoordinates.length > 1 ? rawCoordinates : state.selectedRoute?.coordinates ?? [];
     const durationSeconds = state.elapsedSeconds;
 
     await stopRouteLocationTracking();
+
+    const matchedRoute =
+      rawCoordinates.length > 1
+        ? await matchRecordedRouteToRoads(rawCoordinates).catch(error => {
+            console.error('Failed to map-match recorded route', error);
+            return null;
+          })
+        : null;
+    const coordinates = matchedRoute?.coordinates ?? fallbackCoordinates;
+    const distanceMeters = Math.round(matchedRoute?.distanceMeters ?? calculateRouteDistanceKm(fallbackCoordinates) * 1000);
 
     set({
       ...resetRecordingState,
       finishedRecord: {
         coordinates,
+        rawCoordinates,
         distanceMeters,
         durationSeconds,
         averagePace: formatLivePace(distanceMeters, durationSeconds),
         estimatedCalories: estimateCalories(distanceMeters),
         elevationGain: state.selectedRoute?.estimatedElevationGain ?? 0,
         routeName: state.selectedRoute?.name ?? 'Lộ trình của bạn',
+        isRoadMatched: Boolean(matchedRoute),
+        provider: matchedRoute?.provider,
       },
       phase: 'finish',
     });
@@ -342,6 +422,7 @@ export const useRouteRecordStore = create<RouteRecordState>((set, get) => ({
       coordinates: finishedRecord.coordinates,
       score: 1,
       source: 'recorded',
+      provider: finishedRecord.provider,
     };
 
     const savedRoutes = [
@@ -396,6 +477,9 @@ export const useRouteRecordStore = create<RouteRecordState>((set, get) => ({
       isPaused: false,
       elapsedSeconds: 0,
       liveCoordinates: [],
+      liveRoadCoordinates: [],
+      isMatchingLiveRoute: false,
+      lastRoadMatchCoordinateCount: 0,
       recordingTitle: title,
       startedAt,
       pausedAt: null,
@@ -412,6 +496,41 @@ export const useRouteRecordStore = create<RouteRecordState>((set, get) => ({
       lastDistanceChangeAt: null,
     }),
   resetRecording: () => set(resetRecordingState),
+  refreshRoadMatchedLiveRoute: async () => {
+    const { isRecording, isPaused, isMatchingLiveRoute, liveCoordinates, lastRoadMatchCoordinateCount } = get();
+
+    if (
+      !isRecording ||
+      isPaused ||
+      isMatchingLiveRoute ||
+      liveCoordinates.length < 3 ||
+      liveCoordinates.length - lastRoadMatchCoordinateCount < LIVE_ROAD_MATCH_MIN_NEW_POINTS
+    ) {
+      return;
+    }
+
+    const coordinateCount = liveCoordinates.length;
+    set({ isMatchingLiveRoute: true });
+
+    try {
+      const matchedRoute = await matchRecordedRouteToRoads(liveCoordinates);
+      const latestState = get();
+
+      if (!latestState.isRecording || latestState.liveCoordinates.length < coordinateCount) {
+        return;
+      }
+
+      set({
+        liveRoadCoordinates: matchedRoute?.coordinates ?? latestState.liveRoadCoordinates,
+        lastRoadMatchCoordinateCount: coordinateCount,
+      });
+    } catch (error) {
+      console.error('Failed to refresh live map-matched route', error);
+      set({ lastRoadMatchCoordinateCount: coordinateCount });
+    } finally {
+      set({ isMatchingLiveRoute: false });
+    }
+  },
   syncElapsedTime: (referenceTime = Date.now()) => {
     const { isRecording, startedAt, isPaused, pausedAt, pausedDurationMs, elapsedSeconds } = get();
 
@@ -432,14 +551,32 @@ export const useRouteRecordStore = create<RouteRecordState>((set, get) => ({
       return false;
     }
 
-    const lastCoord = liveCoordinates[liveCoordinates.length - 1];
-    if (lastCoord && distanceBetweenMeters(lastCoord, coord) < MIN_DISTANCE * 1000) {
+    if (typeof coord.accuracy === 'number' && coord.accuracy > MAX_RECORDING_ACCURACY_METERS) {
       return false;
     }
 
+    const lastCoord = liveCoordinates[liveCoordinates.length - 1];
+    const timestamp = coord.timestamp ?? sampleTimestamp;
+
+    if (lastCoord) {
+      if (lastCoord.timestamp != null && timestamp <= lastCoord.timestamp) {
+        return false;
+      }
+
+      const distanceMeters = distanceBetweenMeters(lastCoord, coord);
+      if (distanceMeters < MIN_DISTANCE * 1000) {
+        return false;
+      }
+
+      const elapsedSeconds = lastCoord.timestamp == null ? 0 : Math.max(0, (timestamp - lastCoord.timestamp) / 1000);
+      if (elapsedSeconds > 0 && distanceMeters / elapsedSeconds > MAX_RECORDING_SPEED_METERS_PER_SECOND) {
+        return false;
+      }
+    }
+
     set({
-      liveCoordinates: [...liveCoordinates, coord],
-      lastDistanceChangeAt: sampleTimestamp,
+      liveCoordinates: [...liveCoordinates, { ...coord, timestamp }],
+      lastDistanceChangeAt: timestamp,
     });
 
     return true;
@@ -459,8 +596,10 @@ export function useRouteRecordLifecycle() {
   const phase = useRouteRecordStore(state => state.phase);
   const isRecording = useRouteRecordStore(state => state.isRecording);
   const isPaused = useRouteRecordStore(state => state.isPaused);
+  const liveCoordinateCount = useRouteRecordStore(state => state.liveCoordinates.length);
   const hydrateSavedRoutesFromStorage = useRouteRecordStore(state => state.hydrateSavedRoutesFromStorage);
   const resolveCurrentLocation = useRouteRecordStore(state => state.resolveCurrentLocation);
+  const refreshRoadMatchedLiveRoute = useRouteRecordStore(state => state.refreshRoadMatchedLiveRoute);
   const syncElapsedTime = useRouteRecordStore(state => state.syncElapsedTime);
   const shouldAutoDiscard = useRouteRecordStore(state => state.shouldAutoDiscard);
   const discardRecording = useRouteRecordStore(state => state.discardRecording);
@@ -493,4 +632,12 @@ export function useRouteRecordLifecycle() {
 
     return () => clearInterval(interval);
   }, [discardRecording, isPaused, isRecording, shouldAutoDiscard, syncElapsedTime]);
+
+  useEffect(() => {
+    if (phase !== 'intra' || !isRecording || isPaused || liveCoordinateCount < 3) {
+      return;
+    }
+
+    void refreshRoadMatchedLiveRoute();
+  }, [isPaused, isRecording, liveCoordinateCount, phase, refreshRoadMatchedLiveRoute]);
 }
